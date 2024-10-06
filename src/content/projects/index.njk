@@ -1,0 +1,13 @@
+---
+layout: base.njk
+title: Projects — Stephan Zych
+permalink: /projects/
+---
+<sz-portfolio>
+  {% for project in collections.projects %}
+    <div class="project-card">
+      <h3><a href="{{ project.url }}">{{ project.data.title }}</a></h3>
+      <p>{{ project.data.description }}</p>
+    </div>
+  {% endfor %}
+</sz-portfolio>

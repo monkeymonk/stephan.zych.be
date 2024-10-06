@@ -1,0 +1,6 @@
+node_modules/
+_site/
+dist/
+.cache/
+*.log
+_references/

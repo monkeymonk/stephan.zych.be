@@ -1,0 +1,113 @@
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/assets/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/assets/fonts/JetBrainsMono-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+html, body {
+  width: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+::selection {
+  background: rgba(255,255,255,0.2);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--sz-surface1, #45475a);
+  border-radius: 3px;
+}
+
+a { color: var(--sz-accent, #89b4fa); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Prose styles for sz-markdown (light DOM) */
+.sz-prose {
+  display: block;
+  padding: 24px 32px;
+  max-width: 800px;
+  margin: 0 auto;
+  color: var(--sz-text, #cdd6f4);
+  line-height: 1.8;
+}
+.sz-prose h1 { font-size: 2em; color: var(--sz-accent, #89b4fa); margin: 1em 0 0.5em; }
+.sz-prose h2 { font-size: 1.5em; color: var(--sz-lavender, #b4befe); margin: 1em 0 0.5em; border-bottom: 1px solid var(--sz-surface0, #313244); padding-bottom: 0.3em; }
+.sz-prose h3 { font-size: 1.25em; color: var(--sz-mauve, #cba6f7); margin: 1em 0 0.5em; }
+.sz-prose p { margin: 0.8em 0; }
+.sz-prose ul, .sz-prose ol { padding-left: 1.5em; margin: 0.8em 0; }
+.sz-prose li { margin: 0.3em 0; }
+.sz-prose blockquote {
+  border-left: 3px solid var(--sz-accent, #89b4fa);
+  padding: 0.5em 1em;
+  margin: 1em 0;
+  background: var(--sz-surface0, #313244);
+  border-radius: 0 4px 4px 0;
+}
+.sz-prose pre {
+  background: var(--sz-mantle, #181825);
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 13px;
+  margin: 1em 0;
+}
+.sz-prose code {
+  background: var(--sz-surface0, #313244);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+.sz-prose pre code {
+  background: transparent;
+  padding: 0;
+}
+.sz-prose img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 1em 0;
+}
+.sz-prose hr {
+  border: none;
+  border-top: 1px solid var(--sz-surface1, #45475a);
+  margin: 2em 0;
+}
+.sz-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+.sz-prose th, .sz-prose td {
+  border: 1px solid var(--sz-surface1, #45475a);
+  padding: 8px 12px;
+  text-align: left;
+}
+.sz-prose th {
+  background: var(--sz-surface0, #313244);
+}
+@media (max-width: 768px) {
+  .sz-prose { padding: 16px; }
+}

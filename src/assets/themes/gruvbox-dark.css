@@ -1,0 +1,47 @@
+[data-theme="gruvbox-dark"] {
+  --sz-base: #282828;
+  --sz-mantle: #1d2021;
+  --sz-crust: #1d2021;
+  --sz-surface0: #3c3836;
+  --sz-surface1: #504945;
+  --sz-surface2: #665c54;
+  --sz-overlay0: #7c6f64;
+  --sz-overlay1: #928374;
+  --sz-overlay2: #a89984;
+  --sz-text: #ebdbb2;
+  --sz-subtext: #d5c4a1;
+  --sz-subtext0: #bdae93;
+  --sz-subtext1: #d5c4a1;
+  --sz-accent: #83a598;
+  --sz-blue: #83a598;
+  --sz-green: #b8bb26;
+  --sz-red: #fb4934;
+  --sz-yellow: #fabd2f;
+  --sz-mauve: #d3869b;
+  --sz-pink: #d3869b;
+  --sz-peach: #fe8019;
+  --sz-teal: #8ec07c;
+  --sz-lavender: #83a598;
+  --sz-rosewater: #ebdbb2;
+  --sz-flamingo: #fb4934;
+  --sz-sky: #83a598;
+  --sz-sapphire: #83a598;
+  --sz-maroon: #cc241d;
+
+  --sz-terminal-bg: var(--sz-base);
+  --sz-terminal-opacity: 0.95;
+  --sz-tab-bg: var(--sz-mantle);
+  --sz-tab-active: var(--sz-accent);
+  --sz-tab-text: var(--sz-subtext);
+  --sz-tab-active-text: var(--sz-text);
+  --sz-statusbar-bg: var(--sz-mantle);
+  --sz-statusbar-text: var(--sz-subtext);
+  --sz-statusbar-accent: var(--sz-accent);
+  --sz-pane-border: var(--sz-surface0);
+  --sz-pane-active-border: var(--sz-accent);
+  --sz-cursor: var(--sz-accent);
+  --sz-command-bg: var(--sz-surface0);
+  --sz-command-text: var(--sz-text);
+  --sz-command-highlight: var(--sz-accent);
+  --sz-shadow: rgba(0, 0, 0, 0.5);
+}

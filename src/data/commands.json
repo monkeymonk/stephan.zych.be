@@ -1,0 +1,18 @@
+[
+  { "name": "home", "description": "Go to home page", "category": "navigation" },
+  { "name": "about", "description": "Go to about page", "category": "navigation" },
+  { "name": "projects", "description": "Go to projects page", "category": "navigation" },
+  { "name": "blog", "description": "Go to blog page", "category": "navigation" },
+  { "name": "contact", "description": "Go to contact page", "category": "navigation" },
+  { "name": "colorscheme", "args": ["catppuccin-mocha", "gruvbox-dark", "tokyonight"], "description": "Switch color theme", "category": "theme" },
+  { "name": "fullscreen", "description": "Enter fullscreen mode", "category": "window" },
+  { "name": "windowed", "description": "Enter windowed mode", "category": "window" },
+  { "name": "fullpage", "description": "Enter full-page mode", "category": "window" },
+  { "name": "set", "args": ["transparency", "shader"], "description": "Set a configuration value", "category": "settings" },
+  { "name": "help", "description": "Show available commands", "category": "help" },
+  { "name": "matrix", "description": "Enter the Matrix", "category": "easter-egg" },
+  { "name": "sudo", "description": "Try to gain root access", "category": "easter-egg" },
+  { "name": "coffee", "description": "Brew some coffee", "category": "easter-egg" },
+  { "name": "42", "description": "The answer to everything", "category": "easter-egg" },
+  { "name": "party", "description": "Celebrate!", "category": "easter-egg" }
+]

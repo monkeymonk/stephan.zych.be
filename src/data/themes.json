@@ -1,0 +1,8 @@
+{
+  "default": "catppuccin-mocha",
+  "available": [
+    { "name": "catppuccin-mocha", "label": "Catppuccin Mocha", "file": "/assets/themes/catppuccin-mocha.css" },
+    { "name": "gruvbox-dark", "label": "Gruvbox Dark", "file": "/assets/themes/gruvbox-dark.css" },
+    { "name": "tokyonight", "label": "Tokyo Night", "file": "/assets/themes/tokyonight.css" }
+  ]
+}

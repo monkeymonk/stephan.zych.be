@@ -1,0 +1,8 @@
+---
+layout: base.njk
+---
+<sz-markdown>
+  <h1>{{ title }}</h1>
+  <p style="color: var(--sz-subtext)">{{ date | dateDisplay }}</p>
+  {{ content | safe }}
+</sz-markdown>
