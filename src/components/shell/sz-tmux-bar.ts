@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
 interface Tab {
   index: number;
@@ -15,9 +15,18 @@ const TABS: Tab[] = [
   { index: 4, name: 'contact', path: '/contact/' },
 ];
 
+const DEFAULT_SESSION_NAME = 'stephan.zych';
+
+interface NavData {
+  tabs?: Tab[];
+  sessionName?: string;
+}
+
 @customElement('sz-tmux-bar')
 export class SzTmuxBar extends LitElement {
   @property({ attribute: 'active-path' }) activePath = '/';
+  @state() private tabs: Tab[] = TABS;
+  @state() private sessionName = DEFAULT_SESSION_NAME;
 
   static styles = css`
     :host {
@@ -106,6 +115,9 @@ export class SzTmuxBar extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    const navData = this.readNavData();
+    this.tabs = navData.tabs ?? TABS;
+    this.sessionName = navData.sessionName ?? DEFAULT_SESSION_NAME;
     document.addEventListener('keydown', this.handleKeydown);
   }
 
@@ -118,10 +130,21 @@ export class SzTmuxBar extends LitElement {
     if (e.altKey && e.key >= '1' && e.key <= '5') {
       e.preventDefault();
       const index = parseInt(e.key) - 1;
-      const tab = TABS[index];
+      const tab = this.tabs[index];
       if (tab) window.location.href = tab.path;
     }
   };
+
+  private readNavData(): NavData {
+    const el = document.getElementById('sz-nav-data');
+    if (!el?.textContent) return {};
+
+    try {
+      return JSON.parse(el.textContent) as NavData;
+    } catch {
+      return {};
+    }
+  }
 
   private handleDotClick(action: string, e: MouseEvent) {
     e.stopPropagation();
@@ -139,7 +162,7 @@ export class SzTmuxBar extends LitElement {
         <div class="dot maximize" @click=${(e: MouseEvent) => this.handleDotClick('maximize', e)} title="Fullscreen"></div>
       </div>
       <nav class="tabs" role="tablist">
-        ${TABS.map(tab => html`
+        ${this.tabs.map(tab => html`
           <a
             class="tab ${this.isActive(tab.path) ? 'active' : ''}"
             href="${tab.path}"
@@ -150,7 +173,7 @@ export class SzTmuxBar extends LitElement {
           </a>
         `)}
       </nav>
-      <span class="session">stephan.zych</span>
+      <span class="session">${this.sessionName}</span>
     `;
   }
 }

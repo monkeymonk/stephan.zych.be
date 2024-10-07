@@ -3,7 +3,15 @@ import { customElement, property, state } from 'lit/decorators.js';
 
 @customElement('sz-portfolio')
 export class SzPortfolio extends LitElement {
-  @property({ type: Array }) filters: string[] = [];
+  @property({
+    attribute: 'filters',
+    converter: {
+      fromAttribute: (value: string | null) =>
+        value ? value.split(',').map((filter) => filter.trim()).filter(Boolean) : [],
+      toAttribute: (value: string[]) => value.join(','),
+    },
+  })
+  filters: string[] = [];
   @state() private activeFilter = '';
 
   static styles = css`
@@ -64,6 +72,31 @@ export class SzPortfolio extends LitElement {
       bubbles: true,
       composed: true
     }));
+  }
+
+  protected updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.has('activeFilter')) {
+      this.updateVisibleItems();
+    }
+  }
+
+  private updateVisibleItems() {
+    const items = this.querySelectorAll<HTMLElement>('[data-tags]');
+
+    items.forEach((item) => {
+      if (!this.activeFilter) {
+        item.style.display = '';
+        return;
+      }
+
+      const tags = item
+        .getAttribute('data-tags')
+        ?.split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean) ?? [];
+
+      item.style.display = tags.includes(this.activeFilter) ? '' : 'none';
+    });
   }
 
   render() {

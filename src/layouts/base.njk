@@ -14,6 +14,8 @@
   <script type="module" src="/assets/components.js"></script>
 </head>
 <body>
+  <script type="application/json" id="sz-nav-data">{{ nav | dump | safe }}</script>
+  <script type="application/json" id="sz-commands-data">{{ commands | dump | safe }}</script>
   <a href="#main-content" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">Skip to content</a>
   <sz-background>
     <sz-screen-shader>

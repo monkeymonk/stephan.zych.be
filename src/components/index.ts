@@ -12,6 +12,10 @@ export { SzMarkdown } from './layouts/sz-markdown.js';
 export { SzPortfolio } from './layouts/sz-portfolio.js';
 export { SzWidget } from './layouts/sz-widget.js';
 
+// Widgets
+export { SzContactForm } from './widgets/sz-contact-form.js';
+
 // Shared
 export { SzBackground } from './shared/sz-background.js';
 export { SzScreenShader } from './shared/sz-screen-shader.js';
+export { SzIcon } from './shared/sz-icon.js';

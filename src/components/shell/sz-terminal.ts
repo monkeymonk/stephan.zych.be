@@ -29,8 +29,11 @@ export class SzTerminal extends LitElement {
       flex-direction: column;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 8px 32px var(--sz-shadow, rgba(0,0,0,0.4));
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        0 8px 32px rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       position: absolute;
     }
     .terminal.windowed {
@@ -40,6 +43,12 @@ export class SzTerminal extends LitElement {
       left: 50%;
       transform: translate(-50%, -50%);
       border-radius: 12px;
+      box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        0 8px 32px rgba(0, 0, 0, 0.2),
+        0 20px 60px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        0 0 80px -20px rgba(137, 180, 250, 0.06);
     }
     .terminal.full-page {
       width: 100vw;

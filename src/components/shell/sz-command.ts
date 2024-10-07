@@ -9,6 +9,16 @@ interface Command {
   category: string;
 }
 
+interface NavTab {
+  index: number;
+  name: string;
+  path: string;
+}
+
+interface NavData {
+  tabs?: NavTab[];
+}
+
 const COMMANDS: Command[] = [
   { name: 'home', description: 'Go to home page', category: 'navigation' },
   { name: 'about', description: 'Go to about page', category: 'navigation' },
@@ -39,6 +49,8 @@ export class SzCommand extends LitElement {
   @state() private input = '';
   @state() private selectedIndex = 0;
   @state() private message = '';
+  @state() private commands: Command[] = COMMANDS;
+  @state() private navMap: Record<string, string> = NAV_MAP;
 
   @query('input') private inputEl!: HTMLInputElement;
 
@@ -109,6 +121,8 @@ export class SzCommand extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this.commands = this.readCommandsData();
+    this.navMap = this.buildNavMap();
     document.addEventListener('keydown', this.handleGlobalKey);
   }
 
@@ -149,12 +163,41 @@ export class SzCommand extends LitElement {
   }
 
   private get filtered(): Command[] {
-    if (!this.input) return COMMANDS;
+    if (!this.input) return this.commands;
     const q = this.input.toLowerCase();
-    return COMMANDS.filter(c =>
+    return this.commands.filter(c =>
       c.name.toLowerCase().includes(q) ||
       c.description.toLowerCase().includes(q)
     );
+  }
+
+  private readCommandsData(): Command[] {
+    const el = document.getElementById('sz-commands-data');
+    if (!el?.textContent) return COMMANDS;
+
+    try {
+      const parsed = JSON.parse(el.textContent) as Command[];
+      return Array.isArray(parsed) ? parsed : COMMANDS;
+    } catch {
+      return COMMANDS;
+    }
+  }
+
+  private buildNavMap(): Record<string, string> {
+    const el = document.getElementById('sz-nav-data');
+    if (!el?.textContent) return NAV_MAP;
+
+    try {
+      const parsed = JSON.parse(el.textContent) as NavData;
+      if (!Array.isArray(parsed.tabs)) return NAV_MAP;
+
+      return parsed.tabs.reduce<Record<string, string>>((map, tab) => {
+        map[tab.name] = tab.path;
+        return map;
+      }, {});
+    } catch {
+      return NAV_MAP;
+    }
   }
 
   private handleInput(e: InputEvent) {
@@ -189,8 +232,8 @@ export class SzCommand extends LitElement {
 
   private executeCommand(name: string, args: string[] = []) {
     // Navigation
-    if (name in NAV_MAP) {
-      window.location.href = NAV_MAP[name];
+    if (name in this.navMap) {
+      window.location.href = this.navMap[name];
       return;
     }
 
@@ -242,7 +285,7 @@ export class SzCommand extends LitElement {
 
     // Help
     if (name === 'help') {
-      this.message = 'Commands: ' + COMMANDS.map(c => c.name).join(', ');
+      this.message = 'Commands: ' + this.commands.map(c => c.name).join(', ');
       return;
     }
 
@@ -259,8 +302,88 @@ export class SzCommand extends LitElement {
       this.message = '☕ Brewing...';
       return;
     }
+    if (name === 'matrix') {
+      this.startMatrix();
+      this.hide();
+      return;
+    }
+    if (name === 'party') {
+      this.startParty();
+      this.hide();
+      return;
+    }
 
     this.message = `Unknown command: ${name}. Type :help`;
+  }
+
+  private startMatrix() {
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = 'position:fixed;inset:0;z-index:9999;pointer-events:none;';
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d')!;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const cols = Math.floor(canvas.width / 14);
+    const drops: number[] = new Array(cols).fill(1);
+    const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789';
+
+    const draw = () => {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#0f0';
+      ctx.font = '14px monospace';
+      for (let i = 0; i < drops.length; i++) {
+        const char = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(char, i * 14, drops[i] * 14);
+        if (drops[i] * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    };
+
+    const interval = setInterval(draw, 50);
+    setTimeout(() => {
+      clearInterval(interval);
+      canvas.remove();
+    }, 8000);
+  }
+
+  private startParty() {
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;';
+    document.body.appendChild(container);
+
+    const colors = ['#f38ba8', '#a6e3a1', '#89b4fa', '#f9e2af', '#cba6f7', '#f5c2e7', '#fab387', '#94e2d5'];
+    for (let i = 0; i < 100; i++) {
+      const confetti = document.createElement('div');
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const left = Math.random() * 100;
+      const size = Math.random() * 8 + 4;
+      const duration = Math.random() * 2 + 1.5;
+      const delay = Math.random() * 0.5;
+      confetti.style.cssText = `
+        position:absolute;left:${left}%;top:-10px;
+        width:${size}px;height:${size * 1.5}px;
+        background:${color};border-radius:2px;
+        animation:confetti-fall ${duration}s ease-in ${delay}s forwards;
+        transform:rotate(${Math.random() * 360}deg);
+      `;
+      container.appendChild(confetti);
+    }
+
+    if (!document.getElementById('confetti-style')) {
+      const style = document.createElement('style');
+      style.id = 'confetti-style';
+      style.textContent = `
+        @keyframes confetti-fall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    setTimeout(() => container.remove(), 4000);
   }
 
   render() {

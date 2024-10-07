@@ -3,9 +3,17 @@ layout: base.njk
 title: Projects — Stephan Zych
 permalink: /projects/
 ---
-<sz-portfolio>
+{% set allTags = [] %}
+{% for project in collections.projects %}
+  {% for tag in project.data.tags or [] %}
+    {% if tag not in allTags %}
+      {% set allTags = (allTags.push(tag), allTags) %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+<sz-portfolio filters="{{ allTags | join(',') }}">
   {% for project in collections.projects %}
-    <div class="project-card">
+    <div class="project-card" data-tags="{{ project.data.tags | join(',') }}">
       <h3><a href="{{ project.url }}">{{ project.data.title }}</a></h3>
       <p>{{ project.data.description }}</p>
     </div>

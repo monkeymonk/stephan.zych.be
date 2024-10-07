@@ -15,6 +15,8 @@ interface SplitConfig {
 export class SzTmuxPanes extends LitElement {
   @property({ type: Object }) config?: SplitConfig;
   @state() private activePane = 0;
+  @state() private draggedDividerIndex: number | null = null;
+  @state() private paneSizes: number[] = [];
 
   static styles = css`
     :host {
@@ -91,6 +93,19 @@ export class SzTmuxPanes extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener('keydown', this.handlePaneNav);
+    window.removeEventListener('mousemove', this.handleDividerDrag);
+    window.removeEventListener('mouseup', this.stopDividerDrag);
+  }
+
+  protected willUpdate(changedProperties: Map<PropertyKey, unknown>) {
+    if (changedProperties.has('config')) {
+      this.paneSizes = this.getNormalizedPaneSizes();
+      if (this.config) {
+        this.activePane = Math.min(this.activePane, this.config.panes.length - 1);
+      } else {
+        this.activePane = 0;
+      }
+    }
   }
 
   private handlePaneNav = (e: KeyboardEvent) => {
@@ -105,6 +120,84 @@ export class SzTmuxPanes extends LitElement {
     }
   };
 
+  private getNormalizedPaneSizes() {
+    if (!this.config?.panes.length) return [];
+
+    const sizes = this.config.panes.map((pane) => Math.max(pane.size, 0));
+    const total = sizes.reduce((sum, size) => sum + size, 0);
+    if (total <= 0) {
+      return sizes.map(() => 100 / sizes.length);
+    }
+
+    return sizes.map((size) => (size / total) * 100);
+  }
+
+  private getLayoutDirection() {
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      return 'vertical';
+    }
+
+    return this.config?.direction || 'horizontal';
+  }
+
+  private startDividerDrag = (dividerIndex: number, event: MouseEvent) => {
+    if (!this.config || this.paneSizes.length < 2) return;
+
+    event.preventDefault();
+    this.draggedDividerIndex = dividerIndex;
+    window.addEventListener('mousemove', this.handleDividerDrag);
+    window.addEventListener('mouseup', this.stopDividerDrag);
+  };
+
+  private handleDividerDrag = (event: MouseEvent) => {
+    if (this.draggedDividerIndex === null || !this.config) return;
+
+    const container = this.renderRoot.querySelector('.panes');
+    if (!(container instanceof HTMLElement)) return;
+
+    const direction = this.getLayoutDirection();
+    const rect = container.getBoundingClientRect();
+    const containerSize = direction === 'horizontal' ? rect.width : rect.height;
+    if (containerSize <= 0) return;
+
+    const pointerOffset = direction === 'horizontal'
+      ? event.clientX - rect.left
+      : event.clientY - rect.top;
+    const pointerPercent = (pointerOffset / containerSize) * 100;
+
+    const sizes = [...this.paneSizes];
+    const previousTotal = sizes
+      .slice(0, this.draggedDividerIndex)
+      .reduce((sum, size) => sum + size, 0);
+    const combinedSize = sizes[this.draggedDividerIndex] + sizes[this.draggedDividerIndex + 1];
+    const minSize = 15;
+    const nextSize = Math.min(
+      Math.max(pointerPercent - previousTotal, minSize),
+      combinedSize - minSize,
+    );
+
+    sizes[this.draggedDividerIndex] = nextSize;
+    sizes[this.draggedDividerIndex + 1] = combinedSize - nextSize;
+    this.paneSizes = sizes;
+  };
+
+  private stopDividerDrag = () => {
+    this.draggedDividerIndex = null;
+    window.removeEventListener('mousemove', this.handleDividerDrag);
+    window.removeEventListener('mouseup', this.stopDividerDrag);
+  };
+
+  private getPaneStyle(size: number) {
+    const direction = this.getLayoutDirection();
+    const basis = `${size}%`;
+
+    if (direction === 'horizontal') {
+      return `flex: 0 0 ${basis}; width: ${basis};`;
+    }
+
+    return `flex: 0 0 ${basis}; height: ${basis};`;
+  }
+
   render() {
     if (!this.config) {
       return html`<div class="single"><slot></slot></div>`;
@@ -112,14 +205,22 @@ export class SzTmuxPanes extends LitElement {
 
     const dir = this.config.direction || 'horizontal';
     const panes = this.config.panes;
+    const sizes = this.paneSizes.length === panes.length
+      ? this.paneSizes
+      : this.getNormalizedPaneSizes();
 
     return html`
       <div class="panes ${dir}">
         ${panes.map((pane, i) => html`
-          ${i > 0 ? html`<div class="divider"></div>` : nothing}
+          ${i > 0 ? html`
+            <div
+              class="divider"
+              @mousedown=${(event: MouseEvent) => this.startDividerDrag(i - 1, event)}
+            ></div>
+          ` : nothing}
           <div
             class="pane ${i === this.activePane ? 'active' : ''}"
-            style="flex: ${pane.size}"
+            style=${this.getPaneStyle(sizes[i])}
             @click=${() => { this.activePane = i; }}
             role="tabpanel"
           >

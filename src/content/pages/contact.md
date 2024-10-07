@@ -7,4 +7,4 @@ permalink: /contact/
 
 # Contact
 
-Get in touch at [email](mailto:hello@stephan.zych.be) or find me on GitHub.
+<sz-contact-form></sz-contact-form>

@@ -54,8 +54,14 @@ export class SzStatusbar extends LitElement {
       color: var(--sz-accent, #89b4fa);
     }
 
+    .socials {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     @media (max-width: 768px) {
-      .center, .encoding, .time { display: none; }
+      .center, .encoding, .time, .socials { display: none; }
     }
   `;
 
@@ -99,6 +105,18 @@ export class SzStatusbar extends LitElement {
         <span class="encoding">utf-8</span>
         <span class="separator">|</span>
         <span class="time">${this.time}</span>
+        <span class="separator">|</span>
+        <span class="socials">
+          <a class="social-link" href="https://github.com/monkeymonk" target="_blank" rel="noopener" aria-label="GitHub">
+            <sz-icon name="github" size="13"></sz-icon>
+          </a>
+          <a class="social-link" href="#" target="_blank" rel="noopener" aria-label="LinkedIn">
+            <sz-icon name="linkedin" size="13"></sz-icon>
+          </a>
+          <a class="social-link" href="mailto:hello@stephan.zych.be" aria-label="Email">
+            <sz-icon name="mail" size="13"></sz-icon>
+          </a>
+        </span>
       </div>
     `;
   }
