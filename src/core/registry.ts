@@ -1,0 +1,186 @@
+// Central registry — single source of truth for configurable site data.
+
+import { readJsonData } from './data.js';
+
+export interface NavTab {
+  index: number;
+  name: string;
+  path: string;
+  icon?: string;
+  key?: string;
+}
+
+export interface SocialLink {
+  id: string;
+  label: string;
+  icon: string;
+  url: string;
+}
+
+export interface DesktopApp {
+  id: string;
+  label: string;
+  icon: string;
+  action: 'terminal' | 'browser' | 'link';
+  url?: string;
+}
+
+export interface Shortcut {
+  keys: string;
+  description: string;
+}
+
+export interface SearchEntry {
+  title: string;
+  description: string;
+  url: string;
+  tags: string[];
+  content: string;
+}
+
+const DEFAULT_NAV: NavTab[] = [
+  { index: 0, name: 'home', path: '/', icon: 'terminal', key: 'h' },
+  { index: 1, name: 'about', path: '/about/', icon: 'terminal', key: 'a' },
+  { index: 2, name: 'projects', path: '/projects/', icon: 'folder', key: 'p' },
+  { index: 3, name: 'blog', path: '/blog/', icon: 'file', key: 'b' },
+  { index: 4, name: 'contact', path: '/contact/', icon: 'mail', key: 'c' },
+];
+
+const DEFAULT_SOCIAL: SocialLink[] = [
+  { id: 'github', label: 'GitHub', icon: 'github', url: 'https://github.com/monkeymonk' },
+  { id: 'linkedin', label: 'LinkedIn', icon: 'linkedin', url: 'https://linkedin.com/in/stephanzych' },
+  { id: 'email', label: 'Email', icon: 'mail', url: 'mailto:hello@stephan.zych.be' },
+];
+
+const DEFAULT_DESKTOP_APPS: DesktopApp[] = [
+  { id: 'terminal', label: 'Terminal', icon: 'terminal', action: 'terminal' },
+  { id: 'files', label: 'Projects', icon: 'folder', action: 'link', url: '/projects/' },
+  { id: 'github', label: 'GitHub', icon: 'github', action: 'browser', url: 'https://github.com/monkeymonk' },
+  { id: 'linkedin', label: 'LinkedIn', icon: 'linkedin', action: 'browser', url: 'https://linkedin.com/in/stephanzych' },
+  { id: 'mail', label: 'Email', icon: 'mail', action: 'link', url: 'mailto:hello@stephan.zych.be' },
+];
+
+const DEFAULT_WALLPAPERS: string[] = [
+  '/assets/wallpapers/catpuccin_landscape.jpg',
+  '/assets/wallpapers/dark_forest.jpg',
+  '/assets/wallpapers/neocity.jpg',
+  '/assets/wallpapers/cyberpunk_car.jpg',
+  '/assets/wallpapers/oled-mountains.jpg',
+  '/assets/wallpapers/anime_cafe_tokyonight.jpg',
+  '/assets/wallpapers/nord_dark_city.jpg',
+  '/assets/wallpapers/gruvbox_retrocity.jpg',
+  '/assets/wallpapers/pixel-city.jpg',
+  '/assets/wallpapers/purple-mountain.jpg',
+];
+
+const DEFAULT_SHORTCUTS: Shortcut[] = [
+  { keys: ':', description: 'Open command palette' },
+  { keys: '/', description: 'Search pages and content' },
+  { keys: '?', description: 'Show help' },
+  { keys: 'Esc', description: 'Close palette / search' },
+  { keys: 'Tab', description: 'Autocomplete command / cycle args' },
+  { keys: 'Alt+1-5', description: 'Switch tabs' },
+  { keys: 'Alt+W', description: 'Toggle windowed / full-page' },
+  { keys: 'Alt+F', description: 'Toggle fullscreen' },
+  { keys: 'Alt+N', description: 'Next wallpaper' },
+];
+
+class Registry {
+  private navItems: NavTab[] = [];
+  private socialLinks: SocialLink[] = [];
+  private desktopItems: DesktopApp[] = [];
+  private wallpaperItems: string[] = [];
+  private shortcutItems: Shortcut[] = [];
+  private searchEntries: SearchEntry[] = [];
+  private searchLoaded = false;
+  private searchLoading: Promise<void> | null = null;
+  private initialized = false;
+  private session = 'stephan.zych';
+  private coffee = '';
+
+  init(): void {
+    if (this.initialized) return;
+    this.initialized = true;
+
+    const navData = readJsonData<{ tabs?: NavTab[]; sessionName?: string; coffeeUrl?: string }>('sz-nav-data', {});
+    this.navItems = navData.tabs ?? DEFAULT_NAV;
+    this.session = navData.sessionName ?? 'stephan.zych';
+    this.coffee = navData.coffeeUrl ?? 'https://buymeacoffee.com/monkeymonk';
+
+    this.socialLinks = readJsonData<SocialLink[]>('sz-social-data', DEFAULT_SOCIAL);
+    this.desktopItems = readJsonData<DesktopApp[]>('sz-desktop-apps-data', DEFAULT_DESKTOP_APPS);
+    this.wallpaperItems = readJsonData<string[]>('sz-wallpapers-data', DEFAULT_WALLPAPERS);
+    this.shortcutItems = [...DEFAULT_SHORTCUTS];
+  }
+
+  private ensureInit(): void {
+    if (!this.initialized) this.init();
+  }
+
+  get sessionName(): string {
+    this.ensureInit();
+    return this.session;
+  }
+
+  get coffeeUrl(): string {
+    this.ensureInit();
+    return this.coffee;
+  }
+
+  get nav(): readonly NavTab[] {
+    this.ensureInit();
+    return this.navItems;
+  }
+
+  get social(): readonly SocialLink[] {
+    this.ensureInit();
+    return this.socialLinks;
+  }
+
+  get desktopApps(): readonly DesktopApp[] {
+    this.ensureInit();
+    return this.desktopItems;
+  }
+
+  get wallpapers(): readonly string[] {
+    this.ensureInit();
+    return this.wallpaperItems;
+  }
+
+  get shortcuts(): readonly Shortcut[] {
+    this.ensureInit();
+    return this.shortcutItems;
+  }
+
+  get searchIndex(): readonly SearchEntry[] {
+    this.ensureInit();
+    return this.searchEntries;
+  }
+
+  async getSearchIndex(): Promise<readonly SearchEntry[]> {
+    this.ensureInit();
+    if (this.searchLoaded) return this.searchEntries;
+    if (!this.searchLoading) {
+      this.searchLoading = fetch('/search-index.json')
+        .then(res => res.json())
+        .then((data: SearchEntry[]) => {
+          this.searchEntries = data;
+          this.searchLoaded = true;
+        })
+        .catch(() => {
+          this.searchLoaded = true;
+        });
+    }
+    await this.searchLoading;
+    return this.searchEntries;
+  }
+
+  registerShortcut(shortcut: Shortcut): void {
+    this.ensureInit();
+    if (!this.shortcutItems.find(item => item.keys === shortcut.keys)) {
+      this.shortcutItems.push(shortcut);
+    }
+  }
+}
+
+export const registry = new Registry();
