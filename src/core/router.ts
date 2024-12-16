@@ -62,7 +62,14 @@ class SpaRouter {
       const newTitle = doc.querySelector('title')?.textContent || document.title;
       const attributes = this.collectAttributes(newContent);
 
-      currentContent.innerHTML = newContent.innerHTML;
+      // Remove old children (triggers disconnectedCallback on web components)
+      while (currentContent.firstChild) {
+        currentContent.removeChild(currentContent.firstChild);
+      }
+      // Move new children from parsed doc (preserves element references)
+      while (newContent.firstChild) {
+        currentContent.appendChild(newContent.firstChild);
+      }
       document.title = newTitle;
 
       if (pushState) {
