@@ -10,24 +10,42 @@
   {% if ogImage %}<meta property="og:image" content="{{ ogImage }}">{% endif %}
   <link rel="stylesheet" href="/styles/reset.css">
   <link rel="stylesheet" href="/styles/base.css">
+  <link rel="stylesheet" href="/styles/prism-catppuccin.css">
   <link rel="stylesheet" href="/assets/themes/catppuccin-mocha.css">
+  <link rel="stylesheet" href="/assets/themes/gruvbox-dark.css">
+  <link rel="stylesheet" href="/assets/themes/tokyonight.css">
   <script type="module" src="/assets/components.js"></script>
 </head>
 <body>
   <script type="application/json" id="sz-nav-data">{{ nav | dump | safe }}</script>
-  <script type="application/json" id="sz-commands-data">{{ commands | dump | safe }}</script>
+  <script id="sz-site-data" type="application/json">{{ site | dump | safe }}</script>
   <a href="#main-content" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">Skip to content</a>
-  <sz-background>
-    <sz-screen-shader>
-      <sz-terminal window-mode="{{ windowMode | default('windowed') }}">
-        <sz-tmux-bar slot="bar" active-path="{{ page.url }}"></sz-tmux-bar>
-        <div slot="content" id="main-content">
-          {{ content | safe }}
-        </div>
-        <sz-statusbar slot="statusbar" route="{{ page.url }}"></sz-statusbar>
-        <sz-command slot="command"></sz-command>
-      </sz-terminal>
-    </sz-screen-shader>
-  </sz-background>
+
+  <sz-desktop>
+    <sz-background>
+      <sz-slideshow mode="slideshow" interval="30000"></sz-slideshow>
+    </sz-background>
+    <sz-desktop-icons></sz-desktop-icons>
+    <sz-effect-matrix></sz-effect-matrix>
+    <sz-effect-confetti></sz-effect-confetti>
+  </sz-desktop>
+  <sz-screen-shader></sz-screen-shader>
+
+  <sz-window-manager>
+    <sz-window id="terminal" titlebar="integrated" title="stephan.zych.be">
+      <sz-tmux-bar slot="bar" active-path="{{ page.url }}"></sz-tmux-bar>
+      <sz-tmux-panes>
+        <sz-neovim slot="pane-0">
+          <div id="main-content">
+            {{ content | safe }}
+          </div>
+          <sz-palette></sz-palette>
+          <sz-statusbar></sz-statusbar>
+        </sz-neovim>
+      </sz-tmux-panes>
+    </sz-window>
+  </sz-window-manager>
+
+  <sz-notifications></sz-notifications>
 </body>
 </html>

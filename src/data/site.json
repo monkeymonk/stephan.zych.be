@@ -3,9 +3,12 @@
   "description": "Software developer portfolio and blog",
   "url": "https://stephan.zych.be",
   "author": "Stephan Zych",
+  "email": "hello@stephan.zych.be",
+  "repoUrl": "https://github.com/monkeymonk/stephan.zych.be",
+  "coffeeUrl": "https://buymeacoffee.com/monkeymonk",
   "socials": {
     "github": "https://github.com/monkeymonk",
-    "linkedin": "#",
+    "linkedin": "https://linkedin.com/in/stephanzych",
     "twitter": "#"
   }
 }

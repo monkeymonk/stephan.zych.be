@@ -46,18 +46,11 @@ const DEFAULT_NAV: NavTab[] = [
   { index: 4, name: 'contact', path: '/contact/', icon: 'mail', key: 'c' },
 ];
 
-const DEFAULT_SOCIAL: SocialLink[] = [
-  { id: 'github', label: 'GitHub', icon: 'github', url: 'https://github.com/monkeymonk' },
-  { id: 'linkedin', label: 'LinkedIn', icon: 'linkedin', url: 'https://linkedin.com/in/stephanzych' },
-  { id: 'email', label: 'Email', icon: 'mail', url: 'mailto:hello@stephan.zych.be' },
-];
+const DEFAULT_SOCIAL: SocialLink[] = [];
 
 const DEFAULT_DESKTOP_APPS: DesktopApp[] = [
   { id: 'terminal', label: 'Terminal', icon: 'terminal', action: 'terminal' },
   { id: 'files', label: 'Projects', icon: 'folder', action: 'link', url: '/projects/' },
-  { id: 'github', label: 'GitHub', icon: 'github', action: 'browser', url: 'https://github.com/monkeymonk' },
-  { id: 'linkedin', label: 'LinkedIn', icon: 'linkedin', action: 'browser', url: 'https://linkedin.com/in/stephanzych' },
-  { id: 'mail', label: 'Email', icon: 'mail', action: 'link', url: 'mailto:hello@stephan.zych.be' },
 ];
 
 const DEFAULT_WALLPAPERS: string[] = [
@@ -97,6 +90,8 @@ class Registry {
   private initialized = false;
   private session = 'stephan.zych';
   private coffee = '';
+  private repoAddress = '';
+  private emailAddress = '';
 
   init(): void {
     if (this.initialized) return;
@@ -104,17 +99,53 @@ class Registry {
 
     const navData = readJsonData<{ tabs?: NavTab[]; sessionName?: string; coffeeUrl?: string }>('sz-nav-data', {});
     this.navItems = navData.tabs ?? DEFAULT_NAV;
-    this.session = navData.sessionName ?? 'stephan.zych';
-    this.coffee = navData.coffeeUrl ?? 'https://buymeacoffee.com/monkeymonk';
 
-    this.socialLinks = readJsonData<SocialLink[]>('sz-social-data', DEFAULT_SOCIAL);
-    this.desktopItems = readJsonData<DesktopApp[]>('sz-desktop-apps-data', DEFAULT_DESKTOP_APPS);
+    const siteData = readJsonData<{
+      email?: string;
+      repoUrl?: string;
+      coffeeUrl?: string;
+      author?: string;
+      socials?: { github?: string; linkedin?: string; email?: string };
+    }>('sz-site-data', {});
+
+    this.session = navData.sessionName ?? siteData.author ?? 'unknown';
+    this.coffee = navData.coffeeUrl ?? siteData.coffeeUrl ?? '';
+    this.repoAddress = siteData.repoUrl ?? '';
+    this.emailAddress = siteData.email ?? '';
+
+    if (siteData.socials) {
+      const socials: SocialLink[] = [];
+      if (siteData.socials.github) socials.push({ id: 'github', label: 'GitHub', icon: 'github', url: siteData.socials.github });
+      if (siteData.socials.linkedin) socials.push({ id: 'linkedin', label: 'LinkedIn', icon: 'linkedin', url: siteData.socials.linkedin });
+      if (siteData.email) socials.push({ id: 'email', label: 'Email', icon: 'mail', url: `mailto:${siteData.email}` });
+      if (socials.length > 0) this.socialLinks = socials;
+    }
+    if (!this.socialLinks.length) {
+      this.socialLinks = readJsonData<SocialLink[]>('sz-social-data', DEFAULT_SOCIAL);
+    }
+
+    if (siteData.socials) {
+      const apps: DesktopApp[] = [
+        { id: 'terminal', label: 'Terminal', icon: 'terminal', action: 'terminal' },
+        { id: 'files', label: 'Projects', icon: 'folder', action: 'link', url: '/projects/' },
+      ];
+      if (siteData.socials.github) apps.push({ id: 'github', label: 'GitHub', icon: 'github', action: 'browser', url: siteData.socials.github });
+      if (siteData.socials.linkedin) apps.push({ id: 'linkedin', label: 'LinkedIn', icon: 'linkedin', action: 'browser', url: siteData.socials.linkedin });
+      if (siteData.email) apps.push({ id: 'mail', label: 'Email', icon: 'mail', action: 'link', url: `mailto:${siteData.email}` });
+      this.desktopItems = readJsonData<DesktopApp[]>('sz-desktop-apps-data', apps);
+    } else {
+      this.desktopItems = readJsonData<DesktopApp[]>('sz-desktop-apps-data', DEFAULT_DESKTOP_APPS);
+    }
+
     this.wallpaperItems = readJsonData<string[]>('sz-wallpapers-data', DEFAULT_WALLPAPERS);
     this.shortcutItems = [...DEFAULT_SHORTCUTS];
   }
 
   private ensureInit(): void {
-    if (!this.initialized) this.init();
+    if (!this.initialized) {
+      console.warn('[Registry] Accessed before init() — auto-initializing. Move registry.init() earlier in app/index.ts.');
+      this.init();
+    }
   }
 
   get sessionName(): string {
@@ -125,6 +156,16 @@ class Registry {
   get coffeeUrl(): string {
     this.ensureInit();
     return this.coffee;
+  }
+
+  get repoUrl(): string {
+    this.ensureInit();
+    return this.repoAddress;
+  }
+
+  get email(): string {
+    this.ensureInit();
+    return this.emailAddress;
   }
 
   get nav(): readonly NavTab[] {
