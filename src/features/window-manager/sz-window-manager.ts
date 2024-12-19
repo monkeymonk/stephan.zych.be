@@ -1,19 +1,25 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { actions } from '../../core/actions.js';
 import { mobileQuery } from '../../core/styles.js';
 import { WM_ACTION } from './actions.js';
 import { FocusTrap } from './focus-trap.js';
+import type { WindowLayout } from '../../core/types.js';
 
-/**
- * Window layout stored per managed window.
- * Mirrors the shape returned by sz-window.getLayout().
- */
-interface WindowLayout {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+interface WindowApi {
+  getLayout(): WindowLayout;
+  setLayout(layout: WindowLayout): void;
+  resetLayout(): void;
+  bringToFront(): void;
+  setResizeHandlesVisible(visible: boolean): void;
+  setDragging(dragging: boolean): void;
+  setTiled(tiled: boolean): void;
+  showWindow(): void;
+  hideWindow(): void;
+  windowHidden: boolean;
+  isFullscreen: boolean;
+  enterFullscreen(): Promise<boolean>;
+  exitFullscreen(): Promise<void>;
 }
 
 interface DragState {
@@ -40,32 +46,9 @@ interface ManagedWindow {
 
 const MIN_W = 300;
 const MIN_H = 200;
-const RESIZE_HANDLE_SIZE = 6;
-const RESIZE_CORNER_SIZE = 12;
 
 @customElement('sz-window-manager')
 export class SzWindowManager extends LitElement {
-  static styles = css`
-    :host {
-      display: contents;
-    }
-
-    .wm-resize-handle {
-      position: absolute;
-      z-index: 10000;
-      pointer-events: auto;
-    }
-
-    .wm-resize-n { top: -3px; left: 8px; right: 8px; height: ${RESIZE_HANDLE_SIZE}px; cursor: n-resize; }
-    .wm-resize-s { bottom: -3px; left: 8px; right: 8px; height: ${RESIZE_HANDLE_SIZE}px; cursor: s-resize; }
-    .wm-resize-w { left: -3px; top: 8px; bottom: 8px; width: ${RESIZE_HANDLE_SIZE}px; cursor: w-resize; }
-    .wm-resize-e { right: -3px; top: 8px; bottom: 8px; width: ${RESIZE_HANDLE_SIZE}px; cursor: e-resize; }
-    .wm-resize-nw { top: -3px; left: -3px; width: ${RESIZE_CORNER_SIZE}px; height: ${RESIZE_CORNER_SIZE}px; cursor: nw-resize; }
-    .wm-resize-ne { top: -3px; right: -3px; width: ${RESIZE_CORNER_SIZE}px; height: ${RESIZE_CORNER_SIZE}px; cursor: ne-resize; }
-    .wm-resize-sw { bottom: -3px; left: -3px; width: ${RESIZE_CORNER_SIZE}px; height: ${RESIZE_CORNER_SIZE}px; cursor: sw-resize; }
-    .wm-resize-se { bottom: -3px; right: -3px; width: ${RESIZE_CORNER_SIZE}px; height: ${RESIZE_CORNER_SIZE}px; cursor: se-resize; }
-  `;
-
   @state() private tiled = false;
 
   private windows = new Map<HTMLElement, ManagedWindow>();
@@ -74,9 +57,6 @@ export class SzWindowManager extends LitElement {
   private observer: MutationObserver | null = null;
   private actionUnsubs: (() => void)[] = [];
   private isMobile = mobileQuery.matches;
-  private resizeHandleEls = new Map<HTMLElement, HTMLElement[]>();
-
-  // --- Lifecycle ---
 
   connectedCallback() {
     super.connectedCallback();
@@ -84,33 +64,25 @@ export class SzWindowManager extends LitElement {
     this.observer = new MutationObserver((mutations) => this.handleMutations(mutations));
     this.observer.observe(this, { childList: true });
 
-    // Register existing children
     this.scanChildren();
 
-    // Global mouse handlers for drag/resize
     document.addEventListener('mousemove', this.handleMouseMove);
     document.addEventListener('mouseup', this.handleMouseUp);
-
-    // Titlebar drag detection via composed event path
     this.addEventListener('mousedown', this.handleMouseDown);
-
-    // Z-stack: click on any window brings to front
     this.addEventListener('mousedown', this.handleWindowFocus, true);
-
-    // Mobile query
+    this.addEventListener('focusin', this.handleWindowFocus, true);
+    this.addEventListener('window-resize-start', this.handleResizeStart as EventListener);
     mobileQuery.addEventListener('change', this.handleMobileChange);
 
-    // Action bus subscriptions
     this.actionUnsubs.push(
       actions.on(WM_ACTION.SHOW, (a) => this.handleShow(a.payload as { windowId: string })),
       actions.on(WM_ACTION.HIDE, (a) => this.handleHide(a.payload as { windowId: string })),
       actions.on(WM_ACTION.MAXIMIZE, (a) => this.handleMaximize(a.payload as { windowId: string })),
       actions.on(WM_ACTION.FULLSCREEN, (a) => this.handleFullscreen(a.payload as { windowId: string })),
       actions.on(WM_ACTION.TOGGLE_MODE, (a) => this.handleToggleMode(a.payload as { windowId: string })),
-      actions.on(WM_ACTION.TILE_RETILE, () => this.retileWindows()),
+      actions.on(WM_ACTION.TILE_RETILE, () => this.toggleTiling()),
     );
 
-    // Force full-page on mobile
     if (this.isMobile) {
       this.forceFullPage();
     }
@@ -118,18 +90,29 @@ export class SzWindowManager extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+
+    // Clear active interaction state first
+    if (this.drag) {
+      this.w(this.drag.win).setDragging(false);
+      this.drag = null;
+    }
+    if (this.resize) {
+      this.w(this.resize.win).setDragging(false);
+      this.resize = null;
+    }
+
     this.observer?.disconnect();
     document.removeEventListener('mousemove', this.handleMouseMove);
     document.removeEventListener('mouseup', this.handleMouseUp);
     this.removeEventListener('mousedown', this.handleMouseDown);
     this.removeEventListener('mousedown', this.handleWindowFocus, true);
+    this.removeEventListener('focusin', this.handleWindowFocus, true);
+    this.removeEventListener('window-resize-start', this.handleResizeStart as EventListener);
     mobileQuery.removeEventListener('change', this.handleMobileChange);
     this.actionUnsubs.forEach((fn) => fn());
 
-    // Cleanup resize handles and focus traps
-    for (const [el, managed] of this.windows) {
+    for (const [, managed] of this.windows) {
       managed.focusTrap.destroy();
-      this.removeResizeHandles(el);
     }
     this.windows.clear();
   }
@@ -147,7 +130,6 @@ export class SzWindowManager extends LitElement {
         }
       }
     }
-    // Remove windows no longer in DOM
     for (const el of this.windows.keys()) {
       if (!current.has(el)) {
         this.unregisterWindow(el);
@@ -174,7 +156,7 @@ export class SzWindowManager extends LitElement {
       }
     }
     if (changed && this.tiled) {
-      this.retileWindows();
+      this.applyTileLayout(this.getVisibleWindows());
     }
   }
 
@@ -188,67 +170,14 @@ export class SzWindowManager extends LitElement {
       preMaxLayout: null,
     };
     this.windows.set(el, managed);
-
-    // Position absolutely within viewport
-    el.style.position = 'fixed';
-
-    if (!this.isMobile && !this.tiled) {
-      this.injectResizeHandles(el);
-    }
-
-    // Bring to front on register
-    this.callDOM(el, 'bringToFront');
+    this.w(el).bringToFront();
   }
 
   private unregisterWindow(el: HTMLElement) {
     const managed = this.windows.get(el);
     if (managed) {
       managed.focusTrap.destroy();
-      this.removeResizeHandles(el);
       this.windows.delete(el);
-    }
-  }
-
-  // --- Resize handles (injected as overlay divs) ---
-
-  private injectResizeHandles(el: HTMLElement) {
-    if (this.resizeHandleEls.has(el)) return;
-
-    const directions = ['n', 's', 'w', 'e', 'nw', 'ne', 'sw', 'se'];
-    const handles: HTMLElement[] = [];
-
-    for (const dir of directions) {
-      const handle = document.createElement('div');
-      handle.className = `wm-resize-handle wm-resize-${dir}`;
-      handle.dataset.resizeDir = dir;
-      handle.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.startResize(el, dir, e);
-      });
-      el.appendChild(handle);
-      handles.push(handle);
-    }
-
-    this.resizeHandleEls.set(el, handles);
-  }
-
-  private removeResizeHandles(el: HTMLElement) {
-    const handles = this.resizeHandleEls.get(el);
-    if (handles) {
-      for (const h of handles) {
-        h.remove();
-      }
-      this.resizeHandleEls.delete(el);
-    }
-  }
-
-  private setResizeHandlesVisible(el: HTMLElement, visible: boolean) {
-    const handles = this.resizeHandleEls.get(el);
-    if (handles) {
-      for (const h of handles) {
-        h.style.display = visible ? '' : 'none';
-      }
     }
   }
 
@@ -257,24 +186,21 @@ export class SzWindowManager extends LitElement {
   private handleMouseDown = (e: MouseEvent) => {
     if (this.isMobile) return;
 
-    // Walk composedPath to find a titlebar element
     const path = e.composedPath();
     let titlebarEl: Element | null = null;
-    let windowEl: HTMLElement | null = null;
 
     for (const node of path) {
       if (node instanceof Element) {
         if (node.classList.contains('titlebar')) {
           titlebarEl = node;
         }
-        // Don't start drag if clicking a button inside the titlebar
         if (node.tagName === 'BUTTON') return;
       }
     }
 
     if (!titlebarEl) return;
 
-    // Find the sz-window ancestor
+    let windowEl: HTMLElement | null = null;
     for (const node of path) {
       if (node instanceof HTMLElement && node.tagName === 'SZ-WINDOW' && this.windows.has(node)) {
         windowEl = node;
@@ -287,12 +213,14 @@ export class SzWindowManager extends LitElement {
     const managed = this.windows.get(windowEl)!;
     if (managed.maximized || this.tiled) return;
 
-    const rect = windowEl.getBoundingClientRect();
+    const layout = this.w(windowEl).getLayout();
     this.drag = {
       win: windowEl,
-      offsetX: e.clientX - rect.left,
-      offsetY: e.clientY - rect.top,
+      offsetX: e.clientX - layout.x,
+      offsetY: e.clientY - layout.y,
     };
+
+    this.w(windowEl).setDragging(true);
   };
 
   private handleMouseMove = (e: MouseEvent) => {
@@ -312,38 +240,53 @@ export class SzWindowManager extends LitElement {
     x = Math.max(-vw + margin, Math.min(vw - margin, x));
     y = Math.max(-vh + margin, Math.min(vh - margin, y));
 
-    this.callDOM(win, 'setLayout', {
-      x,
-      y,
-      w: win.getBoundingClientRect().width,
-      h: win.getBoundingClientRect().height,
-    });
+    const layout = this.w(win).getLayout();
+    this.w(win).setLayout({ x, y, w: layout.w, h: layout.h });
   };
 
   private handleMouseUp = () => {
-    this.drag = null;
-    this.resize = null;
+    if (this.drag) {
+      this.w(this.drag.win).setDragging(false);
+      this.drag = null;
+    }
+    if (this.resize) {
+      this.w(this.resize.win).setDragging(false);
+      this.resize = null;
+    }
   };
 
   // --- Resize ---
 
-  private startResize(win: HTMLElement, dir: string, e: MouseEvent) {
+  private handleResizeStart = (e: CustomEvent) => {
     if (this.isMobile) return;
 
-    const managed = this.windows.get(win);
+    const { dir, clientX, clientY } = e.detail;
+
+    const path = e.composedPath();
+    let windowEl: HTMLElement | null = null;
+    for (const node of path) {
+      if (node instanceof HTMLElement && node.tagName === 'SZ-WINDOW' && this.windows.has(node)) {
+        windowEl = node;
+        break;
+      }
+    }
+    if (!windowEl) return;
+
+    const managed = this.windows.get(windowEl);
     if (!managed || managed.maximized || this.tiled) return;
 
-    const layout = this.callDOM(win, 'getLayout') as WindowLayout;
+    const layout = this.w(windowEl).getLayout();
     this.resize = {
-      win,
+      win: windowEl,
       dir,
-      startX: e.clientX,
-      startY: e.clientY,
+      startX: clientX,
+      startY: clientY,
       startLayout: { ...layout },
     };
 
-    this.callDOM(win, 'bringToFront');
-  }
+    this.w(windowEl).setDragging(true);
+    this.w(windowEl).bringToFront();
+  };
 
   private performResize(e: MouseEvent) {
     if (!this.resize) return;
@@ -367,7 +310,7 @@ export class SzWindowManager extends LitElement {
       h = newH;
     }
 
-    this.callDOM(win, 'setLayout', { x, y, w, h });
+    this.w(win).setLayout({ x, y, w, h });
   }
 
   // --- Z-Stack ---
@@ -383,110 +326,95 @@ export class SzWindowManager extends LitElement {
   };
 
   private focusWindow(el: HTMLElement) {
-    // Deactivate all focus traps, then activate the focused one
     for (const managed of this.windows.values()) {
       if (managed.el !== el) {
         managed.focusTrap.deactivate();
       }
     }
-    this.callDOM(el, 'bringToFront');
+    this.w(el).bringToFront();
     const managed = this.windows.get(el);
     managed?.focusTrap.activate();
   }
 
-  // --- Tiling: master-stack layout ---
+  // --- Tiling ---
 
   private getVisibleWindows(): HTMLElement[] {
     const visible: HTMLElement[] = [];
     for (const [el] of this.windows) {
-      if (!el.hidden) {
-        visible.push(el);
-      }
+      if (!this.w(el).windowHidden) visible.push(el);
     }
     return visible;
+  }
+
+  private toggleTiling() {
+    if (this.tiled) {
+      this.untileWindows();
+    } else {
+      this.tileWindows();
+    }
+    actions.dispatch(WM_ACTION.TILE_CHANGED, { tiled: this.tiled });
+  }
+
+  private tileWindows() {
+    const visible = this.getVisibleWindows();
+    if (visible.length === 0) return;
+
+    this.tiled = true;
+    for (const el of visible) {
+      const managed = this.windows.get(el)!;
+      managed.preTileLayout = this.w(el).getLayout();
+      this.w(el).setTiled(true);
+    }
+    this.applyTileLayout(visible);
+  }
+
+  private untileWindows() {
+    if (!this.tiled) return;
+    this.tiled = false;
+
+    for (const [el, managed] of this.windows) {
+      this.w(el).setTiled(false);
+      if (managed.preTileLayout) {
+        this.w(el).setLayout(managed.preTileLayout);
+        managed.preTileLayout = null;
+      } else {
+        this.w(el).resetLayout();
+      }
+      this.w(el).setResizeHandlesVisible(true);
+    }
   }
 
   private applyTileLayout(windows: HTMLElement[]) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const count = windows.length;
+    const gap = 2;
 
     if (count === 0) return;
 
     if (count === 1) {
-      this.callDOM(windows[0], 'setLayout', { x: 0, y: 0, w: vw, h: vh });
+      this.w(windows[0]).setLayout({ x: 0, y: 0, w: vw, h: vh });
     } else if (count === 2) {
-      const halfW = Math.floor(vw / 2);
-      this.callDOM(windows[0], 'setLayout', { x: 0, y: 0, w: halfW, h: vh });
-      this.callDOM(windows[1], 'setLayout', { x: halfW, y: 0, w: vw - halfW, h: vh });
+      const halfW = Math.floor((vw - gap) / 2);
+      this.w(windows[0]).setLayout({ x: 0, y: 0, w: halfW, h: vh });
+      this.w(windows[1]).setLayout({ x: halfW + gap, y: 0, w: vw - halfW - gap, h: vh });
     } else {
-      // Master-stack: first window = left half, rest stacked on right half
-      const masterW = Math.floor(vw / 2);
-      const stackW = vw - masterW;
+      const masterW = Math.floor((vw - gap) / 2);
+      const stackW = vw - masterW - gap;
       const stackCount = count - 1;
-      const cellH = Math.floor(vh / stackCount);
+      const cellH = Math.floor((vh - gap * (stackCount - 1)) / stackCount);
 
-      this.callDOM(windows[0], 'setLayout', { x: 0, y: 0, w: masterW, h: vh });
+      this.w(windows[0]).setLayout({ x: 0, y: 0, w: masterW, h: vh });
       for (let i = 1; i < count; i++) {
         const row = i - 1;
-        const h = row === stackCount - 1 ? vh - row * cellH : cellH;
-        this.callDOM(windows[i], 'setLayout', {
-          x: masterW,
-          y: row * cellH,
-          w: stackW,
-          h,
-        });
+        const y = row * (cellH + gap);
+        const h = row === stackCount - 1 ? vh - y : cellH;
+        this.w(windows[i]).setLayout({ x: masterW + gap, y, w: stackW, h });
       }
     }
 
-    // Disable drag/resize on tiled windows
     for (const win of windows) {
-      this.setResizeHandlesVisible(win, false);
-    }
-  }
-
-  private retileWindows() {
-    const visible = this.getVisibleWindows();
-    if (visible.length === 0) return;
-
-    if (!this.tiled) {
-      // Save pre-tile layouts, enter tiling
-      this.tiled = true;
-      for (const el of visible) {
-        const managed = this.windows.get(el)!;
-        managed.preTileLayout = this.callDOM(el, 'getLayout') as WindowLayout;
-      }
-    } else {
-      // Update saved layouts for new windows
-      for (const el of visible) {
-        const managed = this.windows.get(el)!;
-        if (!managed.preTileLayout) {
-          managed.preTileLayout = this.callDOM(el, 'getLayout') as WindowLayout;
-        }
-      }
-      // Clear stale entries
-      for (const [el, managed] of this.windows) {
-        if (el.hidden && managed.preTileLayout) {
-          managed.preTileLayout = null;
-        }
-      }
-    }
-
-    this.applyTileLayout(visible);
-  }
-
-  untileWindows() {
-    if (!this.tiled) return;
-    this.tiled = false;
-
-    for (const [el, managed] of this.windows) {
-      if (managed.preTileLayout) {
-        this.callDOM(el, 'setLayout', managed.preTileLayout);
-        managed.preTileLayout = null;
-      } else {
-        this.callDOM(el, 'resetLayout');
-      }
-      this.setResizeHandlesVisible(el, true);
+      this.w(win).setResizeHandlesVisible(false);
     }
   }
 
@@ -495,18 +423,18 @@ export class SzWindowManager extends LitElement {
   private handleShow(payload: { windowId: string }) {
     const win = this.findWindowById(payload?.windowId);
     if (!win) return;
-    win.hidden = false;
+    this.w(win).showWindow();
     this.focusWindow(win);
-    if (this.tiled) this.retileWindows();
+    if (this.tiled) this.applyTileLayout(this.getVisibleWindows());
   }
 
   private handleHide(payload: { windowId: string }) {
     const win = this.findWindowById(payload?.windowId);
     if (!win) return;
-    win.hidden = true;
+    this.w(win).hideWindow();
     const managed = this.windows.get(win);
     managed?.focusTrap.deactivate();
-    if (this.tiled) this.retileWindows();
+    if (this.tiled) this.applyTileLayout(this.getVisibleWindows());
   }
 
   // --- Maximize ---
@@ -519,25 +447,23 @@ export class SzWindowManager extends LitElement {
     if (!managed) return;
 
     if (managed.maximized) {
-      // Restore
       managed.maximized = false;
       if (managed.preMaxLayout) {
-        this.callDOM(win, 'setLayout', managed.preMaxLayout);
+        this.w(win).setLayout(managed.preMaxLayout);
         managed.preMaxLayout = null;
       } else {
-        this.callDOM(win, 'resetLayout');
+        this.w(win).resetLayout();
       }
       if (!this.isMobile) {
-        this.setResizeHandlesVisible(win, true);
+        this.w(win).setResizeHandlesVisible(true);
       }
     } else {
-      // Maximize to manager bounds
-      managed.preMaxLayout = this.callDOM(win, 'getLayout') as WindowLayout;
+      managed.preMaxLayout = this.w(win).getLayout();
       managed.maximized = true;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      this.callDOM(win, 'setLayout', { x: 0, y: 0, w: vw, h: vh });
-      this.setResizeHandlesVisible(win, false);
+      this.w(win).setLayout({ x: 0, y: 0, w: vw, h: vh });
+      this.w(win).setResizeHandlesVisible(false);
     }
 
     actions.dispatch(WM_ACTION.MODE_CHANGED, {
@@ -552,49 +478,30 @@ export class SzWindowManager extends LitElement {
     const win = this.findWindowById(payload?.windowId);
     if (!win) return;
 
-    if (document.fullscreenElement === win) {
-      await document.exitFullscreen();
+    const szWin = this.w(win);
+    if (szWin.isFullscreen) {
+      await szWin.exitFullscreen();
       actions.dispatch(WM_ACTION.MODE_CHANGED, {
         windowId: payload.windowId,
         mode: 'windowed',
       });
     } else {
-      try {
-        await win.requestFullscreen();
+      const ok = await szWin.enterFullscreen();
+      if (ok) {
         actions.dispatch(WM_ACTION.MODE_CHANGED, {
           windowId: payload.windowId,
           mode: 'fullscreen',
         });
-      } catch {
-        // Fullscreen not available, fall back to maximize
+      } else {
         this.handleMaximize(payload);
       }
     }
   }
 
-  // --- Toggle Mode ---
+  // --- Toggle Mode (windowed <-> maximized) ---
 
   private handleToggleMode(payload: { windowId: string }) {
-    const win = this.findWindowById(payload?.windowId);
-    if (!win) return;
-
-    const managed = this.windows.get(win);
-    if (!managed) return;
-
-    if (managed.maximized) {
-      this.handleMaximize(payload); // un-maximize
-    } else {
-      this.handleMaximize(payload); // maximize
-    }
-  }
-
-  // --- Transparency ---
-
-  setWindowOpacity(windowId: string, opacity: number) {
-    const win = this.findWindowById(windowId);
-    if (win) {
-      win.style.setProperty('--sz-window-opacity', String(opacity / 100));
-    }
+    this.handleMaximize(payload);
   }
 
   // --- Mobile ---
@@ -610,29 +517,24 @@ export class SzWindowManager extends LitElement {
 
   private forceFullPage() {
     for (const [el] of this.windows) {
-      this.setResizeHandlesVisible(el, false);
+      this.w(el).setResizeHandlesVisible(false);
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      this.callDOM(el, 'setLayout', { x: 0, y: 0, w: vw, h: vh });
+      this.w(el).setLayout({ x: 0, y: 0, w: vw, h: vh });
     }
   }
 
   private restoreFromFullPage() {
     for (const [el] of this.windows) {
-      this.callDOM(el, 'resetLayout');
-      this.injectResizeHandles(el);
-      this.setResizeHandlesVisible(el, true);
+      this.w(el).resetLayout();
+      this.w(el).setResizeHandlesVisible(true);
     }
   }
 
-  // --- DOM API bridge (no TS imports from window feature) ---
+  // --- DOM API bridge ---
 
-  private callDOM(el: HTMLElement, method: string, arg?: unknown): unknown {
-    const fn = (el as Record<string, unknown>)[method];
-    if (typeof fn === 'function') {
-      return fn.call(el, arg);
-    }
-    return undefined;
+  private w(el: HTMLElement): WindowApi {
+    return el as unknown as WindowApi;
   }
 
   private findWindowById(id: string | undefined): HTMLElement | null {
@@ -642,8 +544,6 @@ export class SzWindowManager extends LitElement {
     }
     return null;
   }
-
-  // --- Render ---
 
   render() {
     return html`<slot></slot>`;
