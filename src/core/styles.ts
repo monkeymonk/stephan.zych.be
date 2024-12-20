@@ -24,26 +24,6 @@ export const scrollbarStyles = css`
   ::-webkit-scrollbar-corner { background: transparent; }
 `;
 
-// Terminal monospace constraints
-export const terminalStyles = css`
-  :host {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: var(--sz-font-size, 13px);
-    line-height: 1.5;
-    tab-size: 2;
-  }
-`;
-
-// Typography base
-export const typographyStyles = css`
-  :host {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: var(--sz-font-size, 13px);
-    line-height: 1.6;
-    color: var(--sz-text, #cdd6f4);
-  }
-`;
-
 // Reduced motion query constant (lazy for SSR/test safety)
 export const reducedMotion = typeof window !== 'undefined'
   ? window.matchMedia('(prefers-reduced-motion: reduce)')

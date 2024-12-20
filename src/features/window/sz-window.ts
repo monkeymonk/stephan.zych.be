@@ -1,268 +1,373 @@
-import { LitElement, css, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, css, html, nothing } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import { actions } from '../../core/actions.js';
+import type { WindowLayout } from '../../core/types.js';
 import { WINDOW_ACTION } from './actions.js';
 
+export type { WindowLayout } from '../../core/types.js';
+
 type TitlebarMode = 'visible' | 'integrated' | 'hidden';
-type WindowButton = 'close' | 'maximize' | 'minimize';
 
-export interface WindowLayout {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-const DEFAULT_BUTTONS: WindowButton[] = ['close', 'maximize', 'minimize'];
+let topZIndex = 100;
 
 @customElement('sz-window')
 export class SzWindow extends LitElement {
-  static zCounter = 100;
-
   @property() titlebar: TitlebarMode = 'visible';
   @property() title = '';
-  @property({ type: Array }) buttons: WindowButton[] = [...DEFAULT_BUTTONS];
+  @property({ type: String }) width = '70vw';
+  @property({ type: String }) height = '75vh';
+  @property({ type: Number }) transparency = 95;
+
+  @state() private positionSet = false;
+  @state() private position = { x: 0, y: 0 };
+  @state() private size = { w: 0, h: 0 };
+  @state() private zIndex = 100;
+  @state() private isHidden = false;
+  @state() private isDragging = false;
+  @state() private isTiled = false;
 
   static styles = css`
     :host {
-      position: relative;
-      display: block;
-      min-width: 0;
-      min-height: 0;
+      display: contents;
     }
 
     .window {
-      position: relative;
       display: flex;
-      min-width: 0;
-      min-height: 0;
-      height: 100%;
       flex-direction: column;
-      overflow: hidden;
       border-radius: 12px;
-      background: rgb(30 30 46 / 0.82);
-      backdrop-filter: blur(24px) saturate(130%);
-      -webkit-backdrop-filter: blur(24px) saturate(130%);
+      overflow: visible;
+      pointer-events: auto;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       box-shadow:
-        0 4px 16px rgb(0 0 0 / 0.3),
-        0 8px 32px rgb(0 0 0 / 0.2),
-        0 20px 60px rgb(0 0 0 / 0.15),
-        0 0 0 1px rgb(255 255 255 / 0.05),
-        0 0 80px -20px rgb(137 180 250 / 0.06);
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        0 8px 32px rgba(0, 0, 0, 0.2),
+        0 20px 60px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        0 0 80px -20px rgba(137, 180, 250, 0.06);
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        top 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        left 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .frame {
+    .window.positioned {
+      transform: none;
+    }
+
+    .window.dragging {
+      transition: none;
+      cursor: grabbing;
+    }
+
+    .window.hidden {
+      transform: scale(0.9);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .window.positioned.hidden {
+      transform: scale(0.9);
+    }
+
+    .window.tiled {
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .window-bg {
+      position: absolute;
+      inset: 0;
+      background: var(--sz-terminal-bg, #1e1e2e);
+      z-index: 0;
+      border-radius: inherit;
+    }
+
+    .window-content {
       position: relative;
       z-index: 1;
       display: flex;
-      min-width: 0;
-      min-height: 0;
-      flex: 1;
       flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      border-radius: inherit;
     }
 
+    /* Titlebar */
     .titlebar {
       display: flex;
       align-items: center;
-      gap: 12px;
-      min-height: 32px;
-      padding: 0 12px;
-      user-select: none;
-      flex-shrink: 0;
+      justify-content: flex-end;
+      height: 32px;
       background: var(--sz-mantle, #181825);
+      padding: 0 8px;
+      user-select: none;
+      cursor: grab;
+      flex-shrink: 0;
       border-bottom: 1px solid var(--sz-surface0, #313244);
     }
-
     .titlebar[data-mode='integrated'] {
       background: transparent;
       border-bottom: none;
-      min-height: 36px;
-      padding-top: 6px;
-      padding-bottom: 6px;
+    }
+    .titlebar:active {
+      cursor: grabbing;
+    }
+    .titlebar-title {
+      flex: 1;
+      text-align: center;
+      font-size: var(--sz-font-size, 13px);
+      color: var(--sz-overlay1, #7f849c);
     }
 
+    /* Controls — subtle grey icon buttons with SVG icons */
     .controls {
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-shrink: 0;
     }
-
-    .traffic {
-      width: 12px;
-      height: 12px;
-      padding: 0;
+    .ctrl-btn {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
       border: none;
-      border-radius: 999px;
       cursor: pointer;
-      transition: transform 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background: var(--sz-surface1, #45475a);
+      color: var(--sz-subtext, #a6adc8);
+      line-height: 1;
+      transition: background 0.2s, color 0.2s;
     }
-
-    .traffic:hover,
-    .traffic:focus-visible {
-      transform: scale(1.06);
-      filter: brightness(1.08);
+    .ctrl-btn:hover, .ctrl-btn:focus-visible {
+      background: var(--sz-overlay0, #6c7086);
+      color: var(--sz-text, #cdd6f4);
       outline: none;
     }
-
-    .traffic[data-kind='close'] {
-      background: #ff5f57;
-      box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15) inset;
+    .ctrl-btn.close:hover {
+      background: var(--sz-red, #f38ba8);
+      color: var(--sz-crust, #11111b);
     }
-
-    .traffic[data-kind='minimize'] {
-      background: #febc2e;
-      box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12) inset;
-    }
-
-    .traffic[data-kind='maximize'] {
-      background: #28c840;
-      box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12) inset;
-    }
-
-    .title {
-      flex: 1;
-      min-width: 0;
-      color: var(--sz-overlay1, #7f849c);
-      font-size: var(--sz-font-size, 13px);
-      line-height: 1.2;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      pointer-events: none;
-    }
-
-    .title-spacer {
-      width: 52px;
-      flex-shrink: 0;
-    }
-
-    .bar {
-      position: relative;
-      z-index: 1;
-      flex-shrink: 0;
+    .ctrl-btn svg {
+      width: 8px;
+      height: 8px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
     }
 
     .body {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      min-width: 0;
-      min-height: 0;
       flex: 1;
+      overflow: hidden;
+      display: flex;
       flex-direction: column;
     }
 
-    .content {
-      display: flex;
-      min-width: 0;
-      min-height: 0;
-      flex: 1;
-      flex-direction: column;
+    .bar-area {
+      flex-shrink: 0;
     }
 
-    .overlay {
+    /* Resize handles — rendered inside shadow DOM */
+    .resize-handle {
       position: absolute;
-      inset: 0;
-      z-index: 5;
-      pointer-events: none;
+      z-index: 10;
     }
-
-    .overlay ::slotted(*) {
-      pointer-events: auto;
-    }
+    .resize-n { top: -3px; left: 8px; right: 8px; height: 6px; cursor: n-resize; }
+    .resize-s { bottom: -3px; left: 8px; right: 8px; height: 6px; cursor: s-resize; }
+    .resize-w { left: -3px; top: 8px; bottom: 8px; width: 6px; cursor: w-resize; }
+    .resize-e { right: -3px; top: 8px; bottom: 8px; width: 6px; cursor: e-resize; }
+    .resize-nw { top: -3px; left: -3px; width: 12px; height: 12px; cursor: nw-resize; }
+    .resize-ne { top: -3px; right: -3px; width: 12px; height: 12px; cursor: ne-resize; }
+    .resize-sw { bottom: -3px; left: -3px; width: 12px; height: 12px; cursor: sw-resize; }
+    .resize-se { bottom: -3px; right: -3px; width: 12px; height: 12px; cursor: se-resize; }
 
     @media (max-width: 768px) {
       .window {
+        width: 100vw !important;
+        height: 100dvh !important;
+        top: 0;
+        left: 0;
+        transform: none;
         border-radius: 0;
       }
+      .titlebar {
+        cursor: default;
+        height: 28px;
+      }
+      .controls { display: none; }
+      .resize-handle { display: none; }
     }
   `;
 
+  // --- Public DOM API (called by window-manager) ---
+
   setLayout(layout: WindowLayout): void {
-    this.style.left = `${layout.x}px`;
-    this.style.top = `${layout.y}px`;
-    this.style.width = `${layout.w}px`;
-    this.style.height = `${layout.h}px`;
+    this.position = { x: layout.x, y: layout.y };
+    this.size = { w: layout.w, h: layout.h };
+    this.positionSet = true;
   }
 
   getLayout(): WindowLayout {
-    const rect = this.getBoundingClientRect();
-    return {
-      x: rect.left,
-      y: rect.top,
-      w: rect.width,
-      h: rect.height,
-    };
+    const el = this.shadowRoot?.querySelector('.window') as HTMLElement | null;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      return { x: rect.left, y: rect.top, w: rect.width, h: rect.height };
+    }
+    return { x: this.position.x, y: this.position.y, w: this.size.w, h: this.size.h };
   }
 
   resetLayout(): void {
-    this.style.removeProperty('left');
-    this.style.removeProperty('top');
-    this.style.removeProperty('width');
-    this.style.removeProperty('height');
+    this.position = { x: 0, y: 0 };
+    this.size = { w: 0, h: 0 };
+    this.positionSet = false;
   }
 
   bringToFront(): void {
-    SzWindow.zCounter += 1;
-    this.style.zIndex = String(SzWindow.zCounter);
+    topZIndex++;
+    this.zIndex = topZIndex;
+  }
+
+  setResizeHandlesVisible(visible: boolean): void {
+    const handles = this.shadowRoot?.querySelectorAll<HTMLElement>('.resize-handle');
+    handles?.forEach(h => h.style.display = visible ? '' : 'none');
+  }
+
+  setDragging(dragging: boolean): void {
+    this.isDragging = dragging;
+  }
+
+  setTiled(tiled: boolean): void {
+    this.isTiled = tiled;
+  }
+
+  showWindow(): void {
+    this.isHidden = false;
+  }
+
+  hideWindow(): void {
+    this.isHidden = true;
+  }
+
+  get windowHidden(): boolean {
+    return this.isHidden;
+  }
+
+  async enterFullscreen(): Promise<boolean> {
+    const el = this.shadowRoot?.querySelector('.window') as HTMLElement | null;
+    if (!el) return false;
+    try {
+      await el.requestFullscreen();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async exitFullscreen(): Promise<void> {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    }
+  }
+
+  get isFullscreen(): boolean {
+    const el = this.shadowRoot?.querySelector('.window');
+    return document.fullscreenElement === el;
   }
 
   render() {
+    const sizeStyle = this.size.w > 0
+      ? `width: ${this.size.w}px; height: ${this.size.h}px;`
+      : `width: ${this.width}; height: ${this.height};`;
+    const posStyle = this.positionSet
+      ? `left: ${this.position.x}px; top: ${this.position.y}px;`
+      : '';
+
+    const classes = [
+      'window',
+      this.positionSet ? 'positioned' : '',
+      this.isHidden ? 'hidden' : '',
+      this.isDragging ? 'dragging' : '',
+      this.isTiled ? 'tiled' : '',
+    ].filter(Boolean).join(' ');
+
     return html`
-      <section class="window" role="application" aria-label=${this.title || 'Window'}>
-        <div class="frame">
+      <div
+        class=${classes}
+        style="${posStyle} ${sizeStyle} z-index: ${this.zIndex};"
+        role="application"
+        aria-label=${this.title || 'Window'}
+      >
+        ${this.renderResizeHandles()}
+        <div class="window-bg" style="opacity: ${this.transparency / 100}"></div>
+        <div class="window-content">
           ${this.renderTitlebar()}
-          <div class="bar">
+          <div class="body">
+            <slot></slot>
+          </div>
+          <div class="bar-area">
             <slot name="bar"></slot>
           </div>
-          <div class="body">
-            <div class="content">
-              <slot></slot>
-            </div>
-            <div class="overlay">
-              <slot name="overlay"></slot>
-            </div>
-          </div>
         </div>
-      </section>
+      </div>
     `;
   }
 
   private renderTitlebar() {
-    if (this.titlebar === 'hidden') return null;
+    if (this.titlebar === 'hidden') return nothing;
 
     return html`
-      <header class="titlebar" data-mode=${this.titlebar}>
+      <header
+        class="titlebar"
+        data-mode=${this.titlebar}
+        @dblclick=${this.handleTitlebarDblClick}
+      >
+        <span class="titlebar-title">${this.title}</span>
         <div class="controls" role="group" aria-label="Window controls">
-          ${this.renderControl('close', WINDOW_ACTION.CLOSE_REQUEST, 'Close')}
-          ${this.renderControl('minimize', WINDOW_ACTION.MINIMIZE_REQUEST, 'Minimize')}
-          ${this.renderControl('maximize', WINDOW_ACTION.MAXIMIZE_REQUEST, 'Maximize')}
+          <button class="ctrl-btn" @click=${(e: MouseEvent) => this.handleControlClick(WINDOW_ACTION.FULLSCREEN_REQUEST, e)} title="Fullscreen (Alt+F)" aria-label="Fullscreen">
+            <svg viewBox="0 0 10 10"><polyline points="1,3 1,1 3,1"/><polyline points="7,1 9,1 9,3"/><polyline points="9,7 9,9 7,9"/><polyline points="3,9 1,9 1,7"/></svg>
+          </button>
+          <button class="ctrl-btn" @click=${(e: MouseEvent) => this.handleControlClick(WINDOW_ACTION.MAXIMIZE_REQUEST, e)} title="Maximize (Alt+F)" aria-label="Maximize">
+            <svg viewBox="0 0 10 10"><rect x="2" y="2" width="6" height="6" rx="0.5"/></svg>
+          </button>
+          <button class="ctrl-btn close" @click=${(e: MouseEvent) => this.handleControlClick(WINDOW_ACTION.CLOSE_REQUEST, e)} title="Close" aria-label="Close">
+            <svg viewBox="0 0 10 10"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg>
+          </button>
         </div>
-        <div class="title">${this.title}</div>
-        <div class="title-spacer" aria-hidden="true"></div>
       </header>
     `;
   }
 
-  private renderControl(button: WindowButton, type: string, label: string) {
-    if (!this.buttons.includes(button)) return null;
-
-    return html`
-      <button
-        class="traffic"
-        data-kind=${button}
-        type="button"
-        aria-label=${label}
-        title=${label}
-        @click=${(event: MouseEvent) => this.handleControlClick(type, event)}
-      ></button>
-    `;
+  private renderResizeHandles() {
+    const dirs = ['n', 's', 'w', 'e', 'nw', 'ne', 'sw', 'se'];
+    return dirs.map(dir => html`
+      <div
+        class="resize-handle resize-${dir}"
+        @mousedown=${(e: MouseEvent) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.dispatchEvent(new CustomEvent('window-resize-start', {
+            detail: { dir, clientX: e.clientX, clientY: e.clientY },
+            bubbles: true, composed: true,
+          }));
+        }}
+      ></div>
+    `);
   }
 
   private handleControlClick(type: string, event: MouseEvent): void {
     event.stopPropagation();
     actions.dispatch(type, { windowId: this.id });
   }
+
+  private handleTitlebarDblClick = () => {
+    actions.dispatch(WINDOW_ACTION.MAXIMIZE_REQUEST, { windowId: this.id });
+  };
 }
