@@ -1,6 +1,5 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { registry } from '../core/registry.js';
 import { reducedMotion } from '../core/styles.js';
 
 @customElement('sz-slideshow')
@@ -66,9 +65,8 @@ export class SzSlideshow extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    if (this.images.length === 0) {
-      this.setImages([...registry.wallpapers]);
-    } else {
+    // Images are set externally via setImages()
+    if (this.images.length > 0) {
       this.restartTimer();
     }
   }
