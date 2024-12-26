@@ -1,13 +1,13 @@
 import { LitElement, css, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { actions } from '../../core/actions.js';
 import { reducedMotion } from '../../core/styles.js';
+import { ActionController } from '../../core/action-controller.js';
 import { EFFECT_ACTION } from './actions.js';
 
 @customElement('sz-effect-matrix')
 export class SzEffectMatrix extends LitElement {
-  private unsubMatrix?: () => void;
   private cleanupEffect?: () => void;
+  private actionCtrl = new ActionController(this, [[EFFECT_ACTION.MATRIX, () => this.startMatrix()]]);
 
   static styles = css`
     :host {
@@ -17,15 +17,11 @@ export class SzEffectMatrix extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.unsubMatrix = actions.on(EFFECT_ACTION.MATRIX, () => {
-      this.startMatrix();
-    });
   }
 
   disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.unsubMatrix?.();
     this.cleanupEffect?.();
+    super.disconnectedCallback();
   }
 
   render() {

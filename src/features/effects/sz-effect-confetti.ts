@@ -1,13 +1,19 @@
 import { LitElement, css, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { actions } from '../../core/actions.js';
 import { reducedMotion } from '../../core/styles.js';
+import { ActionController } from '../../core/action-controller.js';
 import { EFFECT_ACTION } from './actions.js';
 
 @customElement('sz-effect-confetti')
 export class SzEffectConfetti extends LitElement {
-  private unsubConfetti?: () => void;
   private cleanupEffect?: () => void;
+  private actionCtrl = new ActionController(this, [[EFFECT_ACTION.CONFETTI, () => {
+    if (reducedMotion.matches) {
+      this.startFlash();
+      return;
+    }
+    this.startParty();
+  }]]);
 
   static styles = css`
     :host {
@@ -17,19 +23,11 @@ export class SzEffectConfetti extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.unsubConfetti = actions.on(EFFECT_ACTION.CONFETTI, () => {
-      if (reducedMotion.matches) {
-        this.startFlash();
-        return;
-      }
-      this.startParty();
-    });
   }
 
   disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.unsubConfetti?.();
     this.cleanupEffect?.();
+    super.disconnectedCallback();
   }
 
   render() {

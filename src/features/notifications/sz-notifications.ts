@@ -1,6 +1,6 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { actions } from '../../core/actions.js';
+import { ActionController } from '../../core/action-controller.js';
 import { NOTIFY_ACTION } from './actions.js';
 
 type NotificationType = 'info' | 'warning' | 'error';
@@ -16,7 +16,11 @@ export class SzNotifications extends LitElement {
   @state() private notification?: Required<NotificationPayload>;
 
   private hideTimer?: number;
-  private unsubShow?: () => void;
+  private actionCtrl = new ActionController(this, [[NOTIFY_ACTION.SHOW, (action) => {
+    const payload = action.payload as NotificationPayload | undefined;
+    if (!payload?.text) return;
+    this.showNotification(payload);
+  }]]);
 
   static styles = css`
     :host {
@@ -73,17 +77,11 @@ export class SzNotifications extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    this.unsubShow = actions.on(NOTIFY_ACTION.SHOW, (action) => {
-      const payload = action.payload as NotificationPayload | undefined;
-      if (!payload?.text) return;
-      this.showNotification(payload);
-    });
   }
 
   disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.unsubShow?.();
     this.clearHideTimer();
+    super.disconnectedCallback();
   }
 
   render() {
