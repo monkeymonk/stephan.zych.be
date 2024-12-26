@@ -51,10 +51,11 @@ export class SzScreenShader extends LitElement {
       const mode = action.payload;
       if (mode === 'off' || mode === 'css' || mode === 'webgl') {
         this.stateCtrl.set('shaderMode', mode);
+        this.updateTimerForMode(mode);
       }
     });
     this.updateLighting();
-    this.intervalId = window.setInterval(() => this.updateLighting(), 600000);
+    this.updateTimerForMode(this.stateCtrl.get('shaderMode'));
   }
 
   disconnectedCallback(): void {
@@ -81,9 +82,18 @@ export class SzScreenShader extends LitElement {
     `;
   }
 
+  private updateTimerForMode(mode: string): void {
+    if (this.intervalId !== undefined) window.clearInterval(this.intervalId);
+    this.intervalId = undefined;
+    if (mode !== 'off') {
+      this.intervalId = window.setInterval(() => this.updateLighting(), 600000);
+    }
+  }
+
   private updateLighting(): void {
-    const hour = new Date().getHours();
-    const minute = new Date().getMinutes();
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
     const time = hour + minute / 60;
 
     if (time >= 6 && time < 10) {
