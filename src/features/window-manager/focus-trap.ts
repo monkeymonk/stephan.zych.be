@@ -61,15 +61,15 @@ export class FocusTrap {
   private root: HTMLElement;
   private active = false;
   private handleKeydown: (e: KeyboardEvent) => void;
+  private cachedFocusable: HTMLElement[] | null = null;
+  private observer: MutationObserver | null = null;
 
   constructor(root: HTMLElement) {
     this.root = root;
     this.handleKeydown = (e: KeyboardEvent) => {
       if (!this.active || e.key !== 'Tab') return;
 
-      const focusable = getFocusableElements(
-        this.root.shadowRoot ?? this.root
-      );
+      const focusable = this.getFocusable();
       if (focusable.length === 0) return;
 
       const first = focusable[0];
@@ -89,6 +89,17 @@ export class FocusTrap {
     };
   }
 
+  private getFocusable(): HTMLElement[] {
+    if (!this.cachedFocusable) {
+      this.cachedFocusable = getFocusableElements(this.root.shadowRoot ?? this.root);
+    }
+    return this.cachedFocusable;
+  }
+
+  private invalidateCache = () => {
+    this.cachedFocusable = null;
+  };
+
   private isActiveElement(el: HTMLElement): boolean {
     let active: Element | null = document.activeElement;
     while (active?.shadowRoot?.activeElement) {
@@ -100,12 +111,18 @@ export class FocusTrap {
   activate(): void {
     if (this.active) return;
     this.active = true;
+    this.cachedFocusable = null;
     document.addEventListener('keydown', this.handleKeydown, true);
+    this.observer = new MutationObserver(this.invalidateCache);
+    this.observer.observe(this.root, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'tabindex'] });
   }
 
   deactivate(): void {
     this.active = false;
+    this.cachedFocusable = null;
     document.removeEventListener('keydown', this.handleKeydown, true);
+    this.observer?.disconnect();
+    this.observer = null;
   }
 
   focusFirst(): void {
