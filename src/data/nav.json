@@ -1,10 +1,10 @@
 {
   "tabs": [
-    { "index": 0, "name": "home", "path": "/", "shortcut": "Alt+1" },
-    { "index": 1, "name": "about", "path": "/about/", "shortcut": "Alt+2" },
-    { "index": 2, "name": "projects", "path": "/projects/", "shortcut": "Alt+3" },
-    { "index": 3, "name": "blog", "path": "/blog/", "shortcut": "Alt+4" },
-    { "index": 4, "name": "contact", "path": "/contact/", "shortcut": "Alt+5" }
+    { "index": 0, "name": "home", "path": "/", "icon": "terminal", "key": "h" },
+    { "index": 1, "name": "about", "path": "/about/", "icon": "terminal", "key": "a" },
+    { "index": 2, "name": "projects", "path": "/projects/", "icon": "folder", "key": "p" },
+    { "index": 3, "name": "blog", "path": "/blog/", "icon": "file", "key": "b" },
+    { "index": 4, "name": "contact", "path": "/contact/", "icon": "mail", "key": "c" }
   ],
   "sessionName": "stephan.zych"
 }

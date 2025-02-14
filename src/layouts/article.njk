@@ -1,0 +1,29 @@
+---
+layout: base.njk
+---
+<article class="sz-article">
+  {% if poster %}
+  <div class="sz-article__hero">
+    <img src="{{ poster }}" alt="{{ title }}">
+  </div>
+  {% endif %}
+  <header class="sz-article__header">
+    <h1 class="sz-article__title">{{ heading or title }}</h1>
+    {% if date %}
+    <div class="sz-article__meta">
+      <time datetime="{{ date | htmlDateString }}">{{ date | dateDisplay }}</time>
+      {% if tags %}
+      <span class="sz-article__tags">
+        {% for tag in tags %}{% if tag !== 'blog' and tag !== 'projects' %}<span class="sz-article__tag">{{ tag }}</span>{% endif %}{% endfor %}
+      </span>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% if description %}
+    <p class="sz-article__description">{{ description }}</p>
+    {% endif %}
+  </header>
+  <sz-markdown class="sz-article__body">
+    {{ content | safe }}
+  </sz-markdown>
+</article>

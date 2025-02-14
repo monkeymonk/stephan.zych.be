@@ -1,5 +1,6 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { scrollbarStyles } from '../core/styles.js';
 
 @customElement('sz-portfolio')
 export class SzPortfolio extends LitElement {
@@ -14,7 +15,7 @@ export class SzPortfolio extends LitElement {
   filters: string[] = [];
   @state() private activeFilter = '';
 
-  static styles = css`
+  static styles = [scrollbarStyles, css`
     :host {
       display: block;
       padding: 20px;
@@ -41,7 +42,7 @@ export class SzPortfolio extends LitElement {
       color: var(--sz-subtext, #a6adc8);
       cursor: pointer;
       font-family: inherit;
-      font-size: 12px;
+      font-size: var(--sz-font-size, 13px);
       transition: all 0.2s;
     }
     .filter-btn:hover {
@@ -63,7 +64,7 @@ export class SzPortfolio extends LitElement {
       :host { padding: 12px; }
       .grid { grid-template-columns: 1fr; }
     }
-  `;
+  `];
 
   private toggleFilter(filter: string) {
     this.activeFilter = this.activeFilter === filter ? '' : filter;
@@ -74,7 +75,7 @@ export class SzPortfolio extends LitElement {
     }));
   }
 
-  protected updated(changedProperties: Map<string, unknown>) {
+  protected updated(changedProperties: Map<PropertyKey, unknown>) {
     if (changedProperties.has('activeFilter')) {
       this.updateVisibleItems();
     }
@@ -114,7 +115,7 @@ export class SzPortfolio extends LitElement {
             >${f}</button>
           `)}
         </div>
-      ` : ''}
+      ` : nothing}
       <div class="grid">
         <slot></slot>
       </div>

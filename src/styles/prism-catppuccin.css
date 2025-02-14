@@ -1,0 +1,155 @@
+/* Prism.js — Catppuccin Mocha theme
+   Matches the terminal portfolio color palette */
+
+code[class*="language-"],
+pre[class*="language-"] {
+  color: var(--sz-text, #cdd6f4);
+  text-shadow: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--sz-font-size, 13px);
+  line-height: var(--sz-line-height, 1.6);
+  direction: ltr;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  tab-size: 2;
+  hyphens: none;
+}
+
+/* Keywords: mauve */
+.token.keyword,
+.token.atrule,
+.token.important {
+  color: var(--sz-mauve, #cba6f7);
+}
+
+/* Strings: green */
+.token.string,
+.token.template-string,
+.token.attr-value {
+  color: var(--sz-green, #a6e3a1);
+}
+
+/* Functions: blue */
+.token.function,
+.token.method {
+  color: var(--sz-accent, #89b4fa);
+}
+
+/* Numbers, booleans: peach */
+.token.number,
+.token.boolean,
+.token.constant {
+  color: var(--sz-peach, #fab387);
+}
+
+/* Types, classes: yellow */
+.token.class-name,
+.token.maybe-class-name,
+.token.builtin {
+  color: var(--sz-yellow, #f9e2af);
+}
+
+/* Variables, parameters: text (default) */
+.token.variable {
+  color: var(--sz-text, #cdd6f4);
+}
+
+/* Properties: lavender */
+.token.property,
+.token.property-access {
+  color: var(--sz-lavender, #b4befe);
+}
+
+/* Operators, punctuation: overlay1 */
+.token.operator {
+  color: var(--sz-teal, #94e2d5);
+}
+.token.punctuation {
+  color: var(--sz-overlay1, #7f849c);
+}
+
+/* Comments: overlay0 italic */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--sz-overlay0, #6c7086);
+  font-style: italic;
+}
+
+/* Tags (HTML/XML): accent */
+.token.tag {
+  color: var(--sz-accent, #89b4fa);
+}
+.token.tag .token.punctuation {
+  color: var(--sz-overlay1, #7f849c);
+}
+
+/* Attributes: yellow */
+.token.attr-name {
+  color: var(--sz-yellow, #f9e2af);
+}
+
+/* Regex, URL: flamingo */
+.token.regex,
+.token.url {
+  color: var(--sz-flamingo, #f2cdcd);
+}
+
+/* Selectors (CSS): lavender */
+.token.selector {
+  color: var(--sz-lavender, #b4befe);
+}
+
+/* CSS property names: accent */
+.token.property {
+  color: var(--sz-lavender, #b4befe);
+}
+
+/* Inserted/added: green */
+.token.inserted {
+  color: var(--sz-green, #a6e3a1);
+}
+
+/* Deleted: red */
+.token.deleted {
+  color: var(--sz-red, #f38ba8);
+}
+
+/* Changed: yellow */
+.token.changed {
+  color: var(--sz-yellow, #f9e2af);
+}
+
+/* Shell/bash specific */
+.token.shebang {
+  color: var(--sz-overlay0, #6c7086);
+  font-style: italic;
+}
+.token.assign-left {
+  color: var(--sz-text, #cdd6f4);
+}
+
+/* JSON keys */
+.language-json .token.property {
+  color: var(--sz-accent, #89b4fa);
+}
+
+/* Namespace: dimmed */
+.token.namespace {
+  opacity: 0.7;
+}
+
+/* Bold & italic tokens */
+.token.bold { font-weight: bold; }
+.token.italic { font-style: italic; }
+
+/* Selection */
+code[class*="language-"]::selection,
+pre[class*="language-"]::selection,
+code[class*="language-"] *::selection,
+pre[class*="language-"] *::selection {
+  background: rgba(255, 255, 255, 0.15);
+}

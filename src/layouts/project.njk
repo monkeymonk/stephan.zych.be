@@ -1,9 +1,6 @@
 ---
-layout: base.njk
+layout: page.njk
+lineNumbers: true
 windowMode: full-page
 ---
-<sz-markdown>
-  <h1>{{ title }}</h1>
-  {% if poster %}<img src="{{ poster }}" alt="{{ title }}">{% endif %}
-  {{ content | safe }}
-</sz-markdown>
+{{ content | safe }}

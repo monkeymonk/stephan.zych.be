@@ -1,0 +1,18 @@
+---
+permalink: /search-index.json
+eleventyExcludeFromCollections: true
+---
+{%- set entries = [] -%}
+{%- for item in collections.all -%}
+  {%- if item.url and item.data.title and '/404' not in item.url -%}
+    {%- set entry = {
+      title: item.data.title,
+      description: item.data.description or "",
+      url: item.url,
+      tags: item.data.tags or [],
+      content: item.templateContent | stripHtml | truncate(300)
+    } -%}
+    {%- set entries = (entries.push(entry), entries) -%}
+  {%- endif -%}
+{%- endfor -%}
+{{ entries | dump | safe }}

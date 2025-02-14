@@ -10,14 +10,14 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "lit": "^3.3.2"
+  },
   "devDependencies": {
     "@11ty/eleventy": "^3.1.2",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.2",
     "concurrently": "^9.2.1",
     "esbuild": "^0.20.2",
-    "lit": "^3.3.2",
     "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "@fontsource/jetbrains-mono": "^5.2.8"
   }
 }

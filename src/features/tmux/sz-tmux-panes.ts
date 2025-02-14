@@ -1,5 +1,9 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { actions } from '../../core/actions.js';
+import { isInputFocused } from '../../core/keyboard.js';
+import { mobileQuery, scrollbarStyles } from '../../core/styles.js';
+import { TMUX_ACTION } from './actions.js';
 
 interface PaneConfig {
   component: string;
@@ -17,8 +21,9 @@ export class SzTmuxPanes extends LitElement {
   @state() private activePane = 0;
   @state() private draggedDividerIndex: number | null = null;
   @state() private paneSizes: number[] = [];
+  @state() private isMobile = mobileQuery.matches;
 
-  static styles = css`
+  static styles = [scrollbarStyles, css`
     :host {
       display: flex;
       flex: 1;
@@ -36,8 +41,9 @@ export class SzTmuxPanes extends LitElement {
       flex-direction: column;
     }
     .pane {
-      overflow-y: auto;
-      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
       position: relative;
       border: 1px solid transparent;
       transition: border-color 0.2s;
@@ -64,8 +70,9 @@ export class SzTmuxPanes extends LitElement {
     }
     .single {
       flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     @media (max-width: 768px) {
@@ -83,16 +90,22 @@ export class SzTmuxPanes extends LitElement {
         cursor: row-resize;
       }
     }
-  `;
+  `];
+
+  private handleMobileChange = (e: MediaQueryListEvent) => {
+    this.isMobile = e.matches;
+  };
 
   connectedCallback() {
     super.connectedCallback();
     document.addEventListener('keydown', this.handlePaneNav);
+    mobileQuery.addEventListener('change', this.handleMobileChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     document.removeEventListener('keydown', this.handlePaneNav);
+    mobileQuery.removeEventListener('change', this.handleMobileChange);
     window.removeEventListener('mousemove', this.handleDividerDrag);
     window.removeEventListener('mouseup', this.stopDividerDrag);
   }
@@ -109,14 +122,17 @@ export class SzTmuxPanes extends LitElement {
   }
 
   private handlePaneNav = (e: KeyboardEvent) => {
+    if (isInputFocused()) return;
     if (!e.altKey || !this.config) return;
     const paneCount = this.config.panes.length;
     if (e.key === 'l' || e.key === 'j') {
       e.preventDefault();
       this.activePane = Math.min(this.activePane + 1, paneCount - 1);
+      actions.dispatch(TMUX_ACTION.PANE_FOCUS, { index: this.activePane });
     } else if (e.key === 'h' || e.key === 'k') {
       e.preventDefault();
       this.activePane = Math.max(this.activePane - 1, 0);
+      actions.dispatch(TMUX_ACTION.PANE_FOCUS, { index: this.activePane });
     }
   };
 
@@ -133,7 +149,7 @@ export class SzTmuxPanes extends LitElement {
   }
 
   private getLayoutDirection() {
-    if (window.matchMedia('(max-width: 768px)').matches) {
+    if (this.isMobile) {
       return 'vertical';
     }
 
@@ -200,7 +216,7 @@ export class SzTmuxPanes extends LitElement {
 
   render() {
     if (!this.config) {
-      return html`<div class="single"><slot></slot></div>`;
+      return html`<div class="single"><slot name="pane-0"></slot><slot></slot></div>`;
     }
 
     const dir = this.config.direction || 'horizontal';
@@ -211,10 +227,11 @@ export class SzTmuxPanes extends LitElement {
 
     return html`
       <div class="panes ${dir}">
-        ${panes.map((pane, i) => html`
+        ${panes.map((_pane, i) => html`
           ${i > 0 ? html`
             <div
               class="divider"
+              role="separator"
               @mousedown=${(event: MouseEvent) => this.startDividerDrag(i - 1, event)}
             ></div>
           ` : nothing}

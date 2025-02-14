@@ -1,19 +1,20 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { scrollbarStyles } from '../core/styles.js';
 
 @customElement('sz-code')
 export class SzCode extends LitElement {
   @property() mode: 'code' | 'tree' = 'code';
   @property({ type: Boolean, attribute: 'line-numbers' }) lineNumbers = true;
 
-  static styles = css`
+  static styles = [scrollbarStyles, css`
     :host {
       display: block;
       height: 100%;
       overflow-y: auto;
       background: var(--sz-base, #1e1e2e);
       color: var(--sz-text, #cdd6f4);
-      font-size: 13px;
+      font-size: var(--sz-font-size, 13px);
     }
     .code-view {
       display: flex;
@@ -65,7 +66,7 @@ export class SzCode extends LitElement {
       width: 16px;
       text-align: center;
     }
-  `;
+  `];
 
   render() {
     if (this.mode === 'tree') {
@@ -74,7 +75,7 @@ export class SzCode extends LitElement {
 
     return html`
       <div class="code-view">
-        ${this.lineNumbers ? html`<div class="gutter"><slot name="gutter"></slot></div>` : ''}
+        ${this.lineNumbers ? html`<div class="gutter"><slot name="gutter"></slot></div>` : nothing}
         <div class="content"><slot></slot></div>
       </div>
     `;

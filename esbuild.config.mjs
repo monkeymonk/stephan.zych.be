@@ -3,7 +3,7 @@ import { build, context } from 'esbuild';
 const isDev = process.argv.includes('--watch');
 
 const config = {
-  entryPoints: ['src/components/index.ts'],
+  entryPoints: ['src/app/index.ts'],
   bundle: true,
   outfile: '_site/assets/components.js',
   format: 'esm',
