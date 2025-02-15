@@ -4,3 +4,4 @@ dist/
 .cache/
 *.log
 _references/
+.worktrees/
