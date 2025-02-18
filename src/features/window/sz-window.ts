@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { actions } from '../../core/actions.js';
 import type { WindowLayout } from '../../core/types.js';
 import { WINDOW_ACTION } from './actions.js';
+import { SpatialTilt } from './spatial-tilt.js';
 
 export type { WindowLayout } from '../../core/types.js';
 
@@ -25,6 +26,8 @@ export class SzWindow extends LitElement {
   @state() private isHidden = false;
   @state() private isDragging = false;
   @state() private isTiled = false;
+
+  private spatialTilt: SpatialTilt | null = null;
 
   static styles = css`
     :host {
@@ -217,6 +220,25 @@ export class SzWindow extends LitElement {
     }
   `;
 
+  // --- Lifecycle ---
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.updateComplete.then(() => {
+      const windowEl = this.shadowRoot?.querySelector('.window') as HTMLElement | null;
+      if (windowEl) {
+        this.spatialTilt = new SpatialTilt(windowEl);
+        this.spatialTilt.enable();
+      }
+    });
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.spatialTilt?.destroy();
+    this.spatialTilt = null;
+  }
+
   // --- Public DOM API (called by window-manager) ---
 
   setLayout(layout: WindowLayout): void {
@@ -252,10 +274,16 @@ export class SzWindow extends LitElement {
 
   setDragging(dragging: boolean): void {
     this.isDragging = dragging;
+    if (dragging) {
+      this.spatialTilt?.freeze();
+    } else {
+      this.spatialTilt?.unfreeze();
+    }
   }
 
   setTiled(tiled: boolean): void {
     this.isTiled = tiled;
+    this.spatialTilt?.setMode(tiled ? 'maximized' : 'windowed');
   }
 
   showWindow(): void {
@@ -275,6 +303,7 @@ export class SzWindow extends LitElement {
     if (!el) return false;
     try {
       await el.requestFullscreen();
+      this.spatialTilt?.setMode('fullscreen');
       return true;
     } catch {
       return false;
@@ -284,6 +313,7 @@ export class SzWindow extends LitElement {
   async exitFullscreen(): Promise<void> {
     if (document.fullscreenElement) {
       await document.exitFullscreen();
+      this.spatialTilt?.setMode(this.isTiled ? 'maximized' : 'windowed');
     }
   }
 
