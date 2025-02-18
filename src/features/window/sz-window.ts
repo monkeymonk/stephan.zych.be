@@ -40,7 +40,15 @@ export class SzWindow extends LitElement {
       position: fixed;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: perspective(var(--sz-tilt-perspective, 1200px))
+                 rotateX(var(--sz-tilt-x, 0deg))
+                 rotateY(var(--sz-tilt-y, 0deg))
+                 translate3d(
+                   calc(-50% + var(--sz-translate-x, 0px)),
+                   calc(-50% + var(--sz-translate-y, 0px)),
+                   0
+                 );
+      will-change: transform;
       box-shadow:
         0 4px 16px rgba(0, 0, 0, 0.3),
         0 8px 32px rgba(0, 0, 0, 0.2),
@@ -51,14 +59,16 @@ export class SzWindow extends LitElement {
         height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
         top 0.4s cubic-bezier(0.16, 1, 0.3, 1),
         left 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-        transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
         opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
         border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1),
         box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .window.positioned {
-      transform: none;
+      transform: perspective(var(--sz-tilt-perspective, 1200px))
+                 rotateX(var(--sz-tilt-x, 0deg))
+                 rotateY(var(--sz-tilt-y, 0deg))
+                 translate3d(var(--sz-translate-x, 0px), var(--sz-translate-y, 0px), 0);
     }
 
     .window.dragging {
