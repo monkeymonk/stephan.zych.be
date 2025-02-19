@@ -288,10 +288,12 @@ export class SzWindow extends LitElement {
 
   showWindow(): void {
     this.isHidden = false;
+    this.spatialTilt?.unfreeze();
   }
 
   hideWindow(): void {
     this.isHidden = true;
+    this.spatialTilt?.freeze();
   }
 
   get windowHidden(): boolean {
