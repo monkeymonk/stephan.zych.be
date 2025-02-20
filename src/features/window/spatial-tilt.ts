@@ -39,6 +39,8 @@ export class SpatialTilt {
 
   private onPointerMove = this.handlePointerMove.bind(this);
   private onPointerLeave = this.handlePointerLeave.bind(this);
+  private onDeviceOrientation = this.handleDeviceOrientation.bind(this);
+  private useDeviceOrientation = false;
 
   private mqReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   private onReducedMotionChange = (e: MediaQueryListEvent): void => {
@@ -63,6 +65,7 @@ export class SpatialTilt {
     document.addEventListener('pointermove', this.onPointerMove);
     document.documentElement.addEventListener('pointerleave', this.onPointerLeave);
     this.startLoop();
+    this.setupDeviceOrientation();
   }
 
   disable(): void {
@@ -70,6 +73,10 @@ export class SpatialTilt {
     this.enabled = false;
     document.removeEventListener('pointermove', this.onPointerMove);
     document.documentElement.removeEventListener('pointerleave', this.onPointerLeave);
+    if (this.useDeviceOrientation) {
+      window.removeEventListener('deviceorientation', this.onDeviceOrientation);
+      this.useDeviceOrientation = false;
+    }
     this.stopLoop();
     this.resetProperties();
   }
@@ -111,6 +118,37 @@ export class SpatialTilt {
     this.targetX = 0;
     this.targetY = 0;
     this.startLoop();
+  }
+
+  private handleDeviceOrientation(e: DeviceOrientationEvent): void {
+    if (this.frozen) return;
+    if (e.beta === null || e.gamma === null) return;
+
+    const intensity = MODE_INTENSITY[this.mode];
+    if (intensity.tilt === 0 && intensity.translate === 0) return;
+
+    this.targetX = Math.max(-1, Math.min(1, e.gamma / 30));
+    this.targetY = Math.max(-1, Math.min(1, (e.beta - 45) / 30));
+    this.startLoop();
+  }
+
+  private async setupDeviceOrientation(): Promise<void> {
+    if (!('ontouchstart' in window)) return;
+    if (!('DeviceOrientationEvent' in window)) return;
+
+    const DOE = DeviceOrientationEvent as any;
+    if (typeof DOE.requestPermission === 'function') {
+      try {
+        const permission = await DOE.requestPermission();
+        if (permission !== 'granted') return;
+      } catch {
+        return;
+      }
+    }
+
+    this.useDeviceOrientation = true;
+    window.addEventListener('deviceorientation', this.onDeviceOrientation);
+    document.removeEventListener('pointermove', this.onPointerMove);
   }
 
   private startLoop(): void {
