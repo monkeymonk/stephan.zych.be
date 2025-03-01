@@ -3,7 +3,6 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { actions } from '../../core/actions.js';
 import type { WindowLayout } from '../../core/types.js';
 import { WINDOW_ACTION } from './actions.js';
-import { SpatialTilt } from './spatial-tilt.js';
 
 export type { WindowLayout } from '../../core/types.js';
 
@@ -27,8 +26,6 @@ export class SzWindow extends LitElement {
   @state() private isDragging = false;
   @state() private isTiled = false;
 
-  private spatialTilt: SpatialTilt | null = null;
-
   static styles = css`
     :host {
       display: contents;
@@ -43,15 +40,7 @@ export class SzWindow extends LitElement {
       position: fixed;
       top: 50%;
       left: 50%;
-      transform: perspective(var(--sz-tilt-perspective, 1200px))
-                 rotateX(var(--sz-tilt-x, 0deg))
-                 rotateY(var(--sz-tilt-y, 0deg))
-                 translate3d(
-                   calc(-50% + var(--sz-translate-x, 0px)),
-                   calc(-50% + var(--sz-translate-y, 0px)),
-                   0
-                 );
-      will-change: transform;
+      transform: translate(-50%, -50%);
       box-shadow:
         0 4px 16px rgba(0, 0, 0, 0.3),
         0 8px 32px rgba(0, 0, 0, 0.2),
@@ -62,16 +51,14 @@ export class SzWindow extends LitElement {
         height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
         top 0.4s cubic-bezier(0.16, 1, 0.3, 1),
         left 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
         opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
         border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1),
         box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .window.positioned {
-      transform: perspective(var(--sz-tilt-perspective, 1200px))
-                 rotateX(var(--sz-tilt-x, 0deg))
-                 rotateY(var(--sz-tilt-y, 0deg))
-                 translate3d(var(--sz-translate-x, 0px), var(--sz-translate-y, 0px), 0);
+      transform: none;
     }
 
     .window.dragging {
@@ -220,25 +207,6 @@ export class SzWindow extends LitElement {
     }
   `;
 
-  // --- Lifecycle ---
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    this.updateComplete.then(() => {
-      const windowEl = this.shadowRoot?.querySelector('.window') as HTMLElement | null;
-      if (windowEl) {
-        this.spatialTilt = new SpatialTilt(windowEl);
-        this.spatialTilt.enable();
-      }
-    });
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.spatialTilt?.destroy();
-    this.spatialTilt = null;
-  }
-
   // --- Public DOM API (called by window-manager) ---
 
   setLayout(layout: WindowLayout): void {
@@ -274,26 +242,18 @@ export class SzWindow extends LitElement {
 
   setDragging(dragging: boolean): void {
     this.isDragging = dragging;
-    if (dragging) {
-      this.spatialTilt?.freeze();
-    } else {
-      this.spatialTilt?.unfreeze();
-    }
   }
 
   setTiled(tiled: boolean): void {
     this.isTiled = tiled;
-    this.spatialTilt?.setMode(tiled ? 'maximized' : 'windowed');
   }
 
   showWindow(): void {
     this.isHidden = false;
-    this.spatialTilt?.unfreeze();
   }
 
   hideWindow(): void {
     this.isHidden = true;
-    this.spatialTilt?.freeze();
   }
 
   get windowHidden(): boolean {
@@ -305,7 +265,6 @@ export class SzWindow extends LitElement {
     if (!el) return false;
     try {
       await el.requestFullscreen();
-      this.spatialTilt?.setMode('fullscreen');
       return true;
     } catch {
       return false;
@@ -315,7 +274,6 @@ export class SzWindow extends LitElement {
   async exitFullscreen(): Promise<void> {
     if (document.fullscreenElement) {
       await document.exitFullscreen();
-      this.spatialTilt?.setMode(this.isTiled ? 'maximized' : 'windowed');
     }
   }
 
