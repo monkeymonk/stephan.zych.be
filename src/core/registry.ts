@@ -25,6 +25,14 @@ export interface DesktopApp {
   url?: string;
 }
 
+export interface StartScreenItem {
+  id: string;
+  label: string;
+  icon: string;
+  action: 'navigate' | 'external' | 'download';
+  target: string;
+}
+
 export interface Shortcut {
   keys: string;
   description: string;
@@ -85,6 +93,7 @@ class Registry {
   private wallpaperItems: string[] = [];
   private shortcutItems: Shortcut[] = [];
   private searchEntries: SearchEntry[] = [];
+  private startScreenData: StartScreenItem[] = [];
   private searchLoaded = false;
   private searchLoading: Promise<void> | null = null;
   private initialized = false;
@@ -138,6 +147,7 @@ class Registry {
     }
 
     this.wallpaperItems = readJsonData<string[]>('sz-wallpapers-data', DEFAULT_WALLPAPERS);
+    this.startScreenData = readJsonData<{ items?: StartScreenItem[] }>('sz-start-screen-data', {}).items ?? [];
     this.shortcutItems = [...DEFAULT_SHORTCUTS];
   }
 
@@ -186,6 +196,11 @@ class Registry {
   get wallpapers(): readonly string[] {
     this.ensureInit();
     return this.wallpaperItems;
+  }
+
+  get startScreenItems(): readonly StartScreenItem[] {
+    this.ensureInit();
+    return this.startScreenData;
   }
 
   get shortcuts(): readonly Shortcut[] {
