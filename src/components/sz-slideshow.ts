@@ -1,6 +1,8 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { reducedMotion } from '../core/styles.js';
+import { reducedMotion, mobileQuery } from '../core/styles.js';
+import { actions } from '../core/actions.js';
+import { SLIDESHOW_ACTION } from './slideshow-actions.js';
 
 @customElement('sz-slideshow')
 export class SzSlideshow extends LitElement {
@@ -60,6 +62,45 @@ export class SzSlideshow extends LitElement {
         transition: none;
         animation: none;
       }
+    }
+
+    .fab-container {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: auto;
+    }
+    .fab {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--sz-surface0, #313244);
+      color: var(--sz-subtext, #a6adc8);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    .fab:hover {
+      background: var(--sz-accent, #89b4fa);
+      color: var(--sz-crust, #11111b);
+    }
+    .fab svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+    @media (max-width: 768px) {
+      .fab-container { display: none; }
     }
   `;
 
@@ -165,6 +206,16 @@ export class SzSlideshow extends LitElement {
           style="background-image: url('${this.layerBImage}')"
         ></div>
       </div>
+      ${!mobileQuery.matches ? html`
+        <div class="fab-container">
+          <button class="fab" @click=${() => actions.dispatch(SLIDESHOW_ACTION.PREV)} title="Previous wallpaper" aria-label="Previous wallpaper">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="fab" @click=${() => actions.dispatch(SLIDESHOW_ACTION.NEXT)} title="Next wallpaper" aria-label="Next wallpaper">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      ` : nothing}
     `;
   }
 }
