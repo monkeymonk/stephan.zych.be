@@ -1,7 +1,7 @@
 import { actions } from '../../core/actions.js';
 import { isInputFocused } from '../../core/keyboard.js';
 import { WM_ACTION } from '../../features/window-manager/actions.js';
-import { DESKTOP_ACTION } from '../../features/desktop/actions.js';
+import { SLIDESHOW_ACTION } from '../../components/slideshow-actions.js';
 
 export function wireKeyboard(): () => void {
   const handler = (e: KeyboardEvent) => {
@@ -20,7 +20,7 @@ export function wireKeyboard(): () => void {
     }
     if (key === 'n') {
       e.preventDefault();
-      actions.dispatch(DESKTOP_ACTION.WALLPAPER_NEXT);
+      actions.dispatch(SLIDESHOW_ACTION.NEXT);
     }
   };
   document.addEventListener('keydown', handler);

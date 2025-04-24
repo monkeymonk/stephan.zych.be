@@ -8,7 +8,7 @@ import { appState } from '../core/state.js';
 registry.init();
 
 // Features (side-effect imports trigger custom element registration)
-import '../features/desktop/index.js';
+import '../features/start-screen/index.js';
 import '../features/window/index.js';
 import '../features/window-manager/index.js';
 import '../features/tmux/index.js';
