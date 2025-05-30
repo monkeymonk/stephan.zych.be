@@ -19,16 +19,15 @@
 <body>
   <script type="application/json" id="sz-nav-data">{{ nav | dump | safe }}</script>
   <script id="sz-site-data" type="application/json">{{ site | dump | safe }}</script>
+  <script type="application/json" id="sz-start-screen-data">{{ startScreen | dump | safe }}</script>
   <a href="#main-content" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">Skip to content</a>
 
-  <sz-desktop>
-    <sz-background>
-      <sz-slideshow mode="slideshow" interval="30000"></sz-slideshow>
-    </sz-background>
-    <sz-desktop-icons></sz-desktop-icons>
-    <sz-effect-matrix></sz-effect-matrix>
-    <sz-effect-confetti></sz-effect-confetti>
-  </sz-desktop>
+  <sz-background>
+    <sz-slideshow mode="slideshow" interval="30000"></sz-slideshow>
+  </sz-background>
+  <sz-start-screen></sz-start-screen>
+  <sz-effect-matrix></sz-effect-matrix>
+  <sz-effect-confetti></sz-effect-confetti>
   <sz-screen-shader></sz-screen-shader>
 
   <sz-window-manager>
