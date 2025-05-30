@@ -17,6 +17,7 @@ export class SzWindow extends LitElement {
   @property({ type: String }) width = '70vw';
   @property({ type: String }) height = '75vh';
   @property({ type: Number }) transparency = 95;
+  @property({ type: Boolean, attribute: 'start-hidden' }) startHidden = false;
 
   @state() private positionSet = false;
   @state() private position = { x: 0, y: 0 };
@@ -206,6 +207,13 @@ export class SzWindow extends LitElement {
       .resize-handle { display: none; }
     }
   `;
+
+  connectedCallback() {
+    super.connectedCallback();
+    if (this.startHidden) {
+      this.isHidden = true;
+    }
+  }
 
   // --- Public DOM API (called by window-manager) ---
 

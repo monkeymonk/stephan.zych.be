@@ -31,7 +31,7 @@
   <sz-screen-shader></sz-screen-shader>
 
   <sz-window-manager>
-    <sz-window id="terminal" titlebar="integrated" title="stephan.zych.be">
+    <sz-window id="terminal" titlebar="integrated" title="stephan.zych.be" {% if page.url == "/" %}start-hidden{% endif %}>
       <sz-tmux-bar slot="bar" active-path="{{ page.url }}"></sz-tmux-bar>
       <sz-tmux-panes>
         <sz-neovim slot="pane-0">
