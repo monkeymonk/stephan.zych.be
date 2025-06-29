@@ -17,14 +17,6 @@ export interface SocialLink {
   url: string;
 }
 
-export interface DesktopApp {
-  id: string;
-  label: string;
-  icon: string;
-  action: 'terminal' | 'browser' | 'link';
-  url?: string;
-}
-
 export interface StartScreenItem {
   id: string;
   label: string;
@@ -56,11 +48,6 @@ const DEFAULT_NAV: NavTab[] = [
 
 const DEFAULT_SOCIAL: SocialLink[] = [];
 
-const DEFAULT_DESKTOP_APPS: DesktopApp[] = [
-  { id: 'terminal', label: 'Terminal', icon: 'terminal', action: 'terminal' },
-  { id: 'files', label: 'Projects', icon: 'folder', action: 'link', url: '/projects/' },
-];
-
 const DEFAULT_WALLPAPERS: string[] = [
   '/assets/wallpapers/catpuccin_landscape.jpg',
   '/assets/wallpapers/dark_forest.jpg',
@@ -89,7 +76,6 @@ const DEFAULT_SHORTCUTS: Shortcut[] = [
 class Registry {
   private navItems: NavTab[] = [];
   private socialLinks: SocialLink[] = [];
-  private desktopItems: DesktopApp[] = [];
   private wallpaperItems: string[] = [];
   private shortcutItems: Shortcut[] = [];
   private searchEntries: SearchEntry[] = [];
@@ -133,19 +119,6 @@ class Registry {
       this.socialLinks = readJsonData<SocialLink[]>('sz-social-data', DEFAULT_SOCIAL);
     }
 
-    if (siteData.socials) {
-      const apps: DesktopApp[] = [
-        { id: 'terminal', label: 'Terminal', icon: 'terminal', action: 'terminal' },
-        { id: 'files', label: 'Projects', icon: 'folder', action: 'link', url: '/projects/' },
-      ];
-      if (siteData.socials.github) apps.push({ id: 'github', label: 'GitHub', icon: 'github', action: 'browser', url: siteData.socials.github });
-      if (siteData.socials.linkedin) apps.push({ id: 'linkedin', label: 'LinkedIn', icon: 'linkedin', action: 'browser', url: siteData.socials.linkedin });
-      if (siteData.email) apps.push({ id: 'mail', label: 'Email', icon: 'mail', action: 'link', url: `mailto:${siteData.email}` });
-      this.desktopItems = readJsonData<DesktopApp[]>('sz-desktop-apps-data', apps);
-    } else {
-      this.desktopItems = readJsonData<DesktopApp[]>('sz-desktop-apps-data', DEFAULT_DESKTOP_APPS);
-    }
-
     this.wallpaperItems = readJsonData<string[]>('sz-wallpapers-data', DEFAULT_WALLPAPERS);
     this.startScreenData = readJsonData<{ items?: StartScreenItem[] }>('sz-start-screen-data', {}).items ?? [];
     this.shortcutItems = [...DEFAULT_SHORTCUTS];
@@ -186,11 +159,6 @@ class Registry {
   get social(): readonly SocialLink[] {
     this.ensureInit();
     return this.socialLinks;
-  }
-
-  get desktopApps(): readonly DesktopApp[] {
-    this.ensureInit();
-    return this.desktopItems;
   }
 
   get wallpapers(): readonly string[] {
