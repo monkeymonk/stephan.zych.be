@@ -29,9 +29,6 @@ import '../layouts/sz-markdown.js';
 import '../layouts/sz-portfolio.js';
 import '../layouts/sz-widget.js';
 
-// Widgets
-import '../widgets/sz-contact-form.js';
-
 // Wire features together (must run after feature imports)
 import './wiring/index.js';
 

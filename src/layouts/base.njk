@@ -5,9 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title | default("Stephan Zych") }}</title>
   <meta name="description" content="{{ description | default('Software developer portfolio') }}">
+  <link rel="canonical" href="{{ site.url }}{{ page.url }}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ site.url }}{{ page.url }}">
   <meta property="og:title" content="{{ title | default('Stephan Zych') }}">
   <meta property="og:description" content="{{ description | default('Software developer portfolio') }}">
-  {% if ogImage %}<meta property="og:image" content="{{ ogImage }}">{% endif %}
+  <meta property="og:image" content="{{ site.url }}{{ ogImage | default('/assets/wallpapers/oled-mountains.jpg') }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#1e1e2e">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles/reset.css">
   <link rel="stylesheet" href="/styles/base.css">
   <link rel="stylesheet" href="/styles/prism-catppuccin.css">

@@ -5,6 +5,7 @@ module.exports = function(eleventyConfig) {
 
   eleventyConfig.addPassthroughCopy('src/assets');
   eleventyConfig.addPassthroughCopy('src/styles');
+  eleventyConfig.addPassthroughCopy({ 'src/CNAME': 'CNAME' });
 
   eleventyConfig.addFilter('dateDisplay', date => {
     return new Date(date).toLocaleDateString('en-US', {
