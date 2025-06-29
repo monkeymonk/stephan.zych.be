@@ -1,6 +1,6 @@
-import { LitElement, html, css, nothing } from 'lit';
+import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { reducedMotion, mobileQuery } from '../core/styles.js';
+import { reducedMotion } from '../core/styles.js';
 import { actions } from '../core/actions.js';
 import { SLIDESHOW_ACTION } from './slideshow-actions.js';
 
@@ -206,16 +206,14 @@ export class SzSlideshow extends LitElement {
           style="background-image: url('${this.layerBImage}')"
         ></div>
       </div>
-      ${!mobileQuery.matches ? html`
-        <div class="fab-container">
-          <button class="fab" @click=${() => actions.dispatch(SLIDESHOW_ACTION.PREV)} title="Previous wallpaper" aria-label="Previous wallpaper">
-            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <button class="fab" @click=${() => actions.dispatch(SLIDESHOW_ACTION.NEXT)} title="Next wallpaper" aria-label="Next wallpaper">
-            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-      ` : nothing}
+      <div class="fab-container">
+        <button class="fab" @click=${() => actions.dispatch(SLIDESHOW_ACTION.PREV)} title="Previous wallpaper" aria-label="Previous wallpaper">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="fab" @click=${() => actions.dispatch(SLIDESHOW_ACTION.NEXT)} title="Next wallpaper" aria-label="Next wallpaper">
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
     `;
   }
 }

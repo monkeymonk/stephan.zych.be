@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { registry, type StartScreenItem } from '../../core/registry.js';
 import { actions } from '../../core/actions.js';
@@ -114,6 +114,7 @@ export class SzStartScreen extends LitElement {
 
   render() {
     const items = registry.startScreenItems;
+    if (items.length === 0) return nothing;
 
     return html`
       <div class="start-screen">
