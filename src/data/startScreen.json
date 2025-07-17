@@ -1,10 +1,11 @@
 {
+  "autoOpen": { "enabled": true, "delayMs": 3500 },
   "items": [
     { "id": "about", "label": "About", "icon": "terminal", "action": "navigate", "target": "/about/" },
     { "id": "projects", "label": "Projects", "icon": "folder", "action": "navigate", "target": "/projects/" },
     { "id": "blog", "label": "Blog", "icon": "file", "action": "navigate", "target": "/blog/" },
     { "id": "contact", "label": "Contact", "icon": "mail", "action": "navigate", "target": "/contact/" },
-    { "id": "github", "label": "GitHub", "icon": "github", "action": "external", "target": "https://github.com/stephan-zych" },
-    { "id": "linkedin", "label": "LinkedIn", "icon": "linkedin", "action": "external", "target": "https://linkedin.com/in/..." }
+    { "id": "github", "label": "GitHub", "icon": "github", "action": "external", "target": "https://github.com/monkeymonk" },
+    { "id": "linkedin", "label": "LinkedIn", "icon": "linkedin", "action": "external", "target": "https://linkedin.com/in/stephanzych" }
   ]
 }
