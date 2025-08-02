@@ -10,7 +10,7 @@
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
   <meta property="og:title" content="{{ title | default('Stephan Zych') }}">
   <meta property="og:description" content="{{ description | default('Software developer portfolio') }}">
-  <meta property="og:image" content="{{ site.url }}{{ ogImage | default('/assets/wallpapers/oled-mountains.jpg') }}">
+  <meta property="og:image" content="{{ site.url }}{{ ogImage | default('/assets/wallpapers/landscape-1.webp') }}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#1e1e2e">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
@@ -37,7 +37,7 @@
   <sz-screen-shader></sz-screen-shader>
 
   <sz-window-manager>
-    <sz-window id="terminal" titlebar="integrated" title="stephan.zych.be" {% if page.url == "/" %}start-hidden{% endif %}>
+    <sz-window id="terminal" titlebar="integrated" title="stephan.zych.be">
       <sz-tmux-bar slot="bar" active-path="{{ page.url }}"></sz-tmux-bar>
       <sz-tmux-panes>
         <sz-neovim slot="pane-0">

@@ -168,8 +168,8 @@ echo "Dev server running on :8080"
 ## Images
 
 <figure>
-  <img src="/assets/wallpapers/catpuccin_landscape.jpg" alt="Catppuccin landscape wallpaper">
-  <figcaption>The Catppuccin landscape wallpaper used as desktop background</figcaption>
+  <img src="/assets/wallpapers/landscape-1.webp" alt="Landscape wallpaper">
+  <figcaption>One of the wallpapers used as the desktop background</figcaption>
 </figure>
 
 ## Embeds

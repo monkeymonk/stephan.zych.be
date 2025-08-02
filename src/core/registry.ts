@@ -49,16 +49,18 @@ const DEFAULT_NAV: NavTab[] = [
 const DEFAULT_SOCIAL: SocialLink[] = [];
 
 const DEFAULT_WALLPAPERS: string[] = [
-  '/assets/wallpapers/catpuccin_landscape.jpg',
-  '/assets/wallpapers/dark_forest.jpg',
-  '/assets/wallpapers/neocity.jpg',
-  '/assets/wallpapers/cyberpunk_car.jpg',
-  '/assets/wallpapers/oled-mountains.jpg',
-  '/assets/wallpapers/anime_cafe_tokyonight.jpg',
-  '/assets/wallpapers/nord_dark_city.jpg',
-  '/assets/wallpapers/gruvbox_retrocity.jpg',
-  '/assets/wallpapers/pixel-city.jpg',
-  '/assets/wallpapers/purple-mountain.jpg',
+  '/assets/wallpapers/landscape-1.webp',
+  '/assets/wallpapers/illustration-1.webp',
+  '/assets/wallpapers/city-1.webp',
+  '/assets/wallpapers/abstract-1.webp',
+  '/assets/wallpapers/landscape-2.webp',
+  '/assets/wallpapers/neon-cup.webp',
+  '/assets/wallpapers/illustration-2.webp',
+  '/assets/wallpapers/dark-room.webp',
+  '/assets/wallpapers/landscape-3.webp',
+  '/assets/wallpapers/keyboard.webp',
+  '/assets/wallpapers/illustration-3.webp',
+  '/assets/wallpapers/illustration-4.webp',
 ];
 
 const DEFAULT_SHORTCUTS: Shortcut[] = [

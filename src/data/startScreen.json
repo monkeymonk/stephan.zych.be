@@ -1,5 +1,4 @@
 {
-  "autoOpen": { "enabled": true, "delayMs": 3500 },
   "items": [
     { "id": "about", "label": "About", "icon": "terminal", "action": "navigate", "target": "/about/" },
     { "id": "projects", "label": "Projects", "icon": "folder", "action": "navigate", "target": "/projects/" },
