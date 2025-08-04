@@ -27,7 +27,10 @@ export function wireNeovimPalette() {
         { id: 'windowed', label: 'windowed', description: 'Enter windowed mode' },
         { id: 'fullpage', label: 'fullpage', description: 'Enter full-page mode' },
         { id: 'set', label: 'set', description: 'Set configuration',
-          args: [{ name: 'transparency' }, { name: 'shader' }] },
+          args: [
+            { name: 'transparency', values: ['100', '90', '80', '70', '60', '50'] },
+            { name: 'shader', values: ['off', 'css', 'webgl'] },
+          ] },
         { id: 'matrix', label: 'matrix', description: 'Enter the Matrix' },
         { id: 'party', label: 'party', description: 'Celebrate!' },
         { id: 'sudo', label: 'sudo', description: 'Try root access' },

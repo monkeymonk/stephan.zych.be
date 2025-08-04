@@ -1,4 +1,5 @@
 import { actions } from '../../core/actions.js';
+import { appState } from '../../core/state.js';
 import { WINDOW_ACTION } from '../../features/window/actions.js';
 import { WM_ACTION } from '../../features/window-manager/actions.js';
 
@@ -17,4 +18,12 @@ export function wireWindowToWM() {
   actions.on(WINDOW_ACTION.FULLSCREEN_REQUEST, (a) => {
     actions.dispatch(WM_ACTION.FULLSCREEN, a.payload);
   });
+
+  // Apply persisted / `:set transparency` value to the terminal window.
+  const applyTransparency = () => {
+    const win = document.getElementById('terminal') as (HTMLElement & { transparency?: number }) | null;
+    if (win) win.transparency = appState.get('transparency');
+  };
+  requestAnimationFrame(applyTransparency);
+  appState.subscribe(applyTransparency);
 }
