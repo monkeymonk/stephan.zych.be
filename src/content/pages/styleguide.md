@@ -162,6 +162,30 @@ echo "Dev server running on :8080"
 }
 ```
 
+### Terminal Session
+
+A shell-session styled code block — handy for walkthroughs, demos, and the occasional bio.
+
+```console
+$ whoami
+stephan — lead dev, ex-CTO, professional yak-shaver
+
+$ cat ~/.profile | grep -i years
+15 years of web. evolved from "frontend guy" into the
+person who decides why your build is slow.
+
+$ ls -la ~/clients/
+drwxr-xr-x  unicef  oxfam  engie  rtbf  telenet
+drwxr-xr-x  delhaize  kbc  monizze  ...  (200+ total)
+
+$ ./career.sh --tldr
+→ co-founded Cherry Pulp (6→20 people, acquired 2023)
+→ now Lead Developer @ CBTW
+→ still committing to main on a Friday
+
+$ man stephan   # spoiler: try :whoami in the command palette
+```
+
 ## Tables
 
 | Feature | Status | Notes |

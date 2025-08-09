@@ -1,239 +1,62 @@
 ---
 layout: page.njk
-title: About — Stephan Zych
+title: About — Stéphan Zych
 heading: About
-description: A comprehensive demo of all supported markdown elements and styling
+description: Lead developer, frontend architect, recovering CTO. Fifteen years building the web's unglamorous foundations — and having opinions about them.
 permalink: /about/
 ---
 
-This page demonstrates every supported markdown element styled with our **render-markdown.nvim** inspired theme. Think of it as a living style guide for content authors.
-
-## Typography & Inline Elements
-
-Regular text with **bold emphasis**, *italic emphasis*, and ***bold italic*** combined. You can also use ~~strikethrough~~ for deleted content and `inline code` for technical terms.
-
-Here's a [hyperlink to GitHub](https://github.com) and another [link to the about page](/about/).
-
-Use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> to open the command palette. The formula H<sub>2</sub>O is water, and E = mc<sup>2</sup> is famous.
-
-<abbr title="Hyper Text Markup Language">HTML</abbr> is the backbone of the web.
-
-### Blockquotes
-
-> "Any sufficiently advanced technology is indistinguishable from magic."
-> — Arthur C. Clarke
-
-> Blockquotes can contain **formatted text**, `code`, and [links](/).
->
-> They can also span multiple paragraphs.
-
-#### Nested Blockquotes
-
-> First level of quoting.
->
-> > Nested blockquote with a different perspective.
->
-> Back to the first level.
-
-## Lists
-
-### Unordered Lists
-
-- First item with some explanation
-- Second item with `inline code`
-  - Nested item level 2
-  - Another nested item
-    - Level 3 nesting goes deeper
-    - And another one
-      - Level 4 for the truly organized
-- Back to top level
-
-### Ordered Lists
-
-1. Clone the repository
-2. Install dependencies
-3. Configure environment variables
-4. Run the development server
-5. Open your browser to `localhost:8080`
-
-### Mixed Lists
-
-1. First ordered item
-   - Unordered sub-item
-   - Another sub-item
-2. Second ordered item
-   1. Ordered sub-item
-   2. Another ordered sub-item
-3. Third ordered item
-
-### Task Lists
-
-- [x] Design the component architecture
-- [x] Implement the base theme
-- [x] Add render-markdown.nvim heading styles
-- [ ] Replace placeholder content
-- [ ] Add real project screenshots
-- [ ] Deploy to production
-
-## Code
-
-### Inline Code
-
-Use `npm install` to install packages. The `Array.prototype.map()` method creates a new array.
-
-### Fenced Code Blocks
-
-```typescript
-interface Project {
-  title: string;
-  description: string;
-  tags: string[];
-  url: string;
-}
-
-class Portfolio {
-  private projects: Project[] = [];
-
-  addProject(project: Project): void {
-    this.projects.push(project);
-    console.log(`Added: ${project.title}`);
-  }
-
-  filterByTag(tag: string): Project[] {
-    return this.projects.filter(p => p.tags.includes(tag));
-  }
-}
+```text
+$ whoami
+> Stéphan Zych — I build the foundations other developers
+  build on. Then I have strong opinions about them.
 ```
 
-```css
-/* Catppuccin Mocha palette */
-:root {
-  --ctp-base: #1e1e2e;
-  --ctp-mantle: #181825;
-  --ctp-crust: #11111b;
-  --ctp-text: #cdd6f4;
-  --ctp-blue: #89b4fa;
-  --ctp-lavender: #b4befe;
-}
+## The short version
 
-.terminal {
-  background: var(--ctp-base);
-  color: var(--ctp-text);
-  font-family: 'JetBrains Mono', monospace;
-  padding: 1rem;
-}
-```
+Fifteen years turning *"can you just make it pop?"* into web platforms that survive contact with production. I co-founded a Brussels agency, **Cherry Pulp**, helped grow it from 6 to 20 people, shipped **200+ platforms**, and stuck around until it got acquired. These days I'm **Lead Developer at CBTW** — still suspiciously hands-on for someone with "lead" in the title.
 
-```bash
-#!/bin/bash
-echo "Building site..."
-npx @11ty/eleventy --serve &
-npx esbuild src/components/index.ts \
-  --bundle --format=esm \
-  --outfile=_site/js/components.js \
-  --watch
-echo "Dev server running on :8080"
-```
+## What I actually do
 
-```json
-{
-  "name": "stephan.zych.be",
-  "version": "1.0.0",
-  "scripts": {
-    "dev": "eleventy --serve",
-    "build": "eleventy && esbuild src/components/index.ts --bundle --minify"
-  }
-}
-```
+The unglamorous stuff that makes everyone else faster: architecture, tooling, conventions, developer experience. I build the boilerplates, CLIs, and standards that turn *"every project is a special snowflake"* into *"every project boots the same way and nobody cries on deploy day."*
 
-## Tables
+Frontend is home turf — but I'm full-stack enough to be dangerous across the JavaScript and PHP worlds, and opinionated enough to tell you which one your project actually needs.
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Terminal shell | Done | 3 display modes |
-| Tmux tabs | Done | Alt+1-5 navigation |
-| Command palette | Done | Fuzzy autocomplete |
-| Theme switching | Done | 3 themes available |
-| Line numbers | Done | render-markdown.nvim style |
-| Blog | WIP | Needs real content |
+## The receipts
 
-### Alignment
+| Metric | Value |
+|--------|-------|
+| Years in | 15 |
+| Platforms shipped | 200+ |
+| Agency grown | 6 → 20 people |
+| Devs mentored at peak | 10–12 |
+| Exits | 1 — Cherry Pulp → CBTW, 2023 |
 
-| Left | Center | Right |
-|:-----|:------:|------:|
-| Cell 1 | Cell 2 | Cell 3 |
-| Longer content here | Centered | 42 |
-| Short | Yes | 1,337 |
+A few names you might recognise, who trusted me not to break their websites: **Unicef · Oxfam · Engie · Delhaize · Telenet · KBC Brussels · RTL · RTBF · Monizze**. No pressure.
 
-## Images
+## Plot twist
 
-<figure>
-  <img src="/assets/wallpapers/landscape-1.webp" alt="Landscape wallpaper">
-  <figcaption>One of the wallpapers used as the desktop background</figcaption>
-</figure>
+I didn't come up purely through computer science. I studied **fine arts** at the Académie Royale des Beaux-Arts de Bruxelles and visual narration at ERG, *then* landed at ULB doing computer science. Turns out composition, hierarchy, and obsessive attention to detail translate scarily well from a canvas to a component library. I still draw system diagrams like they belong in a gallery.
 
-## Embeds
+## Off the clock
 
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" title="Video embed example" allowfullscreen></iframe>
+- **AI-assisted workflows & local LLMs** — running models on my own hardware, because the cloud doesn't need to know *everything*.
+- **A Docker-based homelab** — self-hosting is a personality trait now, apparently.
+- **CLI utilities & terminal nerdery** — yes, this entire website is a terminal. No, I won't apologise. (I've even given the talk: *"Terminal utilities & advanced use cases."*)
+- **Prototyping in Rust, Go, Python, and C#** — and building little games in **Godot** when I want pixels instead of pull requests.
 
-## Horizontal Rules
+## The stack, roughly
 
-Content above the rule.
+- **Frontend** — TypeScript · React · Next.js · Vue · Astro · Tailwind · Storybook
+- **Backend** — PHP · Laravel · WordPress done properly (Bedrock, Sage)
+- **Infra & tooling** — Docker · Linux · Nginx · Cloudflare · AWS Lightsail · Laravel Forge · Vite
 
----
+## Say hi
 
-Content below the rule.
+I'm in Brussels 🇧🇪, I speak French natively and English professionally, and I'm always up for a good conversation about architecture, terminals, or why your build is slow.
 
-## Details / Collapsible Sections
+- **Email** — [{{ site.email }}](mailto:{{ site.email }})
+- **GitHub** — [{{ site.socials.github }}]({{ site.socials.github }})
+- **LinkedIn** — [{{ site.socials.linkedin }}]({{ site.socials.linkedin }})
 
-<details>
-<summary>Click to expand: Technical Architecture</summary>
-
-The portfolio is built with:
-
-- **Eleventy 3.x** for static site generation
-- **Lit 3.x** for web components
-- **esbuild** for TypeScript bundling
-
-Each page is rendered at build time and enhanced with interactive web components at runtime.
-
-</details>
-
-<details>
-<summary>Click to expand: Color Palette Reference</summary>
-
-| Name | Hex | Usage |
-|------|-----|-------|
-| Base | `#1e1e2e` | Background |
-| Text | `#cdd6f4` | Body text |
-| Blue | `#89b4fa` | Accent / links |
-| Lavender | `#b4befe` | Secondary accent |
-| Mauve | `#cba6f7` | Tertiary accent |
-| Green | `#a6e3a1` | Success / code |
-| Peach | `#fab387` | Bold text |
-| Yellow | `#f9e2af` | Italic text |
-
-</details>
-
-##### Heading Level 5
-
-This demonstrates a level 5 heading, which uses the teal color from the Catppuccin palette.
-
-###### Heading Level 6
-
-And finally level 6, styled with flamingo. You rarely need this many heading levels, but they're all covered.
-
-## Definition Lists
-
-<dl>
-<dt>Web Component</dt>
-<dd>A set of web platform APIs that allow you to create custom, reusable HTML elements.</dd>
-<dt>Shadow DOM</dt>
-<dd>Encapsulated DOM tree attached to an element, hidden from the main document.</dd>
-<dt>Light DOM</dt>
-<dd>Regular DOM children of a custom element, visible to the main document and styleable with global CSS.</dd>
-</dl>
-
----
-
-That covers all the supported elements. Each one is styled to match the **Catppuccin Mocha** theme with **render-markdown.nvim** inspired heading highlights, custom list bullets, and consistent terminal typography.
+> Curious who you're *really* talking to? Type `:whoami` in the command palette.

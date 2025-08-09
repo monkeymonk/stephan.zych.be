@@ -31,6 +31,7 @@ export function wireNeovimPalette() {
             { name: 'transparency', values: ['100', '90', '80', '70', '60', '50'] },
             { name: 'shader', values: ['off', 'css', 'webgl'] },
           ] },
+        { id: 'whoami', label: 'whoami', description: 'man page for one (1) developer' },
         { id: 'matrix', label: 'matrix', description: 'Enter the Matrix' },
         { id: 'party', label: 'party', description: 'Celebrate!' },
         { id: 'sudo', label: 'sudo', description: 'Try root access' },
@@ -51,6 +52,7 @@ export function wireNeovimPalette() {
       if (item.id === 'fullscreen') { actions.dispatch(WM_ACTION.FULLSCREEN, { windowId: 'terminal' }); return; }
       if (item.id === 'windowed') { actions.dispatch(WM_ACTION.TOGGLE_MODE, { windowId: 'terminal' }); return; }
       if (item.id === 'fullpage') { actions.dispatch(WM_ACTION.MAXIMIZE, { windowId: 'terminal' }); return; }
+      if (item.id === 'whoami') { router.navigate('/whoami/'); return; }
       if (item.id === 'set' && args?.[0] === 'transparency' && args?.[1]) {
         appState.set('transparency', parseInt(args[1])); return;
       }
