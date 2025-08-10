@@ -51,6 +51,52 @@ I didn't come up purely through computer science. I studied **fine arts** at the
 - **Backend** — PHP · Laravel · WordPress done properly (Bedrock, Sage)
 - **Infra & tooling** — Docker · Linux · Nginx · Cloudflare · AWS Lightsail · Laravel Forge · Vite
 
+## Why work with me
+
+Because I've sat on both sides of the table. As a co-founder and CTO I learned that the code is the easy part — the hard part is scope, trade-offs, and building foundations a team can move fast on for years. You get someone who:
+
+- **Thinks in systems, not tickets** — architecture, tooling, and conventions that keep paying off long after launch.
+- **Has the receipts** — 200+ shipped platforms means I've already made (and fixed) most of the mistakes so your project doesn't have to.
+- **Stays hands-on** — I don't draw the diagram and disappear; I'm in the codebase.
+- **Translates** — I'll talk budget with your CEO and generics with your junior dev in the same afternoon.
+
+## FAQ
+
+<details>
+<summary>Are you available for work?</summary>
+
+Depends on the work. Interesting problem, decent humans, a little respect for craft? Let's talk — [email me](mailto:{{ site.email }}).
+
+</details>
+
+<details>
+<summary>Frontend only, or full-stack?</summary>
+
+Frontend is home turf, but I'm full-stack enough to be useful across the JavaScript and PHP worlds — and honest enough to tell you when you need a specialist instead of me.
+
+</details>
+
+<details>
+<summary>WordPress? Really?</summary>
+
+Really. Done properly — Bedrock, Sage, actual conventions — it ships institutional and editorial sites that non-developers can run themselves. The snobbery is a luxury most projects can't afford.
+
+</details>
+
+<details>
+<summary>Why does your portfolio look like a terminal?</summary>
+
+Because I like terminals, I had opinions, and "tasteful and forgettable" is the worse crime. While you're here, try typing <kbd>:</kbd> — or `:whoami`.
+
+</details>
+
+<details>
+<summary>Can you work with my existing team?</summary>
+
+That's most of what I do: raising the floor for a whole team through tooling, conventions, and mentoring — not just adding one more pair of hands.
+
+</details>
+
 ## Say hi
 
 I'm in Brussels 🇧🇪, I speak French natively and English professionally, and I'm always up for a good conversation about architecture, terminals, or why your build is slow.
