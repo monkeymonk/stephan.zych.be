@@ -503,6 +503,118 @@ a:hover { text-decoration: underline; }
 }
 
 /* ═══════════════════════════════════════════════════
+   Project cards — terminal-window styling on /projects/
+   ═══════════════════════════════════════════════════ */
+
+.project-card {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  background: var(--sz-mantle, #181825);
+  border: 1px solid var(--sz-surface0, #313244);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.project-card:hover,
+.project-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--sz-accent, #89b4fa);
+  box-shadow: 0 10px 30px -12px rgba(137, 180, 250, 0.35);
+  outline: none;
+}
+
+.project-card__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--sz-surface0, #313244);
+  border-bottom: 1px solid var(--sz-surface1, #45475a);
+}
+.project-card__dots {
+  display: inline-flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.project-card__dots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sz-surface2, #585b70);
+}
+.project-card__dots i:nth-child(1) { background: var(--sz-red, #f38ba8); }
+.project-card__dots i:nth-child(2) { background: var(--sz-yellow, #f9e2af); }
+.project-card__dots i:nth-child(3) { background: var(--sz-green, #a6e3a1); }
+.project-card__path {
+  font-size: calc(var(--sz-font-size) * 0.82);
+  color: var(--sz-overlay1, #7f849c);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-card__body {
+  padding: 16px;
+  flex: 1;
+}
+.project-card__title {
+  margin: 0 0 8px;
+  font-size: calc(var(--sz-font-size) * 1.05);
+  font-weight: 700;
+  color: var(--sz-accent, #89b4fa);
+  line-height: 1.35;
+}
+.project-card__desc {
+  margin: 0;
+  color: var(--sz-subtext0, #a6adc8);
+  font-size: calc(var(--sz-font-size) * 0.92);
+  line-height: 1.55;
+}
+.project-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+.project-card__tag {
+  font-size: calc(var(--sz-font-size) * 0.78);
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--sz-surface0, #313244);
+  color: var(--sz-lavender, #b4befe);
+  border: 1px solid var(--sz-surface1, #45475a);
+}
+
+.project-card__cta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: calc(var(--sz-font-size) * 0.85);
+  color: var(--sz-overlay0, #6c7086);
+  border-top: 1px solid var(--sz-surface0, #313244);
+  transition: color 0.18s ease;
+}
+.project-card:hover .project-card__cta,
+.project-card:focus-visible .project-card__cta {
+  color: var(--sz-accent, #89b4fa);
+}
+.project-card__arrow {
+  transition: transform 0.18s ease;
+}
+.project-card:hover .project-card__arrow {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-card,
+  .project-card__arrow { transition: none; }
+  .project-card:hover { transform: none; }
+}
+
+/* ═══════════════════════════════════════════════════
    Block spacing — MUST be last to win on specificity.
    Empty line (margin-bottom) after every direct-child block.
    ═══════════════════════════════════════════════════ */

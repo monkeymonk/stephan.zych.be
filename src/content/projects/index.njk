@@ -13,9 +13,21 @@ permalink: /projects/
 {% endfor %}
 <sz-portfolio filters="{{ allTags | join(',') }}">
   {% for project in collections.projects %}
-    <div class="project-card" data-tags="{{ project.data.tags | join(',') }}">
-      <h3><a href="{{ project.url }}">{{ project.data.title }}</a></h3>
-      <p>{{ project.data.description }}</p>
-    </div>
+    <a class="project-card" href="{{ project.url }}" data-tags="{{ project.data.tags | join(',') }}">
+      <div class="project-card__bar">
+        <span class="project-card__dots"><i></i><i></i><i></i></span>
+        <span class="project-card__path">~/projects/{{ project.fileSlug }}</span>
+      </div>
+      <div class="project-card__body">
+        <h3 class="project-card__title">{{ project.data.title }}</h3>
+        <p class="project-card__desc">{{ project.data.description }}</p>
+        {% if project.data.tags %}
+        <div class="project-card__tags">
+          {% for tag in project.data.tags %}<span class="project-card__tag">{{ tag }}</span>{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      <div class="project-card__cta">open <span class="project-card__arrow">→</span></div>
+    </a>
   {% endfor %}
 </sz-portfolio>

@@ -9,9 +9,9 @@ layout: base.njk
   {% endif %}
   <header class="sz-article__header">
     <h1 class="sz-article__title">{{ heading or title }}</h1>
-    {% if date %}
+    {% if date or tags %}
     <div class="sz-article__meta">
-      <time datetime="{{ date | htmlDateString }}">{{ date | dateDisplay }}</time>
+      {% if date %}<time datetime="{{ date | htmlDateString }}">{{ date | dateDisplay }}</time>{% endif %}
       {% if tags %}
       <span class="sz-article__tags">
         {% for tag in tags %}{% if tag !== 'blog' and tag !== 'projects' %}<span class="sz-article__tag">{{ tag }}</span>{% endif %}{% endfor %}
