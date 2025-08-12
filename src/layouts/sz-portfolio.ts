@@ -60,9 +60,18 @@ export class SzPortfolio extends LitElement {
       color: var(--sz-base, #1e1e2e);
       border-color: var(--sz-accent, #89b4fa);
     }
+    /* tmux tiled-pane grid: 1px gaps over a border-coloured backplate
+       render as shared single-line pane separators */
     .list {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-auto-rows: 1fr;
+      gap: 1px;
+      background: var(--sz-surface0, #313244);
+      border: 1px solid var(--sz-surface0, #313244);
+    }
+    @media (max-width: 768px) {
+      .list { grid-template-columns: 1fr; }
     }
 
     /* tmux-style status / pager footer */

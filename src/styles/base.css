@@ -503,84 +503,72 @@ a:hover { text-decoration: underline; }
 }
 
 /* ═══════════════════════════════════════════════════
-   Project list — multiplexer (tmux choose-tree) styling
+   Project panes — tmux tiled-pane grid on /projects/
    ═══════════════════════════════════════════════════ */
 
-.project-row {
+.project-pane {
+  position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 12px;
+  flex-direction: column;
+  min-height: 150px;
+  padding: 16px 18px;
   text-decoration: none;
   color: inherit;
-  border-left: 2px solid transparent;
-  border-radius: 4px;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  background: var(--sz-base, #1e1e2e);
+  box-shadow: inset 0 0 0 1px transparent;
+  transition: box-shadow 0.15s ease, background 0.15s ease;
 }
-.project-row + .project-row {
-  border-top: 1px solid var(--sz-surface0, #313244);
-}
-.project-row:hover,
-.project-row:focus-visible {
-  background: var(--sz-surface0, #313244);
-  background: color-mix(in srgb, var(--sz-accent, #89b4fa) 12%, transparent);
-  border-left-color: var(--sz-accent, #89b4fa);
+.project-pane:hover,
+.project-pane:focus-visible {
+  /* active-pane border, like tmux's highlighted pane */
+  box-shadow: inset 0 0 0 2px var(--sz-accent, #89b4fa);
+  background: color-mix(in srgb, var(--sz-accent, #89b4fa) 7%, var(--sz-base, #1e1e2e));
   outline: none;
 }
 
-.project-row__num {
-  flex-shrink: 0;
-  width: 2ch;
-  text-align: right;
-  padding-top: 1px;
-  color: var(--sz-overlay0, #6c7086);
+/* display-panes style index watermark */
+.project-pane__num {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: calc(var(--sz-font-size) * 2.2);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--sz-surface1, #45475a);
   font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  transition: color 0.15s ease;
 }
-.project-row:hover .project-row__num,
-.project-row:focus-visible .project-row__num {
-  color: var(--sz-accent, #89b4fa);
+.project-pane:hover .project-pane__num,
+.project-pane:focus-visible .project-pane__num {
+  color: color-mix(in srgb, var(--sz-accent, #89b4fa) 45%, transparent);
 }
 
-.project-row__main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
-}
-.project-row__title {
-  color: var(--sz-text, #cdd6f4);
+.project-pane__title {
+  margin: 0 2.5ch 6px 0;
+  font-size: calc(var(--sz-font-size) * 1.02);
   font-weight: 700;
+  color: var(--sz-accent, #89b4fa);
   line-height: 1.35;
 }
-.project-row:hover .project-row__title,
-.project-row:focus-visible .project-row__title {
-  color: var(--sz-accent, #89b4fa);
-}
-.project-row__desc {
-  color: var(--sz-overlay1, #7f849c);
+.project-pane__desc {
+  margin: 0;
+  color: var(--sz-subtext0, #a6adc8);
   font-size: calc(var(--sz-font-size) * 0.9);
   line-height: 1.5;
 }
-
-.project-row__tags {
-  flex-shrink: 0;
+.project-pane__tags {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
   gap: 8px;
-  max-width: 40%;
-  padding-top: 2px;
+  margin-top: auto;
+  padding-top: 14px;
 }
-.project-row__tag {
-  font-size: calc(var(--sz-font-size) * 0.78);
+.project-pane__tag {
+  font-size: calc(var(--sz-font-size) * 0.76);
   color: var(--sz-overlay1, #7f849c);
 }
-.project-row__tag::before { content: "#"; opacity: 0.5; }
-
-@media (max-width: 768px) {
-  .project-row__tags { display: none; }
-}
+.project-pane__tag::before { content: "#"; opacity: 0.5; }
 
 /* ═══════════════════════════════════════════════════
    Article breadcrumb + blog footer
