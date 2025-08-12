@@ -11,23 +11,19 @@ permalink: /projects/
     {% endif %}
   {% endfor %}
 {% endfor %}
-<sz-portfolio filters="{{ allTags | join(',') }}">
+<sz-portfolio filters="{{ allTags | join(',') }}" page-size="8">
   {% for project in collections.projects %}
-    <a class="project-card" href="{{ project.url }}" data-tags="{{ project.data.tags | join(',') }}">
-      <div class="project-card__bar">
-        <span class="project-card__dots"><i></i><i></i><i></i></span>
-        <span class="project-card__path">~/projects/{{ project.fileSlug }}</span>
-      </div>
-      <div class="project-card__body">
-        <h3 class="project-card__title">{{ project.data.title }}</h3>
-        <p class="project-card__desc">{{ project.data.description }}</p>
-        {% if project.data.tags %}
-        <div class="project-card__tags">
-          {% for tag in project.data.tags %}<span class="project-card__tag">{{ tag }}</span>{% endfor %}
-        </div>
-        {% endif %}
-      </div>
-      <div class="project-card__cta">open <span class="project-card__arrow">→</span></div>
+    <a class="project-row" href="{{ project.url }}" data-tags="{{ project.data.tags | join(',') }}">
+      <span class="project-row__num">{{ loop.index0 }}</span>
+      <span class="project-row__main">
+        <span class="project-row__title">{{ project.data.title }}</span>
+        <span class="project-row__desc">{{ project.data.description }}</span>
+      </span>
+      {% if project.data.tags %}
+      <span class="project-row__tags">
+        {% for tag in project.data.tags %}<span class="project-row__tag">{{ tag }}</span>{% endfor %}
+      </span>
+      {% endif %}
     </a>
   {% endfor %}
 </sz-portfolio>

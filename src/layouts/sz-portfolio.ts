@@ -13,7 +13,13 @@ export class SzPortfolio extends LitElement {
     },
   })
   filters: string[] = [];
+
+  @property({ attribute: 'page-size', type: Number }) pageSize = 8;
+
   @state() private activeFilter = '';
+  @state() private page = 1;
+  @state() private totalPages = 1;
+  @state() private matchedCount = 0;
 
   static styles = [scrollbarStyles, css`
     :host {
@@ -26,7 +32,7 @@ export class SzPortfolio extends LitElement {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       padding-bottom: 12px;
       border-bottom: 1px solid var(--sz-surface0, #313244);
       position: sticky;
@@ -54,53 +60,114 @@ export class SzPortfolio extends LitElement {
       color: var(--sz-base, #1e1e2e);
       border-color: var(--sz-accent, #89b4fa);
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
+    .list {
+      display: flex;
+      flex-direction: column;
     }
+
+    /* tmux-style status / pager footer */
+    .pager {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--sz-surface0, #313244);
+      font-size: calc(var(--sz-font-size, 13px) * 0.9);
+      color: var(--sz-overlay1, #7f849c);
+    }
+    .pager--static { justify-content: flex-end; }
+    .pager__info { white-space: nowrap; }
+    .pager__btn {
+      background: transparent;
+      border: 1px solid var(--sz-surface1, #45475a);
+      border-radius: 4px;
+      color: var(--sz-subtext, #a6adc8);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: inherit;
+      padding: 3px 12px;
+      transition: all 0.2s;
+    }
+    .pager__btn:hover:not(:disabled) {
+      border-color: var(--sz-accent, #89b4fa);
+      color: var(--sz-text, #cdd6f4);
+    }
+    .pager__btn:disabled { opacity: 0.4; cursor: default; }
 
     @media (max-width: 768px) {
       :host { padding: 12px; }
-      .grid { grid-template-columns: 1fr; }
     }
   `];
 
   private toggleFilter(filter: string) {
     this.activeFilter = this.activeFilter === filter ? '' : filter;
+    this.page = 1;
     this.dispatchEvent(new CustomEvent('filter-change', {
       detail: { filter: this.activeFilter },
       bubbles: true,
-      composed: true
+      composed: true,
     }));
   }
 
-  protected updated(changedProperties: Map<PropertyKey, unknown>) {
-    if (changedProperties.has('activeFilter')) {
-      this.updateVisibleItems();
+  protected firstUpdated() {
+    this.applyView();
+    const slot = this.shadowRoot?.querySelector('slot');
+    slot?.addEventListener('slotchange', () => this.applyView());
+  }
+
+  protected updated(changed: Map<PropertyKey, unknown>) {
+    if (changed.has('activeFilter') || changed.has('page') || changed.has('pageSize')) {
+      this.applyView();
     }
   }
 
-  private updateVisibleItems() {
-    const items = this.querySelectorAll<HTMLElement>('[data-tags]');
+  private get items(): HTMLElement[] {
+    return Array.from(this.querySelectorAll<HTMLElement>('[data-tags]'));
+  }
 
-    items.forEach((item) => {
-      if (!this.activeFilter) {
-        item.style.display = '';
-        return;
-      }
+  private matched(): HTMLElement[] {
+    if (!this.activeFilter) return this.items;
+    return this.items.filter((el) =>
+      (el.getAttribute('data-tags') ?? '')
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .includes(this.activeFilter)
+    );
+  }
 
-      const tags = item
-        .getAttribute('data-tags')
-        ?.split(',')
-        .map((tag) => tag.trim())
-        .filter(Boolean) ?? [];
+  private applyView() {
+    const all = this.items;
+    const matched = this.matched();
+    this.matchedCount = matched.length;
+    this.totalPages = Math.max(1, Math.ceil(matched.length / this.pageSize));
+    if (this.page > this.totalPages) {
+      this.page = this.totalPages; // re-runs applyView via updated()
+      return;
+    }
+    const start = (this.page - 1) * this.pageSize;
+    const visible = new Set(matched.slice(start, start + this.pageSize));
+    for (const el of all) {
+      el.style.display = visible.has(el) ? '' : 'none';
+    }
+  }
 
-      item.style.display = tags.includes(this.activeFilter) ? '' : 'none';
-    });
+  private go(delta: number) {
+    const next = Math.min(this.totalPages, Math.max(1, this.page + delta));
+    if (next !== this.page) this.page = next;
+  }
+
+  private get rangeLabel(): string {
+    if (this.matchedCount === 0) return 'no entries';
+    const start = (this.page - 1) * this.pageSize + 1;
+    const end = Math.min(this.matchedCount, this.page * this.pageSize);
+    return `${start}–${end} of ${this.matchedCount}`;
   }
 
   render() {
+    const noun = this.matchedCount === 1 ? 'entry' : 'entries';
     return html`
       ${this.filters.length > 0 ? html`
         <div class="filter-bar">
@@ -116,9 +183,20 @@ export class SzPortfolio extends LitElement {
           `)}
         </div>
       ` : nothing}
-      <div class="grid">
+      <div class="list">
         <slot></slot>
       </div>
+      ${this.totalPages > 1 ? html`
+        <div class="pager">
+          <button class="pager__btn" ?disabled=${this.page <= 1} @click=${() => this.go(-1)}>‹ prev</button>
+          <span class="pager__info">${this.rangeLabel} · page ${this.page}/${this.totalPages}</span>
+          <button class="pager__btn" ?disabled=${this.page >= this.totalPages} @click=${() => this.go(1)}>next ›</button>
+        </div>
+      ` : html`
+        <div class="pager pager--static">
+          <span class="pager__info">${this.matchedCount} ${noun}</span>
+        </div>
+      `}
     `;
   }
 }

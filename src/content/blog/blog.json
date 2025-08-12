@@ -1,4 +1,5 @@
 {
   "permalink": "/blog/{{ page.fileSlug }}/",
-  "layout": "post.njk"
+  "layout": "post.njk",
+  "section": { "name": "blog", "path": "/blog/" }
 }
