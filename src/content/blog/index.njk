@@ -1,15 +1,33 @@
 ---
 layout: base.njk
-title: Blog — Stephan Zych
+title: Blog — Stéphan Zych
 permalink: /blog/
 ---
-<sz-markdown>
-  <h1>Blog</h1>
-  {% for post in collections.blog %}
-    <article>
-      <h2><a href="{{ post.url }}">{{ post.data.title }}</a></h2>
-      <p>{{ post.data.description }}</p>
-      <time>{{ post.date | dateDisplay }}</time>
-    </article>
-  {% endfor %}
-</sz-markdown>
+<div class="blog-index">
+  <header class="blog-index__head">
+    <span class="blog-index__cmd"><span class="blog-index__sigil">$</span> ls -lt ~/blog</span>
+    <span class="blog-index__count">{{ collections.blog | length }} post{% if (collections.blog | length) != 1 %}s{% endif %}</span>
+  </header>
+  <ul class="post-list">
+    {% for post in collections.blog %}
+    <li>
+      <a class="post-row" href="{{ post.url }}">
+        <span class="post-row__date">
+          <time datetime="{{ post.date | htmlDateString }}">{{ post.date | htmlDateString }}</time>
+          <span class="post-row__read">{{ post.templateContent | readingTime }} min read</span>
+        </span>
+        <span class="post-row__main">
+          <span class="post-row__title">{{ post.data.title }}</span>
+          <span class="post-row__desc">{{ post.data.description }}</span>
+          {% if post.data.tags %}
+          <span class="post-row__tags">
+            {% for tag in post.data.tags %}{% if tag !== 'blog' %}<span class="post-row__tag">{{ tag }}</span>{% endif %}{% endfor %}
+          </span>
+          {% endif %}
+        </span>
+        <span class="post-row__arrow">→</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>

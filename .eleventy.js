@@ -26,6 +26,12 @@ module.exports = function(eleventyConfig) {
     return collection.getFilteredByGlob('src/content/projects/**/*.md');
   });
 
+  // Estimate reading time in minutes from rendered content
+  eleventyConfig.addFilter('readingTime', content => {
+    const words = (content || '').replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+    return Math.max(1, Math.round(words / 200));
+  });
+
   // Strip HTML helper for search index
   eleventyConfig.addFilter('stripHtml', content => {
     return (content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
