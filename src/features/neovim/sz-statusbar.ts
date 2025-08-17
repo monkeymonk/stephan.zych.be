@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { StateController } from '../../core/state-controller.js';
 import { registry } from '../../core/registry.js';
 import { actions, ROUTER_ACTION } from '../../core/actions.js';
+import type { RouteChangedDetail } from '../../core/router.js';
 
 @customElement('sz-statusbar')
 export class SzStatusbar extends LitElement {
@@ -14,7 +15,7 @@ export class SzStatusbar extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.routeUnsub = actions.on(ROUTER_ACTION.ROUTE_CHANGED, (a) => {
-      this.route = (a.payload as any).path;
+      this.route = (a.payload as RouteChangedDetail).path;
     });
   }
 

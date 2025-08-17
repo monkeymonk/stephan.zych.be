@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { actions, ROUTER_ACTION } from '../../core/actions.js';
+import type { RouteChangedDetail } from '../../core/router.js';
 import { isInputFocused } from '../../core/keyboard.js';
 import { registry } from '../../core/registry.js';
 import { TMUX_ACTION } from './actions.js';
@@ -146,7 +147,7 @@ export class SzTmuxBar extends LitElement {
     this.timer = window.setInterval(() => this.updateTime(), 60000);
     document.addEventListener('keydown', this.handleKeydown);
     this.routeUnsub = actions.on(ROUTER_ACTION.ROUTE_CHANGED, (a) => {
-      this.activePath = (a.payload as any).path;
+      this.activePath = (a.payload as RouteChangedDetail).path;
     });
     document.addEventListener('visibilitychange', this.handleVisibility);
   }

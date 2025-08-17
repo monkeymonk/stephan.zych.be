@@ -4,8 +4,15 @@ import { reducedMotion } from '../core/styles.js';
 import { actions } from '../core/actions.js';
 import { SLIDESHOW_ACTION } from './slideshow-actions.js';
 
+/** Public contract consumed by the slideshow wiring. */
+export interface SlideshowApi {
+  setImages(urls: string[]): void;
+  next(): void;
+  prev(): void;
+}
+
 @customElement('sz-slideshow')
-export class SzSlideshow extends LitElement {
+export class SzSlideshow extends LitElement implements SlideshowApi {
   @property({ type: Number }) interval = 30000;
 
   @state() private layerAImage = '';

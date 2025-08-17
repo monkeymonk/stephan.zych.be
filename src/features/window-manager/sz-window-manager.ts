@@ -5,22 +5,7 @@ import { mobileQuery } from '../../core/styles.js';
 import { WM_ACTION } from './actions.js';
 import { FocusTrap } from './focus-trap.js';
 import type { WindowLayout } from '../../core/types.js';
-
-interface WindowApi {
-  getLayout(): WindowLayout;
-  setLayout(layout: WindowLayout): void;
-  resetLayout(): void;
-  bringToFront(): void;
-  setResizeHandlesVisible(visible: boolean): void;
-  setDragging(dragging: boolean): void;
-  setTiled(tiled: boolean): void;
-  showWindow(): void;
-  hideWindow(): void;
-  windowHidden: boolean;
-  isFullscreen: boolean;
-  enterFullscreen(): Promise<boolean>;
-  exitFullscreen(): Promise<void>;
-}
+import type { WindowApi } from '../window/sz-window.js';
 
 interface DragState {
   win: HTMLElement;
@@ -465,11 +450,6 @@ export class SzWindowManager extends LitElement {
       this.w(win).setLayout({ x: 0, y: 0, w: vw, h: vh });
       this.w(win).setResizeHandlesVisible(false);
     }
-
-    actions.dispatch(WM_ACTION.MODE_CHANGED, {
-      windowId: payload.windowId,
-      mode: managed.maximized ? 'maximized' : 'windowed',
-    });
   }
 
   // --- Fullscreen ---
@@ -481,18 +461,9 @@ export class SzWindowManager extends LitElement {
     const szWin = this.w(win);
     if (szWin.isFullscreen) {
       await szWin.exitFullscreen();
-      actions.dispatch(WM_ACTION.MODE_CHANGED, {
-        windowId: payload.windowId,
-        mode: 'windowed',
-      });
     } else {
       const ok = await szWin.enterFullscreen();
-      if (ok) {
-        actions.dispatch(WM_ACTION.MODE_CHANGED, {
-          windowId: payload.windowId,
-          mode: 'fullscreen',
-        });
-      } else {
+      if (!ok) {
         this.handleMaximize(payload);
       }
     }
