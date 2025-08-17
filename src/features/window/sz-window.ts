@@ -8,10 +8,27 @@ export type { WindowLayout } from '../../core/types.js';
 
 type TitlebarMode = 'visible' | 'integrated' | 'hidden';
 
+/** Imperative contract the window-manager drives each window through. */
+export interface WindowApi {
+  getLayout(): WindowLayout;
+  setLayout(layout: WindowLayout): void;
+  resetLayout(): void;
+  bringToFront(): void;
+  setResizeHandlesVisible(visible: boolean): void;
+  setDragging(dragging: boolean): void;
+  setTiled(tiled: boolean): void;
+  showWindow(): void;
+  hideWindow(): void;
+  windowHidden: boolean;
+  isFullscreen: boolean;
+  enterFullscreen(): Promise<boolean>;
+  exitFullscreen(): Promise<void>;
+}
+
 let topZIndex = 100;
 
 @customElement('sz-window')
-export class SzWindow extends LitElement {
+export class SzWindow extends LitElement implements WindowApi {
   @property() titlebar: TitlebarMode = 'visible';
   @property() title = '';
   @property({ type: String }) width = '70vw';

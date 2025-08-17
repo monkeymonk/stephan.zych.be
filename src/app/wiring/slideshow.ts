@@ -1,15 +1,14 @@
 import { actions } from '../../core/actions.js';
 import { SLIDESHOW_ACTION } from '../../components/slideshow-actions.js';
 import { registry } from '../../core/registry.js';
+import type { SlideshowApi } from '../../components/sz-slideshow.js';
 
 export function wireSlideshow() {
-  const slideshow = () => document.querySelector('sz-slideshow') as any;
+  const slideshow = () =>
+    document.querySelector('sz-slideshow') as (HTMLElement & SlideshowApi) | null;
 
   requestAnimationFrame(() => {
-    const el = slideshow();
-    if (el) {
-      (el as any).setImages([...registry.wallpapers]);
-    }
+    slideshow()?.setImages([...registry.wallpapers]);
   });
 
   actions.on(SLIDESHOW_ACTION.NEXT, () => slideshow()?.next());

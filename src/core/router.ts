@@ -1,10 +1,10 @@
 import { actions, ROUTER_ACTION } from './actions.js';
 
-interface RouteChangedAttributes {
+export interface RouteChangedAttributes {
   [key: string]: Record<string, string>;
 }
 
-interface RouteChangedDetail {
+export interface RouteChangedDetail {
   path: string;
   title: string;
   attributes: RouteChangedAttributes;

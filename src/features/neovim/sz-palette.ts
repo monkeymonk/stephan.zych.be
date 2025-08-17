@@ -1,8 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
 import { paletteRegistry, type PaletteSource, type PaletteItem } from '../../core/types.js';
-import { actions } from '../../core/actions.js';
-import { NEOVIM_ACTION } from './actions.js';
 import { isInputFocused } from '../../core/keyboard.js';
 import { scrollbarStyles } from '../../core/styles.js';
 import { registry } from '../../core/registry.js';
@@ -21,7 +19,6 @@ export class SzPalette extends LitElement {
   @query('.help-overlay') private helpEl!: HTMLElement;
 
   private sources: PaletteSource[] = [];
-  private unsubPaletteOpen?: () => void;
 
   static styles = [scrollbarStyles, css`
     :host { display: contents; }
@@ -159,13 +156,6 @@ export class SzPalette extends LitElement {
     this.sources = paletteRegistry.getAll();
     document.addEventListener('keydown', this.handleGlobalKey);
     window.addEventListener('keydown', this.handleCaptureTab, true);
-    this.unsubPaletteOpen = actions.on(NEOVIM_ACTION.PALETTE_OPEN, (a) => {
-      const prefix = (a.payload as { prefix?: string })?.prefix;
-      if (prefix) {
-        const source = paletteRegistry.getByPrefix(prefix);
-        if (source) this.openWithSource(source);
-      }
-    });
   }
 
   disconnectedCallback() {
@@ -173,7 +163,6 @@ export class SzPalette extends LitElement {
     document.removeEventListener('keydown', this.handleGlobalKey);
     window.removeEventListener('keydown', this.handleCaptureTab, true);
     document.removeEventListener('click', this.handleOutsideClick, true);
-    this.unsubPaletteOpen?.();
   }
 
   private handleCaptureTab = (e: KeyboardEvent) => {
@@ -201,7 +190,7 @@ export class SzPalette extends LitElement {
       const confirmed = this.confirmedTokens;
       // If we're in sub-command mode and the item has no further args, execute
       if (confirmed.length > 0 && (!selected.args || selected.args.length === 0)) {
-        this.executeResolvedCommand(confirmed[0], [...confirmed.slice(1), selected.label]);
+        this.runCommandByLabel(confirmed[0], [...confirmed.slice(1), selected.label]);
         return;
       }
       this.confirmSelection();
@@ -356,16 +345,24 @@ export class SzPalette extends LitElement {
 
   // --- Input parsing ---
 
+  /** Split input into confirmed tokens and the in-progress fragment. */
+  private parseTokens(input: string) {
+    const hasTrailingSpace = input.endsWith(' ');
+    const tokens = input.split(/\s+/).filter(Boolean);
+    return {
+      tokens,
+      hasTrailingSpace,
+      fragment: hasTrailingSpace ? '' : (tokens[tokens.length - 1] ?? ''),
+      confirmed: hasTrailingSpace ? tokens : tokens.slice(0, -1),
+    };
+  }
+
   private get currentFragment(): string {
-    if (this.input.endsWith(' ')) return '';
-    const tokens = this.input.split(/\s+/);
-    return tokens[tokens.length - 1] || '';
+    return this.parseTokens(this.input).fragment;
   }
 
   private get confirmedTokens(): string[] {
-    const tokens = this.input.split(/\s+/).filter(Boolean);
-    if (this.input.endsWith(' ')) return tokens;
-    return tokens.slice(0, -1);
+    return this.parseTokens(this.input).confirmed;
   }
 
   private get ghostHint(): string {
@@ -441,37 +438,25 @@ export class SzPalette extends LitElement {
     });
   }
 
-  private executeItem(item: PaletteItem, rawInput: string) {
-    if (!this.activeSource) return;
-    const parts = rawInput.trim().split(/\s+/);
-    const args = parts.slice(1);
-    this.activeSource.execute(item, args.length > 0 ? args : undefined);
+  /** Look up a base command of the active source by its label. */
+  private async findCommand(label: string): Promise<PaletteItem | undefined> {
+    if (!this.activeSource) return undefined;
+    const all = this.activeSource.getItems('');
+    const base = all instanceof Promise ? await all : all;
+    return base.find(i => i.label.toLowerCase() === label.toLowerCase());
+  }
+
+  /** Execute a resolved item with args, then close the palette. */
+  private runCommand(item: PaletteItem, args: string[]) {
+    this.activeSource?.execute(item, args.length > 0 ? args : undefined);
     this.hide();
   }
 
-  /** Execute a command by name with resolved args (used in sub-command mode) */
-  private async executeResolvedCommand(commandLabel: string, args: string[]) {
-    if (!this.activeSource) return;
-    const allItems = this.activeSource.getItems('');
-    const baseItems = allItems instanceof Promise ? await allItems : allItems;
-    const cmd = baseItems.find(i => i.label.toLowerCase() === commandLabel.toLowerCase());
-    if (cmd) {
-      this.activeSource.execute(cmd, args);
-    }
-    this.hide();
-  }
-
-  /** Parse full input tokens and try to execute against source items */
-  private async executeFromInput(tokens: string[]) {
-    if (!this.activeSource || tokens.length === 0) { this.hide(); return; }
-    const allItems = this.activeSource.getItems('');
-    const baseItems = allItems instanceof Promise ? await allItems : allItems;
-    const cmd = baseItems.find(i => i.label.toLowerCase() === tokens[0].toLowerCase());
-    if (cmd) {
-      const args = tokens.slice(1);
-      this.activeSource.execute(cmd, args.length > 0 ? args : undefined);
-    }
-    this.hide();
+  /** Resolve a command by label and execute it with args (sub-command mode). */
+  private async runCommandByLabel(label: string, args: string[]) {
+    const cmd = await this.findCommand(label);
+    if (cmd) this.runCommand(cmd, args);
+    else this.hide();
   }
 
   private handleKeydown(e: KeyboardEvent) {
@@ -503,12 +488,12 @@ export class SzPalette extends LitElement {
         // If we're in sub-command mode (confirmed tokens exist), execute the parent command
         const confirmed = this.confirmedTokens;
         if (confirmed.length > 0) {
-          this.executeResolvedCommand(confirmed[0], [...confirmed.slice(1), selected.label]);
+          this.runCommandByLabel(confirmed[0], [...confirmed.slice(1), selected.label]);
           return;
         }
 
         // Execute the selected item
-        this.executeItem(selected, this.input);
+        this.runCommand(selected, []);
         return;
       }
 
@@ -519,12 +504,12 @@ export class SzPalette extends LitElement {
       const tokens = trimmed.split(/\s+/);
       const exact = this.items.find(item => item.label.toLowerCase() === tokens[0].toLowerCase());
       if (exact) {
-        this.executeItem(exact, trimmed);
+        this.runCommand(exact, tokens.slice(1));
         return;
       }
 
       // Also check against all source items for sub-command execution
-      this.executeFromInput(tokens);
+      this.runCommandByLabel(tokens[0], tokens.slice(1));
     }
   }
 
@@ -537,9 +522,9 @@ export class SzPalette extends LitElement {
       this.confirmSelection();
     } else if (confirmed.length > 0) {
       // Sub-command mode — execute parent command with args
-      this.executeResolvedCommand(confirmed[0], [...confirmed.slice(1), selected.label]);
+      this.runCommandByLabel(confirmed[0], [...confirmed.slice(1), selected.label]);
     } else {
-      this.executeItem(selected, this.input);
+      this.runCommand(selected, []);
     }
     this.inputEl?.focus();
   }

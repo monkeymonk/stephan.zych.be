@@ -76,9 +76,9 @@ export function wireNeovimPalette() {
       if (!query || query.length < 2) return [];
       const index = await registry.getSearchIndex();
       const q = query.toLowerCase();
-      return (index as any[])
-        .filter((entry: any) => entry.title?.toLowerCase().includes(q) || entry.content?.toLowerCase().includes(q))
-        .map((entry: any) => ({ id: entry.url, label: entry.title, description: entry.url }));
+      return index
+        .filter((entry) => entry.title.toLowerCase().includes(q) || entry.content.toLowerCase().includes(q))
+        .map((entry) => ({ id: entry.url, label: entry.title, description: entry.url }));
     },
     execute(item: PaletteItem) {
       router.navigate(item.id);
