@@ -1,11 +1,14 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { registry, type StartScreenItem } from '../../core/registry.js';
 import { actions } from '../../core/actions.js';
 import { START_SCREEN_ACTION } from './actions.js';
 
 @customElement('sz-start-screen')
 export class SzStartScreen extends LitElement {
+  /** Hidden while the terminal window is open; revealed when it is closed. */
+  @property({ type: Boolean }) inactive = false;
+
   static styles = css`
     :host {
       display: contents;
@@ -114,7 +117,7 @@ export class SzStartScreen extends LitElement {
 
   render() {
     const items = registry.startScreenItems;
-    if (items.length === 0) return nothing;
+    if (this.inactive || items.length === 0) return nothing;
 
     return html`
       <div class="start-screen">
