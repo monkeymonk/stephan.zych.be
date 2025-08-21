@@ -24,10 +24,8 @@ import '../components/sz-slideshow.js';
 
 // Layouts
 import '../layouts/sz-dashboard.js';
-import '../layouts/sz-code.js';
 import '../layouts/sz-markdown.js';
 import '../layouts/sz-portfolio.js';
-import '../layouts/sz-widget.js';
 
 // Wire features together (must run after feature imports)
 import './wiring/index.js';

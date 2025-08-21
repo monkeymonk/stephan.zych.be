@@ -1,0 +1,11 @@
+[
+  { "keys": ":", "description": "Open command palette" },
+  { "keys": "/", "description": "Search pages and content" },
+  { "keys": "?", "description": "Show help" },
+  { "keys": "Esc", "description": "Close palette / search" },
+  { "keys": "Tab", "description": "Autocomplete command / cycle args" },
+  { "keys": "Alt+1-5", "description": "Switch tabs" },
+  { "keys": "Alt+W", "description": "Toggle windowed / full-page" },
+  { "keys": "Alt+F", "description": "Toggle fullscreen" },
+  { "keys": "Alt+N", "description": "Next wallpaper" }
+]

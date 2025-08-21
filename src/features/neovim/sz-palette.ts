@@ -1,9 +1,12 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, state, query } from 'lit/decorators.js';
+import { customElement, state, query, property } from 'lit/decorators.js';
 import { paletteRegistry, type PaletteSource, type PaletteItem } from '../../core/types.js';
+import { actions } from '../../core/actions.js';
+import { NEOVIM_ACTION } from './actions.js';
 import { isInputFocused } from '../../core/keyboard.js';
 import { scrollbarStyles } from '../../core/styles.js';
-import { registry } from '../../core/registry.js';
+import type { Shortcut } from '../../core/registry.js';
+import { jsonArrayAttribute } from '../../core/data.js';
 
 @customElement('sz-palette')
 export class SzPalette extends LitElement {
@@ -18,7 +21,11 @@ export class SzPalette extends LitElement {
   @query('.suggestions') private suggestionsEl!: HTMLElement;
   @query('.help-overlay') private helpEl!: HTMLElement;
 
+  /** Keyboard-shortcut help rows, injected by the template (shortcuts='[...]'). */
+  @property({ attribute: 'shortcuts', converter: jsonArrayAttribute }) shortcuts: Shortcut[] = [];
+
   private sources: PaletteSource[] = [];
+  private unsubPaletteOpen?: () => void;
 
   static styles = [scrollbarStyles, css`
     :host { display: contents; }
@@ -156,6 +163,13 @@ export class SzPalette extends LitElement {
     this.sources = paletteRegistry.getAll();
     document.addEventListener('keydown', this.handleGlobalKey);
     window.addEventListener('keydown', this.handleCaptureTab, true);
+    this.unsubPaletteOpen = actions.on(NEOVIM_ACTION.PALETTE_OPEN, (a) => {
+      const prefix = (a.payload as { prefix?: string })?.prefix;
+      if (prefix) {
+        const source = paletteRegistry.getByPrefix(prefix);
+        if (source) this.openWithSource(source);
+      }
+    });
   }
 
   disconnectedCallback() {
@@ -163,6 +177,7 @@ export class SzPalette extends LitElement {
     document.removeEventListener('keydown', this.handleGlobalKey);
     window.removeEventListener('keydown', this.handleCaptureTab, true);
     document.removeEventListener('click', this.handleOutsideClick, true);
+    this.unsubPaletteOpen?.();
   }
 
   private handleCaptureTab = (e: KeyboardEvent) => {
@@ -558,7 +573,7 @@ export class SzPalette extends LitElement {
         })}
         <div class="help-section">
           <div class="help-section-title">keyboard shortcuts</div>
-          ${registry.shortcuts.map(s => html`
+          ${this.shortcuts.map(s => html`
             <div class="help-row">
               <span class="help-keys"><kbd>${s.keys}</kbd></span>
               <span class="help-desc">${s.description}</span>
