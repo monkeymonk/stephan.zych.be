@@ -33,11 +33,3 @@ export const reducedMotion = typeof window !== 'undefined'
 export const mobileQuery = typeof window !== 'undefined'
   ? window.matchMedia('(max-width: 768px)')
   : mediaQueryListFallback;
-
-// Helper to adopt shared CSSStyleSheets on a shadow root.
-// Works with Lit's CSSResult by extracting the underlying CSSStyleSheet.
-export function adoptStyles(el: HTMLElement, ...styles: CSSStyleSheet[]) {
-  if (el.shadowRoot) {
-    el.shadowRoot.adoptedStyleSheets = [...el.shadowRoot.adoptedStyleSheets, ...styles];
-  }
-}

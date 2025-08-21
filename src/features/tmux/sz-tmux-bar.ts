@@ -3,12 +3,14 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { actions, ROUTER_ACTION } from '../../core/actions.js';
 import type { RouteChangedDetail } from '../../core/router.js';
 import { isInputFocused } from '../../core/keyboard.js';
-import { registry } from '../../core/registry.js';
+import type { NavTab } from '../../core/registry.js';
+import { jsonArrayAttribute } from '../../core/data.js';
 import { TMUX_ACTION } from './actions.js';
 
 @customElement('sz-tmux-bar')
 export class SzTmuxBar extends LitElement {
   @property({ attribute: 'active-path' }) activePath = '/';
+  @property({ attribute: 'nav', converter: jsonArrayAttribute }) nav: NavTab[] = [];
   @state() private time = '';
 
   private timer?: number;
@@ -178,7 +180,7 @@ export class SzTmuxBar extends LitElement {
     if (isInputFocused()) return;
     if (e.altKey && e.key >= '1' && e.key <= '9') {
       const index = parseInt(e.key) - 1;
-      const tab = registry.nav[index];
+      const tab = this.nav[index];
       if (tab) {
         e.preventDefault();
         actions.dispatch(TMUX_ACTION.TAB_SWITCH, { path: tab.path });
@@ -188,7 +190,7 @@ export class SzTmuxBar extends LitElement {
     // Single-letter shortcut: first char of tab name (no modifiers)
     if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key.length === 1) {
       const key = e.key.toLowerCase();
-      const tab = registry.nav.find(t => t.name.charAt(0).toLowerCase() === key);
+      const tab = this.nav.find(t => t.name.charAt(0).toLowerCase() === key);
       if (tab) {
         e.preventDefault();
         actions.dispatch(TMUX_ACTION.TAB_SWITCH, { path: tab.path });
@@ -201,7 +203,7 @@ export class SzTmuxBar extends LitElement {
   };
 
   render() {
-    const tabs = registry.nav;
+    const tabs = this.nav;
 
     return html`
       <nav class="tabs" role="tablist">

@@ -1,12 +1,17 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, state, property } from 'lit/decorators.js';
 import { StateController } from '../../core/state-controller.js';
-import { registry } from '../../core/registry.js';
+import type { SocialLink } from '../../core/registry.js';
+import { jsonArrayAttribute } from '../../core/data.js';
 import { actions, ROUTER_ACTION } from '../../core/actions.js';
 import type { RouteChangedDetail } from '../../core/router.js';
 
 @customElement('sz-statusbar')
 export class SzStatusbar extends LitElement {
+  /** Injected by the template. */
+  @property({ attribute: 'repo-url' }) repoUrl = '';
+  @property({ attribute: 'socials', converter: jsonArrayAttribute }) socials: SocialLink[] = [];
+
   private stateCtrl = new StateController(this, ['theme', 'windowMode']);
   private routeUnsub?: () => void;
 
@@ -106,7 +111,7 @@ export class SzStatusbar extends LitElement {
         <span class="route">${this.routeToPath(this.route)}</span>
       </div>
       <div class="segment center">
-        <a class="branch" href="${registry.repoUrl}" target="_blank" rel="noopener"><sz-icon name="git-branch" size="12"></sz-icon> main</a>
+        <a class="branch" href="${this.repoUrl}" target="_blank" rel="noopener"><sz-icon name="git-branch" size="12"></sz-icon> main</a>
       </div>
       <div class="segment">
         <span class="info">${theme}</span>
@@ -114,7 +119,7 @@ export class SzStatusbar extends LitElement {
         <span class="info">utf-8</span>
         <span class="separator">|</span>
         <span class="socials">
-          ${registry.social.map(link => html`
+          ${this.socials.map(link => html`
             <a class="social-link" href="${link.url}" target="${link.url.startsWith('mailto:') ? '' : '_blank'}" rel="noopener" aria-label="${link.label}">
               <sz-icon name="${link.icon}" size="12"></sz-icon>
             </a>

@@ -1,11 +1,15 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { registry, type StartScreenItem } from '../../core/registry.js';
+import type { StartScreenItem } from '../../core/registry.js';
+import { jsonArrayAttribute } from '../../core/data.js';
 import { actions } from '../../core/actions.js';
 import { START_SCREEN_ACTION } from './actions.js';
 
 @customElement('sz-start-screen')
 export class SzStartScreen extends LitElement {
+  /** Launcher items, injected by the template (items='[...]'). */
+  @property({ attribute: 'items', converter: jsonArrayAttribute }) items: StartScreenItem[] = [];
+
   /** Hidden while the terminal window is open; revealed when it is closed. */
   @property({ type: Boolean }) inactive = false;
 
@@ -116,7 +120,7 @@ export class SzStartScreen extends LitElement {
   }
 
   render() {
-    const items = registry.startScreenItems;
+    const items = this.items;
     if (this.inactive || items.length === 0) return nothing;
 
     return html`

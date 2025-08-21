@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
-import { customElement } from 'lit/decorators.js';
-import { registry } from '../core/registry.js';
+import { customElement, property } from 'lit/decorators.js';
+import type { NavTab } from '../core/registry.js';
+import { jsonArrayAttribute } from '../core/data.js';
 import { TypewriterController } from '../controllers/typewriter.js';
 
 const ASCII_ART = `
@@ -107,16 +108,16 @@ export class SzDashboard extends LitElement {
     }
   `;
 
+  /** Navigation tabs, injected by the template (nav='[...]'). */
+  @property({ attribute: 'nav', converter: jsonArrayAttribute }) nav: NavTab[] = [];
+
   connectedCallback() {
     super.connectedCallback();
-    this.computeDashboardLinks();
     this.typewriter.cycle(TAGLINES, { pauseBetween: 3000, eraseSpeed: 30 });
   }
 
-  private dashboardLinks: { label: string; key: string; href: string; icon: string }[] = [];
-
-  private computeDashboardLinks() {
-    this.dashboardLinks = registry.nav
+  private get dashboardLinks() {
+    return this.nav
       .filter(tab => tab.key && tab.name !== 'home')
       .map(tab => ({ label: tab.name, key: tab.key!, href: tab.path, icon: tab.icon || 'file' }));
   }
