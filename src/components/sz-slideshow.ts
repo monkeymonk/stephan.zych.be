@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { reducedMotion } from '../core/styles.js';
+import { reducedMotion, focusRing } from '../core/styles.js';
 import { actions } from '../core/actions.js';
 import { SLIDESHOW_ACTION } from './slideshow-actions.js';
 
@@ -24,6 +24,7 @@ export class SzSlideshow extends LitElement implements SlideshowApi {
   private imageIndex = 0;
 
   static styles = css`
+    ${focusRing}
     :host {
       display: block;
       position: absolute;

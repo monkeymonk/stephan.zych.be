@@ -39,8 +39,22 @@ export function wireStartScreen() {
   const isTerminal = (payload: unknown) =>
     (payload as { windowId?: string })?.windowId === TERMINAL_ID;
 
+  const focusFirstStartScreenItem = () => {
+    requestAnimationFrame(() => {
+      const item = document
+        .querySelector('sz-start-screen')
+        ?.shadowRoot?.querySelector<HTMLElement>('.item');
+      item?.focus();
+    });
+  };
+
   actions.on(WM_ACTION.SHOW, (a) => { if (isTerminal(a.payload)) setStartScreenActive(true); });
-  actions.on(WM_ACTION.HIDE, (a) => { if (isTerminal(a.payload)) setStartScreenActive(false); });
+  actions.on(WM_ACTION.HIDE, (a) => {
+    if (!isTerminal(a.payload)) return;
+    setStartScreenActive(false);
+    // Move focus to the launcher so keyboard users aren't stranded.
+    focusFirstStartScreenItem();
+  });
 
   // Initial sync: hide the start screen if the terminal starts open.
   requestAnimationFrame(() => {

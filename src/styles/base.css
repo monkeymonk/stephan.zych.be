@@ -738,6 +738,45 @@ a:hover { text-decoration: underline; }
 }
 
 /* ═══════════════════════════════════════════════════
+   Accessibility — skip link + keyboard focus
+   ═══════════════════════════════════════════════════ */
+
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -60px;
+  z-index: 10000;
+  padding: 10px 16px;
+  background: var(--sz-accent, #89b4fa);
+  color: var(--sz-crust, #11111b);
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: top 0.18s ease;
+}
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid var(--sz-text, #cdd6f4);
+  outline-offset: 2px;
+}
+
+/* Skip-link target — focusable but no visible ring */
+#main-content:focus { outline: none; }
+
+/* Keyboard focus indicator for light-DOM links & buttons */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--sz-accent, #89b4fa);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link { transition: none; }
+}
+
+/* ═══════════════════════════════════════════════════
    Block spacing — MUST be last to win on specificity.
    Empty line (margin-bottom) after every direct-child block.
    ═══════════════════════════════════════════════════ */

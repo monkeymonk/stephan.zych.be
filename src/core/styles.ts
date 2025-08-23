@@ -24,6 +24,15 @@ export const scrollbarStyles = css`
   ::-webkit-scrollbar-corner { background: transparent; }
 `;
 
+// Shared keyboard focus indicator for interactive elements inside a shadow root.
+export const focusRing = css`
+  :focus-visible {
+    outline: 2px solid var(--sz-accent, #89b4fa);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+`;
+
 // Reduced motion query constant (lazy for SSR/test safety)
 export const reducedMotion = typeof window !== 'undefined'
   ? window.matchMedia('(prefers-reduced-motion: reduce)')
