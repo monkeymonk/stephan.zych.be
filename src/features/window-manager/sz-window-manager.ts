@@ -411,6 +411,15 @@ export class SzWindowManager extends LitElement {
     this.w(win).showWindow();
     this.focusWindow(win);
     if (this.tiled) this.applyTileLayout(this.getVisibleWindows());
+    // Move keyboard focus into the window when it is explicitly opened,
+    // landing on the main content region (so screen-reader users hear it)
+    // and falling back to the first focusable control.
+    const managed = this.windows.get(win);
+    requestAnimationFrame(() => {
+      const main = win.querySelector<HTMLElement>('main, [role="main"]');
+      if (main) main.focus();
+      else managed?.focusTrap.focusFirst();
+    });
   }
 
   private handleHide(payload: { windowId: string }) {

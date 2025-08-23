@@ -1,22 +1,25 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { actions, ROUTER_ACTION } from '../../core/actions.js';
-import type { RouteChangedDetail } from '../../core/router.js';
-import { isInputFocused } from '../../core/keyboard.js';
-import type { NavTab } from '../../core/registry.js';
-import { jsonArrayAttribute } from '../../core/data.js';
-import { TMUX_ACTION } from './actions.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import { actions, ROUTER_ACTION } from "../../core/actions.js";
+import type { RouteChangedDetail } from "../../core/router.js";
+import { isInputFocused } from "../../core/keyboard.js";
+import type { NavTab } from "../../core/registry.js";
+import { jsonArrayAttribute } from "../../core/data.js";
+import { focusRing } from "../../core/styles.js";
+import { TMUX_ACTION } from "./actions.js";
 
-@customElement('sz-tmux-bar')
+@customElement("sz-tmux-bar")
 export class SzTmuxBar extends LitElement {
-  @property({ attribute: 'active-path' }) activePath = '/';
-  @property({ attribute: 'nav', converter: jsonArrayAttribute }) nav: NavTab[] = [];
-  @state() private time = '';
+  @property({ attribute: "active-path" }) activePath = "/";
+  @property({ attribute: "nav", converter: jsonArrayAttribute }) nav: NavTab[] =
+    [];
+  @state() private time = "";
 
   private timer?: number;
   private routeUnsub?: () => void;
 
   static styles = css`
+    ${focusRing}
     :host {
       display: flex;
       align-items: center;
@@ -34,7 +37,9 @@ export class SzTmuxBar extends LitElement {
       scrollbar-width: none;
       height: 100%;
     }
-    .tabs::-webkit-scrollbar { display: none; }
+    .tabs::-webkit-scrollbar {
+      display: none;
+    }
 
     .tab {
       display: flex;
@@ -44,11 +49,14 @@ export class SzTmuxBar extends LitElement {
       color: var(--sz-overlay1, #7f849c);
       text-decoration: none;
       white-space: nowrap;
-      transition: color 0.2s, background 0.2s;
+      transition:
+        color 0.2s,
+        background 0.2s;
       font-family: inherit;
       position: relative;
     }
-    .tab:hover, .tab:focus-visible {
+    .tab:hover,
+    .tab:focus-visible {
       color: var(--sz-text, #cdd6f4);
       background: var(--sz-surface0, #313244);
       outline: none;
@@ -76,7 +84,10 @@ export class SzTmuxBar extends LitElement {
       align-items: center;
       padding: 0 10px;
       height: 100%;
+      min-width: 45px;
       color: var(--sz-subtext, #a6adc8);
+      line-height: 28px;
+      text-align: center;
     }
     .right-item.accent {
       background: var(--sz-accent, #89b4fa);
@@ -109,7 +120,9 @@ export class SzTmuxBar extends LitElement {
         padding: 0 8px;
         font-size: 12px;
       }
-      .right { display: none; }
+      .right {
+        display: none;
+      }
       .search-btn {
         display: flex;
         align-items: center;
@@ -139,7 +152,7 @@ export class SzTmuxBar extends LitElement {
   `;
 
   private isActive(tabPath: string): boolean {
-    if (tabPath === '/') return this.activePath === '/';
+    if (tabPath === "/") return this.activePath === "/";
     return this.activePath.startsWith(tabPath);
   }
 
@@ -147,29 +160,36 @@ export class SzTmuxBar extends LitElement {
     super.connectedCallback();
     this.updateTime();
     this.timer = window.setInterval(() => this.updateTime(), 60000);
-    document.addEventListener('keydown', this.handleKeydown);
+    document.addEventListener("keydown", this.handleKeydown);
     this.routeUnsub = actions.on(ROUTER_ACTION.ROUTE_CHANGED, (a) => {
       this.activePath = (a.payload as RouteChangedDetail).path;
     });
-    document.addEventListener('visibilitychange', this.handleVisibility);
+    document.addEventListener("visibilitychange", this.handleVisibility);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     if (this.timer) clearInterval(this.timer);
-    document.removeEventListener('keydown', this.handleKeydown);
-    document.removeEventListener('visibilitychange', this.handleVisibility);
+    document.removeEventListener("keydown", this.handleKeydown);
+    document.removeEventListener("visibilitychange", this.handleVisibility);
     this.routeUnsub?.();
   }
 
   private updateTime() {
     const now = new Date();
-    this.time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    this.time = now.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   }
 
   private handleVisibility = () => {
     if (document.hidden) {
-      if (this.timer) { clearInterval(this.timer); this.timer = undefined; }
+      if (this.timer) {
+        clearInterval(this.timer);
+        this.timer = undefined;
+      }
     } else {
       this.updateTime();
       this.timer = window.setInterval(() => this.updateTime(), 60000);
@@ -178,7 +198,7 @@ export class SzTmuxBar extends LitElement {
 
   private handleKeydown = (e: KeyboardEvent) => {
     if (isInputFocused()) return;
-    if (e.altKey && e.key >= '1' && e.key <= '9') {
+    if (e.altKey && e.key >= "1" && e.key <= "9") {
       const index = parseInt(e.key) - 1;
       const tab = this.nav[index];
       if (tab) {
@@ -190,7 +210,7 @@ export class SzTmuxBar extends LitElement {
     // Single-letter shortcut: first char of tab name (no modifiers)
     if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key.length === 1) {
       const key = e.key.toLowerCase();
-      const tab = this.nav.find(t => t.name.charAt(0).toLowerCase() === key);
+      const tab = this.nav.find((t) => t.name.charAt(0).toLowerCase() === key);
       if (tab) {
         e.preventDefault();
         actions.dispatch(TMUX_ACTION.TAB_SWITCH, { path: tab.path });
@@ -199,7 +219,7 @@ export class SzTmuxBar extends LitElement {
   };
 
   private openSearch = () => {
-    actions.dispatch('neovim:palette-open', { prefix: '/' });
+    actions.dispatch("neovim:palette-open", { prefix: "/" });
   };
 
   render() {
@@ -207,19 +227,25 @@ export class SzTmuxBar extends LitElement {
 
     return html`
       <nav class="tabs" role="tablist">
-        ${tabs.map(tab => html`
-          <a
-            class="tab ${this.isActive(tab.path) ? 'active' : ''}"
-            href="${tab.path}"
-            role="tab"
-            aria-selected=${this.isActive(tab.path) ? 'true' : undefined}
-          >
-            <span class="tab-key">${tab.name.charAt(0)}</span>${tab.name.slice(1)}
-          </a>
-        `)}
+        ${tabs.map(
+          (tab) => html`
+            <a
+              class="tab ${this.isActive(tab.path) ? "active" : ""}"
+              href="${tab.path}"
+              role="tab"
+              aria-selected=${this.isActive(tab.path) ? "true" : undefined}
+            >
+              <span class="tab-key">${tab.name.charAt(0)}</span
+              >${tab.name.slice(1)}
+            </a>
+          `,
+        )}
       </nav>
       <button class="search-btn" @click=${this.openSearch} aria-label="Search">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <svg viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="7" />
+          <line x1="16.5" y1="16.5" x2="21" y2="21" />
+        </svg>
       </button>
       <div class="right">
         <slot name="widget">

@@ -29,24 +29,24 @@
   {%- if site.socials.github -%}{%- set socialLinks = (socialLinks.push({ id: "github", label: "GitHub", icon: "github", url: site.socials.github }), socialLinks) -%}{%- endif -%}
   {%- if site.socials.linkedin -%}{%- set socialLinks = (socialLinks.push({ id: "linkedin", label: "LinkedIn", icon: "linkedin", url: site.socials.linkedin }), socialLinks) -%}{%- endif -%}
   {%- if site.email -%}{%- set socialLinks = (socialLinks.push({ id: "email", label: "Email", icon: "mail", url: "mailto:" + site.email }), socialLinks) -%}{%- endif -%}
-  <a href="#main-content" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden">Skip to content</a>
+  <a href="#main-content" class="skip-link">Skip to content</a>
 
   <sz-background>
     <sz-slideshow mode="slideshow" interval="30000"></sz-slideshow>
   </sz-background>
   <sz-start-screen items='{{ startScreen.items | dump }}'></sz-start-screen>
-  <sz-effect-matrix></sz-effect-matrix>
-  <sz-effect-confetti></sz-effect-confetti>
-  <sz-screen-shader></sz-screen-shader>
+  <sz-effect-matrix aria-hidden="true"></sz-effect-matrix>
+  <sz-effect-confetti aria-hidden="true"></sz-effect-confetti>
+  <sz-screen-shader aria-hidden="true"></sz-screen-shader>
 
   <sz-window-manager>
     <sz-window id="terminal" titlebar="integrated" title="stephan.zych.be">
       <sz-tmux-bar slot="bar" active-path="{{ page.url }}" nav='{{ nav.tabs | dump }}'></sz-tmux-bar>
       <sz-tmux-panes>
         <sz-neovim slot="pane-0">
-          <div id="main-content">
+          <main id="main-content" tabindex="-1">
             {{ content | safe }}
-          </div>
+          </main>
           <sz-palette shortcuts='{{ shortcuts | dump }}'></sz-palette>
           <sz-statusbar repo-url="{{ site.repoUrl }}" socials='{{ socialLinks | dump }}'></sz-statusbar>
         </sz-neovim>

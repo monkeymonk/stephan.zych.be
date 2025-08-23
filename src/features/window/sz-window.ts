@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { actions } from '../../core/actions.js';
 import type { WindowLayout } from '../../core/types.js';
 import { WINDOW_ACTION } from './actions.js';
+import { focusRing } from '../../core/styles.js';
 
 export type { WindowLayout } from '../../core/types.js';
 
@@ -45,6 +46,7 @@ export class SzWindow extends LitElement implements WindowApi {
   @state() private isTiled = false;
 
   static styles = css`
+    ${focusRing}
     :host {
       display: contents;
     }
@@ -327,11 +329,11 @@ export class SzWindow extends LitElement implements WindowApi {
       <div
         class=${classes}
         style="${posStyle} ${sizeStyle} z-index: ${this.zIndex};"
-        role="application"
+        role="region"
         aria-label=${this.title || 'Window'}
       >
         ${this.renderResizeHandles()}
-        <div class="window-bg" style="opacity: ${this.transparency / 100}"></div>
+        <div class="window-bg" style="opacity: ${this.transparency / 100}" aria-hidden="true"></div>
         <div class="window-content">
           ${this.renderTitlebar()}
           <div class="body">

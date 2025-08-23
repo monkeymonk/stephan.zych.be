@@ -3,6 +3,7 @@ import { customElement, property } from 'lit/decorators.js';
 import type { NavTab } from '../core/registry.js';
 import { jsonArrayAttribute } from '../core/data.js';
 import { TypewriterController } from '../controllers/typewriter.js';
+import { focusRing } from '../core/styles.js';
 
 const ASCII_ART = `
 ███████╗████████╗███████╗██████╗ ██╗  ██╗ █████╗ ███╗   ██╗
@@ -26,6 +27,7 @@ export class SzDashboard extends LitElement {
   private typewriter = new TypewriterController(this, { speed: 60 });
 
   static styles = css`
+    ${focusRing}
     :host {
       display: flex;
       flex-direction: column;

@@ -3,6 +3,7 @@ import { customElement, state, property } from 'lit/decorators.js';
 import { StateController } from '../../core/state-controller.js';
 import type { SocialLink } from '../../core/registry.js';
 import { jsonArrayAttribute } from '../../core/data.js';
+import { focusRing } from '../../core/styles.js';
 import { actions, ROUTER_ACTION } from '../../core/actions.js';
 import type { RouteChangedDetail } from '../../core/router.js';
 
@@ -30,6 +31,7 @@ export class SzStatusbar extends LitElement {
   }
 
   static styles = css`
+    ${focusRing}
     :host {
       display: flex;
       align-items: center;
