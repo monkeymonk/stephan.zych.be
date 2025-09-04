@@ -1,0 +1,35 @@
+{
+  "identity": {
+    "user": "stephan@zych.be",
+    "rows": [
+      ["OS", "Brussels, Belgium"],
+      ["Role", "Lead Dev · Frontend Architect"],
+      ["Uptime", "15 years"],
+      ["Shell", "zsh · tmux · neovim"],
+      ["Editor", "neovim (btw)"],
+      ["Stack", "TS · React · Laravel · Docker"],
+      ["Shipped", "200+ platforms · 1 exit"],
+      ["Langs", "FR (native) · EN (pro)"],
+      ["Status", "available to talk"]
+    ]
+  },
+  "timeline": [
+    { "hash": "a1b2c3d", "ref": "HEAD → main", "message": "Lead Developer @ CBTW", "date": "2023—now" },
+    { "hash": "d4e5f6a", "message": "Co-founder / CTO @ Cherry Pulp  (acquired)", "date": "2013—2024" },
+    { "hash": "9a8b7c1", "message": "Freelance full-stack developer", "date": "2011—2016" },
+    { "hash": "11f2e3d", "message": "Rich-media dev @ TBWA · Agency.com", "date": "2009—2013" }
+  ],
+  "stats": [
+    { "value": 15, "suffix": "", "label": "years in" },
+    { "value": 200, "suffix": "+", "label": "platforms shipped" },
+    { "value": 20, "suffix": "", "label": "team at peak" },
+    { "value": 1, "suffix": "", "label": "exit" }
+  ],
+  "skills": [
+    { "name": "TypeScript / JavaScript", "level": 95 },
+    { "name": "Frontend architecture", "level": 92 },
+    { "name": "Vue · React · Astro", "level": 88 },
+    { "name": "PHP / Laravel / WordPress", "level": 80 },
+    { "name": "Docker · Linux · infra", "level": 78 }
+  ]
+}

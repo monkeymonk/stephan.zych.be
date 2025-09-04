@@ -22,6 +22,12 @@ import '../components/sz-icon.js';
 import '../components/sz-background.js';
 import '../components/sz-slideshow.js';
 
+// Content widgets (used inside markdown pages)
+import '../components/sz-neofetch.js';
+import '../components/sz-gitlog.js';
+import '../components/sz-stats.js';
+import '../components/sz-contact-card.js';
+
 // Layouts
 import '../layouts/sz-dashboard.js';
 import '../layouts/sz-markdown.js';

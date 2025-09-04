@@ -33,6 +33,31 @@ export const focusRing = css`
   }
 `;
 
+// Shared "TUI panel" chrome — a bordered box framed as command output:
+// a "❯ <command>" prompt header, then the result. No window chrome (we are
+// already inside the terminal). Used by the content widgets.
+export const panelStyles = css`
+  .panel {
+    border: 1px solid var(--sz-surface1, #45475a);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--sz-mantle, #181825) 45%, transparent);
+    overflow: hidden;
+    margin: 1.5em 0;
+  }
+  .panel__cmd {
+    padding: 7px 14px;
+    border-bottom: 1px solid var(--sz-surface0, #313244);
+    color: var(--sz-subtext0, #a6adc8);
+    font-size: calc(var(--sz-font-size, 13px) * 0.85);
+  }
+  .panel__cmd .sigil {
+    color: var(--sz-green, #a6e3a1);
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .panel__body { padding: 16px 18px; }
+`;
+
 // Reduced motion query constant (lazy for SSR/test safety)
 export const reducedMotion = typeof window !== 'undefined'
   ? window.matchMedia('(prefers-reduced-motion: reduce)')
