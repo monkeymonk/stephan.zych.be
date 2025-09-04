@@ -17,6 +17,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          WAKAPI_API_KEY: ${{ secrets.WAKAPI_API_KEY }}
+          WAKAPI_API_URL: https://wakapi.zych.link
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

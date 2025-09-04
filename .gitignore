@@ -5,3 +5,8 @@ dist/
 *.log
 _references/
 .worktrees/
+
+# Secrets — never commit. Use .env locally, GitHub Actions secrets in CI.
+.env
+.env.local
+.env.*.local
