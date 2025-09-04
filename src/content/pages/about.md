@@ -6,11 +6,7 @@ description: Lead developer, frontend architect, recovering CTO. Fifteen years b
 permalink: /about/
 ---
 
-```text
-$ whoami
-> Stéphan Zych — I build the foundations other developers
-  build on. Then I have strong opinions about them.
-```
+<sz-neofetch user="{{ profile.identity.user }}" rows='{{ profile.identity.rows | dump }}'></sz-neofetch>
 
 ## The short version
 
@@ -22,15 +18,13 @@ The unglamorous stuff that makes everyone else faster: architecture, tooling, co
 
 Frontend is home turf — but I'm full-stack enough to be dangerous across the JavaScript and PHP worlds, and opinionated enough to tell you which one your project actually needs.
 
-## The receipts
+## The path so far
 
-| Metric | Value |
-|--------|-------|
-| Years in | 15 |
-| Platforms shipped | 200+ |
-| Agency grown | 6 → 20 people |
-| Devs mentored at peak | 10–12 |
-| Exits | 1 — Cherry Pulp → CBTW, 2023 |
+<sz-gitlog commits='{{ profile.timeline | dump }}'></sz-gitlog>
+
+## By the numbers
+
+<sz-stats counters='{{ profile.stats | dump }}' skills='{{ profile.skills | dump }}'></sz-stats>
 
 A few names you might recognise, who trusted me not to break their websites: **Unicef · Oxfam · Engie · Delhaize · Telenet · KBC Brussels · RTL · RTBF · Monizze**. No pressure.
 
@@ -44,12 +38,6 @@ I didn't come up purely through computer science. I studied **fine arts** at the
 - **A Docker-based homelab** — self-hosting is a personality trait now, apparently.
 - **CLI utilities & terminal nerdery** — yes, this entire website is a terminal. No, I won't apologise. (I've even given the talk: *"Terminal utilities & advanced use cases."*)
 - **Prototyping in Rust, Go, Python, and C#** — and building little games in **Godot** when I want pixels instead of pull requests.
-
-## The stack, roughly
-
-- **Frontend** — TypeScript · React · Next.js · Vue · Astro · Tailwind · Storybook
-- **Backend** — PHP · Laravel · WordPress done properly (Bedrock, Sage)
-- **Infra & tooling** — Docker · Linux · Nginx · Cloudflare · AWS Lightsail · Laravel Forge · Vite
 
 ## Why work with me
 
@@ -99,10 +87,4 @@ That's most of what I do: raising the floor for a whole team through tooling, co
 
 ## Say hi
 
-I'm in Brussels 🇧🇪, I speak French natively and English professionally, and I'm always up for a good conversation about architecture, terminals, or why your build is slow.
-
-- **Email** — [{{ site.email }}](mailto:{{ site.email }})
-- **GitHub** — [{{ site.socials.github }}]({{ site.socials.github }})
-- **LinkedIn** — [{{ site.socials.linkedin }}]({{ site.socials.linkedin }})
-
-> Curious who you're *really* talking to? Type `:whoami` in the command palette.
+I'm in Brussels 🇧🇪, I speak French natively and English professionally, and I'm always up for a good conversation about architecture, terminals, or why your build is slow. The fastest way is the [contact page](/contact/) — or type `:whoami` in the command palette to see who you're really talking to.

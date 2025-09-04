@@ -1,15 +1,13 @@
 ---
 layout: page.njk
-title: Contact — Stephan Zych
+title: Contact — Stéphan Zych
 heading: Contact
-description: Get in touch
+description: Get in touch with Stéphan Zych — email, GitHub, LinkedIn.
 permalink: /contact/
 ---
 
-Want to get in touch? Email is the fastest way to reach me.
+Got an interesting problem, a team that needs a steadier technical floor, or just want to argue about tooling? Email is the fastest way to reach me — there's a copy button so you don't have to squint.
 
-- **Email** — [{{ site.email }}](mailto:{{ site.email }})
-- **GitHub** — [{{ site.socials.github }}]({{ site.socials.github }})
-{% if site.socials.linkedin and site.socials.linkedin != "#" %}- **LinkedIn** — [{{ site.socials.linkedin }}]({{ site.socials.linkedin }})
-{% endif %}{% if site.socials.twitter and site.socials.twitter != "#" %}- **Twitter / X** — [{{ site.socials.twitter }}]({{ site.socials.twitter }})
-{% endif %}
+<sz-contact-card email="{{ site.email }}" github="{{ site.socials.github }}" linkedin="{{ site.socials.linkedin }}"></sz-contact-card>
+
+Prefer the keyboard? Press <kbd>:</kbd> anywhere and run `contact`, or `:whoami` to see who you're talking to first.

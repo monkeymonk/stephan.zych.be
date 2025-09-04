@@ -1,0 +1,159 @@
+import { LitElement, html, css } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
+import { panelStyles, focusRing } from '../core/styles.js';
+import { actions } from '../core/actions.js';
+import { NOTIFY_ACTION } from '../features/notifications/actions.js';
+
+/**
+ * Terminal "contact card" — `cat ~/.contact` with copy-to-clipboard and a
+ * live local clock. Data via attributes:
+ *   <sz-contact-card email="..." github="..." linkedin="..."></sz-contact-card>
+ */
+@customElement('sz-contact-card')
+export class SzContactCard extends LitElement {
+  @property({ attribute: 'email' }) email = '';
+  @property({ attribute: 'github' }) github = '';
+  @property({ attribute: 'linkedin' }) linkedin = '';
+
+  @state() private time = '';
+  private timer?: number;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.updateTime();
+    this.timer = window.setInterval(() => this.updateTime(), 30000);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this.timer) clearInterval(this.timer);
+  }
+
+  private updateTime() {
+    try {
+      this.time = new Intl.DateTimeFormat('en-GB', {
+        hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Brussels',
+      }).format(new Date());
+    } catch {
+      this.time = '';
+    }
+  }
+
+  private async copyEmail() {
+    try {
+      await navigator.clipboard.writeText(this.email);
+      actions.dispatch(NOTIFY_ACTION.SHOW, { text: '✓ Email copied to clipboard', type: 'success' });
+    } catch {
+      actions.dispatch(NOTIFY_ACTION.SHOW, { text: 'Could not copy — select it manually', type: 'error' });
+    }
+  }
+
+  private host(url: string) {
+    return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  }
+
+  static styles = [panelStyles, focusRing, css`
+    :host { display: block; }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px dashed var(--sz-surface0, #313244);
+    }
+    .row:last-of-type { border-bottom: none; }
+    .tag {
+      flex: 0 0 2.4ch;
+      color: var(--sz-overlay1, #7f849c);
+      text-align: center;
+    }
+    .row a {
+      color: var(--sz-text, #cdd6f4);
+      text-decoration: none;
+    }
+    .row a:hover { color: var(--sz-accent, #89b4fa); text-decoration: underline; }
+    .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .copy {
+      flex-shrink: 0;
+      background: var(--sz-surface0, #313244);
+      border: 1px solid var(--sz-surface1, #45475a);
+      color: var(--sz-subtext0, #a6adc8);
+      border-radius: 5px;
+      padding: 3px 10px;
+      font-family: inherit;
+      font-size: calc(var(--sz-font-size, 13px) * 0.85);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .copy:hover {
+      border-color: var(--sz-accent, #89b4fa);
+      color: var(--sz-accent, #89b4fa);
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      margin-top: 14px;
+      color: var(--sz-overlay1, #7f849c);
+      font-size: calc(var(--sz-font-size, 13px) * 0.88);
+    }
+    .meta .online { color: var(--sz-green, #a6e3a1); }
+    .meta .online::before {
+      content: "●";
+      margin-right: 5px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .prompt {
+      margin-top: 14px;
+      color: var(--sz-overlay0, #6c7086);
+    }
+    .prompt .sigil { color: var(--sz-green, #a6e3a1); font-weight: 700; }
+    .cursor {
+      display: inline-block;
+      width: 7px;
+      height: 1em;
+      background: var(--sz-accent, #89b4fa);
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    @keyframes blink { 50% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      .meta .online::before, .cursor { animation: none; }
+    }
+  `];
+
+  render() {
+    return html`
+      <div class="panel">
+        <div class="panel__cmd"><span class="sigil">❯</span>cat ~/.contact</div>
+        <div class="panel__body">
+          ${this.email ? html`
+            <div class="row">
+              <span class="tag" aria-hidden="true">✉</span>
+              <a class="grow" href="mailto:${this.email}">${this.email}</a>
+              <button class="copy" @click=${this.copyEmail} aria-label="Copy email address">copy</button>
+            </div>
+          ` : ''}
+          ${this.github ? html`
+            <div class="row">
+              <span class="tag" aria-hidden="true">gh</span>
+              <a class="grow" href="${this.github}" target="_blank" rel="noopener noreferrer">${this.host(this.github)}</a>
+            </div>
+          ` : ''}
+          ${this.linkedin ? html`
+            <div class="row">
+              <span class="tag" aria-hidden="true">in</span>
+              <a class="grow" href="${this.linkedin}" target="_blank" rel="noopener noreferrer">${this.host(this.linkedin)}</a>
+            </div>
+          ` : ''}
+          <div class="meta">
+            <span>◍ Brussels${this.time ? html` · ${this.time} CET` : ''}</span>
+            <span class="online">open to projects</span>
+          </div>
+          <div class="prompt" aria-hidden="true"><span class="sigil">❯</span> <span class="cursor"></span></div>
+        </div>
+      </div>
+    `;
+  }
+}
