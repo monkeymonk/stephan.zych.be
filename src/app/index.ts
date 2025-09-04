@@ -26,6 +26,7 @@ import '../components/sz-slideshow.js';
 import '../components/sz-neofetch.js';
 import '../components/sz-gitlog.js';
 import '../components/sz-stats.js';
+import '../components/sz-wakapi.js';
 import '../components/sz-contact-card.js';
 
 // Layouts

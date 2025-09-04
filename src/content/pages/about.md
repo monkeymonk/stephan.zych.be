@@ -27,7 +27,13 @@ Frontend is home turf — but I'm full-stack enough to be dangerous across the J
 <sz-stats counters='{{ profile.stats | dump }}' skills='{{ profile.skills | dump }}'></sz-stats>
 
 A few names you might recognise, who trusted me not to break their websites: **Unicef · Oxfam · Engie · Delhaize · Telenet · KBC Brussels · RTL · RTBF · Monizze**. No pressure.
+{% if wakapi %}
+## Lately, at the keyboard
 
+<sz-wakapi range="{{ wakapi.range }}" total="{{ wakapi.total }}" daily="{{ wakapi.dailyAverage }}" languages='{{ wakapi.languages | dump }}'></sz-wakapi>
+
+Real coding stats from my self-hosted [Wakapi](https://wakapi.zych.link), baked in fresh on every deploy.
+{% endif %}
 ## Plot twist
 
 I didn't come up purely through computer science. I studied **fine arts** at the Académie Royale des Beaux-Arts de Bruxelles and visual narration at ERG, *then* landed at ULB doing computer science. Turns out composition, hierarchy, and obsessive attention to detail translate scarily well from a canvas to a component library. I still draw system diagrams like they belong in a gallery.

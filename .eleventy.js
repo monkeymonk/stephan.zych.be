@@ -1,5 +1,20 @@
 const syntaxHighlight = require('@11ty/eleventy-plugin-syntaxhighlight');
 
+// Minimal .env loader (no dependency) for local builds. CI provides env vars
+// directly via GitHub Actions secrets, so .env is only used in development.
+(() => {
+  const fs = require('fs');
+  try {
+    if (!fs.existsSync('.env')) return;
+    for (const line of fs.readFileSync('.env', 'utf8').split('\n')) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i);
+      if (m && process.env[m[1]] === undefined) {
+        process.env[m[1]] = m[2].replace(/^["']|["']$/g, '').trim();
+      }
+    }
+  } catch { /* ignore — env vars may be provided another way */ }
+})();
+
 module.exports = function(eleventyConfig) {
   eleventyConfig.addPlugin(syntaxHighlight);
 
