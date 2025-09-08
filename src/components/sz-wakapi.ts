@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { panelStyles, reducedMotion } from '../core/styles.js';
+import { cmdLine, reducedMotion } from '../core/styles.js';
 import { jsonArrayAttribute } from '../core/data.js';
 
 interface Lang { name: string; percent: number; text?: string; }
@@ -39,8 +39,8 @@ export class SzWakapi extends LitElement {
     this.observer?.disconnect();
   }
 
-  static styles = [panelStyles, css`
-    :host { display: block; }
+  static styles = [cmdLine, css`
+    :host { display: block; margin: 1.5em 0; }
     .summary {
       display: flex;
       flex-wrap: wrap;
@@ -88,10 +88,8 @@ export class SzWakapi extends LitElement {
   render() {
     const fill = (pct: number) => (this.revealed || reducedMotion.matches ? pct : 0);
     return html`
-      <div class="panel">
-        <div class="panel__cmd"><span class="sigil">❯</span>wakatime --last-7-days</div>
-        <div class="panel__body">
-          <div class="summary">
+      <div class="cmd"><span class="sigil">❯</span>wakatime --last-7-days</div>
+      <div class="summary">
             <span class="total">${this.total}</span>
             ${this.daily ? html`<span class="muted">~${this.daily} / day</span>` : ''}
             <span class="muted">· ${this.range}</span>
@@ -108,8 +106,6 @@ export class SzWakapi extends LitElement {
               </div>
             </div>
           `)}
-        </div>
-      </div>
     `;
   }
 }

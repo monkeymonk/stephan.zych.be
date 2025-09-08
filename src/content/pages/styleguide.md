@@ -186,6 +186,18 @@ $ ./career.sh --tldr
 $ man stephan   # spoiler: try :whoami in the command palette
 ```
 
+### Boxed panel (`sz-panel`)
+
+Wrap a code block (or any content) in a TUI panel framed as command output. Use this in **articles** — the about/contact pages keep content unboxed.
+
+<sz-panel cmd="cat greet.ts">
+
+```typescript
+export const greet = (name: string): string => `Hello, ${name}!`;
+```
+
+</sz-panel>
+
 ## Tables
 
 | Feature | Status | Notes |

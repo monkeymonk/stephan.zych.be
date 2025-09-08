@@ -28,6 +28,7 @@ import '../components/sz-gitlog.js';
 import '../components/sz-stats.js';
 import '../components/sz-wakapi.js';
 import '../components/sz-contact-card.js';
+import '../components/sz-panel.js';
 
 // Layouts
 import '../layouts/sz-dashboard.js';

@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { panelStyles } from '../core/styles.js';
+import { cmdLine } from '../core/styles.js';
 import { jsonArrayAttribute } from '../core/data.js';
 
 const LOGO = String.raw`
@@ -22,8 +22,8 @@ export class SzNeofetch extends LitElement {
   @property({ attribute: 'user' }) user = '';
   @property({ attribute: 'rows', converter: jsonArrayAttribute }) rows: [string, string][] = [];
 
-  static styles = [panelStyles, css`
-    :host { display: block; }
+  static styles = [cmdLine, css`
+    :host { display: block; margin: 1.5em 0; }
     .fetch {
       display: flex;
       gap: 22px;
@@ -90,23 +90,19 @@ export class SzNeofetch extends LitElement {
   render() {
     const [name, host] = this.user.split('@');
     return html`
-      <div class="panel">
-        <div class="panel__cmd"><span class="sigil">❯</span>neofetch</div>
-        <div class="panel__body">
-          <div class="fetch">
-            <pre class="logo" aria-hidden="true">${LOGO}</pre>
-            <div class="info">
-              <div class="user">${name}${host ? html`<span class="host">@${host}</span>` : ''}</div>
-              <div class="rule"></div>
-              ${this.rows.map(([k, v]) => html`
-                <div class="row ${k.toLowerCase() === 'status' ? 'status' : ''}">
-                  <span class="k">${k}</span><span class="v">${v}</span>
-                </div>
-              `)}
-              <div class="palette" aria-hidden="true">
-                ${PALETTE.map(c => html`<span style="background: var(--sz-${c}, #888)"></span>`)}
-              </div>
+      <div class="cmd"><span class="sigil">❯</span>neofetch</div>
+      <div class="fetch">
+        <pre class="logo" aria-hidden="true">${LOGO}</pre>
+        <div class="info">
+          <div class="user">${name}${host ? html`<span class="host">@${host}</span>` : ''}</div>
+          <div class="rule"></div>
+          ${this.rows.map(([k, v]) => html`
+            <div class="row ${k.toLowerCase() === 'status' ? 'status' : ''}">
+              <span class="k">${k}</span><span class="v">${v}</span>
             </div>
+          `)}
+          <div class="palette" aria-hidden="true">
+            ${PALETTE.map(c => html`<span style="background: var(--sz-${c}, #888)"></span>`)}
           </div>
         </div>
       </div>

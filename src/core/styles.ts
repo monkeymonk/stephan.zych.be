@@ -33,9 +33,24 @@ export const focusRing = css`
   }
 `;
 
-// Shared "TUI panel" chrome — a bordered box framed as command output:
-// a "❯ <command>" prompt header, then the result. No window chrome (we are
-// already inside the terminal). Used by the content widgets.
+// Bare "command output" header — a "❯ <command>" prompt line with no box,
+// for content that flows inline in a markdown document (about / contact).
+export const cmdLine = css`
+  .cmd {
+    color: var(--sz-overlay1, #7f849c);
+    font-size: calc(var(--sz-font-size, 13px) * 0.85);
+    margin-bottom: 10px;
+  }
+  .cmd .sigil {
+    color: var(--sz-green, #a6e3a1);
+    font-weight: 700;
+    margin-right: 8px;
+  }
+`;
+
+// Boxed "TUI panel" chrome — a bordered box framed as command output:
+// a "❯ <command>" header, then the result. Kept for *article* use (wrapping
+// code snippets or other content) via <sz-panel>.
 export const panelStyles = css`
   .panel {
     border: 1px solid var(--sz-surface1, #45475a);
