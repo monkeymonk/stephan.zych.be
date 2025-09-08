@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { panelStyles, focusRing } from '../core/styles.js';
+import { cmdLine, focusRing } from '../core/styles.js';
 import { actions } from '../core/actions.js';
 import { NOTIFY_ACTION } from '../features/notifications/actions.js';
 
@@ -52,8 +52,8 @@ export class SzContactCard extends LitElement {
     return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
   }
 
-  static styles = [panelStyles, focusRing, css`
-    :host { display: block; }
+  static styles = [cmdLine, focusRing, css`
+    :host { display: block; margin: 1.5em 0; }
     .row {
       display: flex;
       align-items: center;
@@ -125,10 +125,8 @@ export class SzContactCard extends LitElement {
 
   render() {
     return html`
-      <div class="panel">
-        <div class="panel__cmd"><span class="sigil">❯</span>cat ~/.contact</div>
-        <div class="panel__body">
-          ${this.email ? html`
+      <div class="cmd"><span class="sigil">❯</span>cat ~/.contact</div>
+      ${this.email ? html`
             <div class="row">
               <span class="tag" aria-hidden="true">✉</span>
               <a class="grow" href="mailto:${this.email}">${this.email}</a>
@@ -151,9 +149,7 @@ export class SzContactCard extends LitElement {
             <span>◍ Brussels${this.time ? html` · ${this.time} CET` : ''}</span>
             <span class="online">open to projects</span>
           </div>
-          <div class="prompt" aria-hidden="true"><span class="sigil">❯</span> <span class="cursor"></span></div>
-        </div>
-      </div>
+      <div class="prompt" aria-hidden="true"><span class="sigil">❯</span> <span class="cursor"></span></div>
     `;
   }
 }

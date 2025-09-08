@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { panelStyles, reducedMotion } from '../core/styles.js';
+import { cmdLine, reducedMotion } from '../core/styles.js';
 import { jsonArrayAttribute } from '../core/data.js';
 
 interface Counter { value: number; suffix?: string; label: string; }
@@ -54,8 +54,8 @@ export class SzStats extends LitElement {
     requestAnimationFrame(tick);
   }
 
-  static styles = [panelStyles, css`
-    :host { display: block; }
+  static styles = [cmdLine, css`
+    :host { display: block; margin: 1.5em 0; }
     .counters {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
@@ -112,10 +112,8 @@ export class SzStats extends LitElement {
 
   render() {
     return html`
-      <div class="panel">
-        <div class="panel__cmd"><span class="sigil">❯</span>./stats --receipts</div>
-        <div class="panel__body">
-          <div class="counters">
+      <div class="cmd"><span class="sigil">❯</span>./stats --receipts</div>
+      <div class="counters">
             ${this.counters.map((c, i) => html`
               <div class="counter">
                 <div class="counter__num">
@@ -139,8 +137,6 @@ export class SzStats extends LitElement {
               </div>
             `)}
           ` : ''}
-        </div>
-      </div>
     `;
   }
 }
