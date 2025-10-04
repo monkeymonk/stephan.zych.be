@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { cmdLine } from '../core/styles.js';
+import { panelStyles } from '../core/styles.js';
 import { jsonArrayAttribute } from '../core/data.js';
 
 interface Commit {
@@ -18,8 +18,8 @@ interface Commit {
 export class SzGitlog extends LitElement {
   @property({ attribute: 'commits', converter: jsonArrayAttribute }) commits: Commit[] = [];
 
-  static styles = [cmdLine, css`
-    :host { display: block; margin: 1.5em 0; }
+  static styles = [panelStyles, css`
+    :host { display: block; }
     .log {
       position: relative;
       padding-left: 4px;
@@ -71,9 +71,11 @@ export class SzGitlog extends LitElement {
 
   render() {
     return html`
-      <div class="cmd"><span class="sigil">❯</span>git log --graph --oneline</div>
-      <div class="log">
-        ${this.commits.map((c, i) => html`
+      <div class="panel">
+        <div class="panel__cmd"><span class="sigil">❯</span>git log --graph --oneline</div>
+        <div class="panel__body">
+          <div class="log">
+            ${this.commits.map((c, i) => html`
               <div class="commit ${i === 0 ? 'commit--head' : ''}">
                 <div class="line1">
                   <span class="hash">${c.hash}</span>
@@ -83,6 +85,8 @@ export class SzGitlog extends LitElement {
                 </div>
               </div>
             `)}
+          </div>
+        </div>
       </div>
     `;
   }
