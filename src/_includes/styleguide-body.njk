@@ -1,0 +1,183 @@
+Internal documentation. A complete, living showcase of every markdown element and style the site renders. Hidden from navigation, sitemap, and search (and `noindex`). Keep it in sync when styles change.
+
+## Headings
+
+All six levels, styled with the Catppuccin palette. The page title is rendered as the `h1`; in-body headings start at `h2`.
+
+## Heading Level 2
+
+### Heading Level 3
+
+#### Heading Level 4
+
+##### Heading Level 5
+
+###### Heading Level 6
+
+## Typography & Inline Elements
+
+Regular text with **bold emphasis**, *italic emphasis*, and ***bold italic*** combined. You can also use ~~strikethrough~~ for deleted content and `inline code` for technical terms.
+
+Here's a [hyperlink to GitHub](https://github.com) and another [internal link to home](/).
+
+Use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> to open the command palette. The formula H<sub>2</sub>O is water, and E = mc<sup>2</sup> is famous.
+
+<abbr title="Hyper Text Markup Language">HTML</abbr> is the backbone of the web.
+
+### Blockquotes
+
+> "Any sufficiently advanced technology is indistinguishable from magic."
+> — Arthur C. Clarke
+
+> Blockquotes can contain **formatted text**, `code`, and [links](/).
+>
+> They can also span multiple paragraphs.
+
+#### Nested Blockquotes
+
+> First level of quoting.
+>
+> > Nested blockquote with a different perspective.
+>
+> Back to the first level.
+
+## Lists
+
+### Unordered Lists
+
+- First item with some explanation
+- Second item with `inline code`
+  - Nested item level 2
+  - Another nested item
+    - Level 3 nesting goes deeper
+      - Level 4 for the truly organized
+- Back to top level
+
+### Ordered Lists
+
+1. Clone the repository
+2. Install dependencies
+3. Configure environment variables
+4. Run the development server
+
+### Task Lists
+
+- [x] Design the component architecture
+- [x] Implement the base theme
+- [ ] Replace placeholder content
+- [ ] Deploy to production
+
+## Code
+
+### Inline Code
+
+Use `npm install` to install packages. The `Array.prototype.map()` method creates a new array.
+
+### Fenced Code Blocks
+
+```typescript
+interface Project {
+  title: string;
+  tags: string[];
+}
+
+class Portfolio {
+  private projects: Project[] = [];
+
+  addProject(project: Project): void {
+    this.projects.push(project);
+  }
+
+  filterByTag(tag: string): Project[] {
+    return this.projects.filter((p) => p.tags.includes(tag));
+  }
+}
+```
+
+```bash
+#!/bin/bash
+echo "Building site..."
+npx @11ty/eleventy --serve &
+echo "Dev server running on :8080"
+```
+
+### Terminal Session
+
+A shell-session styled code block — handy for walkthroughs and demos.
+
+```console
+$ whoami
+stephan — lead dev, ex-CTO, professional yak-shaver
+
+$ ./career.sh --tldr
+→ co-founded Cherry Pulp (6→20 people, acquired 2023)
+→ now Lead Developer @ CBTW
+```
+
+### Boxed panel (`sz-panel`)
+
+Wrap a code block (or any content) in a TUI panel framed as command output — handy for articles and projects.
+
+<sz-panel cmd="cat greet.ts">
+
+```typescript
+export const greet = (name: string): string => `Hello, ${name}!`;
+```
+
+</sz-panel>
+
+## Tables
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Terminal shell | Done | 3 display modes |
+| Command palette | Done | Fuzzy autocomplete |
+| Theme switching | Done | 3 themes available |
+
+### Alignment
+
+| Left | Center | Right |
+|:-----|:------:|------:|
+| Cell 1 | Cell 2 | Cell 3 |
+| Longer content here | Centered | 1,337 |
+
+## Images
+
+<figure>
+  <img src="/assets/wallpapers/landscape-1.webp" alt="Landscape wallpaper">
+  <figcaption>One of the wallpapers used as the desktop background</figcaption>
+</figure>
+
+## Horizontal Rules
+
+Content above the rule.
+
+---
+
+Content below the rule.
+
+## Details / Collapsible Sections
+
+<details>
+<summary>Click to expand: Technical Architecture</summary>
+
+The portfolio is built with:
+
+- **Eleventy 3.x** for static site generation
+- **Lit 3.x** for web components
+- **esbuild** for TypeScript bundling
+
+</details>
+
+## Definition Lists
+
+<dl>
+<dt>Web Component</dt>
+<dd>A set of web platform APIs that allow you to create custom, reusable HTML elements.</dd>
+<dt>Shadow DOM</dt>
+<dd>Encapsulated DOM tree attached to an element, hidden from the main document.</dd>
+</dl>
+
+---
+
+That covers the supported elements, styled to match the **Catppuccin Mocha** theme with **render-markdown.nvim** inspired highlights.

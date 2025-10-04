@@ -4,7 +4,6 @@ title: Contact — Stéphan Zych
 heading: Contact
 description: Get in touch with Stéphan Zych — email, GitHub, LinkedIn.
 permalink: /contact/
-lineNumbers: false
 ---
 
 Got an interesting problem, a team that needs a steadier technical floor, or just want to argue about tooling? Email is the fastest way to reach me — there's a copy button so you don't have to squint.

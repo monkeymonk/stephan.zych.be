@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { cmdLine, focusRing } from '../core/styles.js';
+import { panelStyles, focusRing } from '../core/styles.js';
 import { actions } from '../core/actions.js';
 import { NOTIFY_ACTION } from '../features/notifications/actions.js';
 
@@ -52,8 +52,8 @@ export class SzContactCard extends LitElement {
     return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
   }
 
-  static styles = [cmdLine, focusRing, css`
-    :host { display: block; margin: 1.5em 0; }
+  static styles = [panelStyles, focusRing, css`
+    :host { display: block; }
     .row {
       display: flex;
       align-items: center;
@@ -103,30 +103,17 @@ export class SzContactCard extends LitElement {
       margin-right: 5px;
       animation: pulse 2s ease-in-out infinite;
     }
-    .prompt {
-      margin-top: 14px;
-      color: var(--sz-overlay0, #6c7086);
-    }
-    .prompt .sigil { color: var(--sz-green, #a6e3a1); font-weight: 700; }
-    .cursor {
-      display: inline-block;
-      width: 7px;
-      height: 1em;
-      background: var(--sz-accent, #89b4fa);
-      vertical-align: text-bottom;
-      animation: blink 1s step-end infinite;
-    }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    @keyframes blink { 50% { opacity: 0; } }
     @media (prefers-reduced-motion: reduce) {
-      .meta .online::before, .cursor { animation: none; }
+      .meta .online::before { animation: none; }
     }
   `];
 
   render() {
     return html`
-      <div class="cmd"><span class="sigil">❯</span>cat ~/.contact</div>
-      ${this.email ? html`
+      <div class="panel">
+        <div class="panel__body">
+          ${this.email ? html`
             <div class="row">
               <span class="tag" aria-hidden="true">✉</span>
               <a class="grow" href="mailto:${this.email}">${this.email}</a>
@@ -149,7 +136,8 @@ export class SzContactCard extends LitElement {
             <span>◍ Brussels${this.time ? html` · ${this.time} CET` : ''}</span>
             <span class="online">open to projects</span>
           </div>
-      <div class="prompt" aria-hidden="true"><span class="sigil">❯</span> <span class="cursor"></span></div>
+        </div>
+      </div>
     `;
   }
 }

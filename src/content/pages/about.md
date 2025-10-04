@@ -4,7 +4,6 @@ title: About — Stéphan Zych
 heading: About
 description: Lead developer, frontend architect, recovering CTO. Fifteen years building the web's unglamorous foundations — and having opinions about them.
 permalink: /about/
-lineNumbers: false
 ---
 
 <sz-neofetch user="{{ profile.identity.user }}" rows='{{ profile.identity.rows | dump }}'></sz-neofetch>
