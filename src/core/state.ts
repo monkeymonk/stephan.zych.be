@@ -5,6 +5,7 @@ export interface AppStateSchema {
   activePane: string | null;
   transparency: number;
   shaderMode: 'off' | 'css' | 'webgl';
+  viewMode: 'code' | 'reading';
 }
 
 const STORAGE_KEY = 'sz-state-v1';
@@ -16,6 +17,7 @@ const defaults: AppStateSchema = {
   activePane: null,
   transparency: 95,
   shaderMode: 'css',
+  viewMode: 'code',
 };
 
 type Listener = () => void;

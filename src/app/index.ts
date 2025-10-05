@@ -29,6 +29,7 @@ import '../components/sz-stats.js';
 import '../components/sz-wakapi.js';
 import '../components/sz-contact-card.js';
 import '../components/sz-panel.js';
+import '../components/sz-view-toggle.js';
 
 // Layouts
 import '../layouts/sz-dashboard.js';
@@ -45,6 +46,11 @@ actions.on(THEME_ACTION.SET, (a) => {
   appState.set('theme', theme);
   document.documentElement.setAttribute('data-theme', theme);
 });
+
+// Apply saved view mode (code ⟷ reading) on <html> and keep it in sync.
+const applyViewMode = () => document.documentElement.setAttribute('data-view', appState.get('viewMode'));
+applyViewMode();
+appState.subscribe(applyViewMode);
 
 // Initialize SPA router
 router.init();

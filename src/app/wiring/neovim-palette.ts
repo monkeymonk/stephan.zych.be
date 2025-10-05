@@ -30,6 +30,7 @@ export function wireNeovimPalette() {
           args: [
             { name: 'transparency', values: ['100', '90', '80', '70', '60', '50'] },
             { name: 'shader', values: ['off', 'css', 'webgl'] },
+            { name: 'view', values: ['code', 'reading'] },
           ] },
         { id: 'whoami', label: 'whoami', description: 'man page for one (1) developer' },
         { id: 'matrix', label: 'matrix', description: 'Enter the Matrix' },
@@ -58,6 +59,9 @@ export function wireNeovimPalette() {
       }
       if (item.id === 'set' && args?.[0] === 'shader' && args?.[1]) {
         actions.dispatch(SHADER_ACTION.SET_MODE, args[1]); return;
+      }
+      if (item.id === 'set' && args?.[0] === 'view' && (args?.[1] === 'code' || args?.[1] === 'reading')) {
+        appState.set('viewMode', args[1]); return;
       }
       if (item.id === 'matrix') { actions.dispatch(EFFECT_ACTION.MATRIX); return; }
       if (item.id === 'party') { actions.dispatch(EFFECT_ACTION.CONFETTI); return; }

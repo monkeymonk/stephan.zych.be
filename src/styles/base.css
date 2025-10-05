@@ -574,11 +574,34 @@ a:hover { text-decoration: underline; }
   margin-right: auto;
 }
 
-/* Body — centered reading column, no line numbers */
-.sz-article__body.sz-prose {
+/* ── Article view modes: code (default, line-numbered) ⟷ reading ── */
+
+/* Toolbar (breadcrumb + nvim/glow toggle) */
+.sz-article__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 32px 0;
+}
+.sz-article__view { flex-shrink: 0; }
+
+/* Hero shows only in reading view */
+.sz-article__hero { display: none; }
+html[data-view="reading"] .sz-article__hero { display: flex; }
+
+/* Content vertical spacing in code view */
+.sz-article__body .sz-content { padding-top: 18px; padding-bottom: 48px; }
+
+/* Reading view: hide the line-number gutter, center the reading column */
+html[data-view="reading"] .sz-article__body .sz-gutter { display: none; }
+html[data-view="reading"] .sz-article__body.sz-prose--numbered {
+  display: block;
   max-width: 680px;
-  width: 100%;
   margin: 0 auto;
+}
+html[data-view="reading"] .sz-article__body .sz-content {
+  max-width: none;
   padding: 24px 32px 48px;
 }
 
