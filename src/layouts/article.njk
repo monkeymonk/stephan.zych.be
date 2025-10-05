@@ -2,15 +2,18 @@
 layout: base.njk
 ---
 <article class="sz-article">
-  {% if section %}
-  <nav class="sz-article__breadcrumb" aria-label="Breadcrumb">
-    <a href="/">~</a>
-    <span class="sz-article__crumb-sep">/</span>
-    <a href="{{ section.path }}">{{ section.name }}</a>
-    <span class="sz-article__crumb-sep">/</span>
-    <span class="sz-article__crumb-current">{{ page.fileSlug }}</span>
-  </nav>
-  {% endif %}
+  <div class="sz-article__toolbar">
+    {% if section %}
+    <nav class="sz-article__breadcrumb" aria-label="Breadcrumb">
+      <a href="/">~</a>
+      <span class="sz-article__crumb-sep">/</span>
+      <a href="{{ section.path }}">{{ section.name }}</a>
+      <span class="sz-article__crumb-sep">/</span>
+      <span class="sz-article__crumb-current">{{ page.fileSlug }}</span>
+    </nav>
+    {% endif %}
+    <sz-view-toggle class="sz-article__view"></sz-view-toggle>
+  </div>
   {% if poster %}
   <div class="sz-article__hero">
     <img src="{{ poster }}" alt="{{ title }}">
@@ -32,7 +35,7 @@ layout: base.njk
     <p class="sz-article__description">{{ description }}</p>
     {% endif %}
   </header>
-  <sz-markdown class="sz-article__body">
+  <sz-markdown line-numbers class="sz-article__body">
     {{ content | safe }}
   </sz-markdown>
   {% if section.name == 'blog' %}
