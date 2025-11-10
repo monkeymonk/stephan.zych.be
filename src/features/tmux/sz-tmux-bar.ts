@@ -5,7 +5,8 @@ import type { RouteChangedDetail } from "../../core/router.js";
 import { isInputFocused } from "../../core/keyboard.js";
 import type { NavTab } from "../../core/registry.js";
 import { jsonArrayAttribute } from "../../core/data.js";
-import { focusRing } from "../../core/styles.js";
+import { focusRing, clockStyles } from "../../core/styles.js";
+import { clock, type ClockTime } from "../../core/clock.js";
 import { TMUX_ACTION } from "./actions.js";
 
 @customElement("sz-tmux-bar")
@@ -13,13 +14,13 @@ export class SzTmuxBar extends LitElement {
   @property({ attribute: "active-path" }) activePath = "/";
   @property({ attribute: "nav", converter: jsonArrayAttribute }) nav: NavTab[] =
     [];
-  @state() private time = "";
+  @state() private time: ClockTime = clock.time;
 
-  private timer?: number;
+  private clockUnsub?: () => void;
   private routeUnsub?: () => void;
 
   static styles = css`
-    ${focusRing}
+    ${focusRing}${clockStyles}
     :host {
       display: flex;
       align-items: center;
@@ -158,43 +159,19 @@ export class SzTmuxBar extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.updateTime();
-    this.timer = window.setInterval(() => this.updateTime(), 60000);
+    this.clockUnsub = clock.subscribe((t) => { this.time = t; });
     document.addEventListener("keydown", this.handleKeydown);
     this.routeUnsub = actions.on(ROUTER_ACTION.ROUTE_CHANGED, (a) => {
       this.activePath = (a.payload as RouteChangedDetail).path;
     });
-    document.addEventListener("visibilitychange", this.handleVisibility);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    if (this.timer) clearInterval(this.timer);
+    this.clockUnsub?.();
     document.removeEventListener("keydown", this.handleKeydown);
-    document.removeEventListener("visibilitychange", this.handleVisibility);
     this.routeUnsub?.();
   }
-
-  private updateTime() {
-    const now = new Date();
-    this.time = now.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  }
-
-  private handleVisibility = () => {
-    if (document.hidden) {
-      if (this.timer) {
-        clearInterval(this.timer);
-        this.timer = undefined;
-      }
-    } else {
-      this.updateTime();
-      this.timer = window.setInterval(() => this.updateTime(), 60000);
-    }
-  };
 
   private handleKeydown = (e: KeyboardEvent) => {
     if (isInputFocused()) return;
@@ -250,7 +227,7 @@ export class SzTmuxBar extends LitElement {
       <div class="right">
         <slot name="widget">
           <div class="right-arrow"></div>
-          <span class="right-item accent">${this.time}</span>
+          <span class="right-item accent">${this.time.hh}<span class="clock-colon">:</span>${this.time.mm}</span>
         </slot>
       </div>
     `;

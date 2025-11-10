@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { panelStyles, focusRing } from '../core/styles.js';
+import { panelStyles, focusRing, clockStyles } from '../core/styles.js';
+import { clock, type ClockTime } from '../core/clock.js';
 import { actions } from '../core/actions.js';
 import { NOTIFY_ACTION } from '../features/notifications/actions.js';
 
@@ -15,28 +16,17 @@ export class SzContactCard extends LitElement {
   @property({ attribute: 'github' }) github = '';
   @property({ attribute: 'linkedin' }) linkedin = '';
 
-  @state() private time = '';
-  private timer?: number;
+  @state() private time: ClockTime = clock.time;
+  private clockUnsub?: () => void;
 
   connectedCallback() {
     super.connectedCallback();
-    this.updateTime();
-    this.timer = window.setInterval(() => this.updateTime(), 30000);
+    this.clockUnsub = clock.subscribe((t) => { this.time = t; });
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    if (this.timer) clearInterval(this.timer);
-  }
-
-  private updateTime() {
-    try {
-      this.time = new Intl.DateTimeFormat('en-GB', {
-        hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Brussels',
-      }).format(new Date());
-    } catch {
-      this.time = '';
-    }
+    this.clockUnsub?.();
   }
 
   private async copyEmail() {
@@ -52,7 +42,7 @@ export class SzContactCard extends LitElement {
     return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
   }
 
-  static styles = [panelStyles, focusRing, css`
+  static styles = [panelStyles, focusRing, clockStyles, css`
     :host { display: block; }
     .row {
       display: flex;
@@ -133,7 +123,7 @@ export class SzContactCard extends LitElement {
             </div>
           ` : ''}
           <div class="meta">
-            <span>◍ Brussels${this.time ? html` · ${this.time} CET` : ''}</span>
+            <span>◍ Brussels · ${this.time.hh}<span class="clock-colon">:</span>${this.time.mm} CET</span>
             <span class="online">open to projects</span>
           </div>
         </div>

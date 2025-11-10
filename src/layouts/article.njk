@@ -14,11 +14,26 @@ layout: base.njk
     {% endif %}
     <sz-view-toggle class="sz-article__view"></sz-view-toggle>
   </div>
+
   {% if poster %}
   <div class="sz-article__hero">
     <img src="{{ poster }}" alt="{{ title }}">
   </div>
   {% endif %}
+
+  {# Markdown header — shown in code view #}
+  <div class="sz-article__md-header">
+    <div class="md-h1"><span class="md-hash"># </span>{{ heading or title }}</div>
+    {% if date or tags %}
+    <div class="md-meta">
+      {% if date %}<span class="md-date">{{ date | htmlDateString }}</span>{% endif %}
+      {% if tags %}{% for tag in tags %}{% if tag !== 'blog' and tag !== 'projects' %}<span class="md-tag">#{{ tag }}</span>{% endif %}{% endfor %}{% endif %}
+    </div>
+    {% endif %}
+    {% if description %}<blockquote class="md-desc">{{ description }}</blockquote>{% endif %}
+  </div>
+
+  {# Styled header — shown in reading view #}
   <header class="sz-article__header">
     <h1 class="sz-article__title">{{ heading or title }}</h1>
     {% if date or tags %}
@@ -35,12 +50,23 @@ layout: base.njk
     <p class="sz-article__description">{{ description }}</p>
     {% endif %}
   </header>
+
   <sz-markdown line-numbers class="sz-article__body">
     {{ content | safe }}
   </sz-markdown>
+
   {% if section.name == 'blog' %}
   {% set shareUrl = (site.url + page.url) | urlencode %}
   {% set shareText = title | urlencode %}
+
+  {# Markdown footer — shown in code view #}
+  <div class="sz-article__md-footer">
+    <div class="md-hr">---</div>
+    <div class="md-foot">written by <strong>{{ site.author }}</strong> · <a href="/about/">~/about</a></div>
+    <div class="md-foot">share: <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ shareUrl }}" target="_blank" rel="noopener noreferrer">linkedin</a> · <a href="https://twitter.com/intent/tweet?url={{ shareUrl }}&text={{ shareText }}" target="_blank" rel="noopener noreferrer">x</a> · <a href="https://bsky.app/intent/compose?text={{ shareText }}%20{{ shareUrl }}" target="_blank" rel="noopener noreferrer">bluesky</a> · <a href="mailto:?subject={{ shareText }}&body={{ shareUrl }}">email</a></div>
+  </div>
+
+  {# Styled footer — shown in reading view #}
   <footer class="sz-article__footer">
     <div class="sz-article__author">
       <div class="sz-article__author-name">{{ site.author }}</div>
