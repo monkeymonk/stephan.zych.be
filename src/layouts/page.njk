@@ -1,6 +1,9 @@
 ---
 layout: base.njk
 ---
+{% if lineNumbers !== false %}
+<div class="sz-page__toolbar"><sz-view-toggle class="sz-page__view"></sz-view-toggle></div>
+{% endif %}
 <sz-markdown{% if lineNumbers !== false %} line-numbers{% endif %}>
   <h1>{{ heading or title }}</h1>
   {% if date %}<p style="color: var(--sz-subtext)">{{ date | dateDisplay }}</p>{% endif %}

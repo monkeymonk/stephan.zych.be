@@ -94,7 +94,6 @@ export class SzNeofetch extends LitElement {
         <div class="panel__cmd"><span class="sigil">❯</span>neofetch</div>
         <div class="panel__body">
           <div class="fetch">
-            <pre class="logo" aria-hidden="true">${LOGO}</pre>
             <div class="info">
               <div class="user">${name}${host ? html`<span class="host">@${host}</span>` : ''}</div>
               <div class="rule"></div>
@@ -107,6 +106,7 @@ export class SzNeofetch extends LitElement {
                 ${PALETTE.map(c => html`<span style="background: var(--sz-${c}, #888)"></span>`)}
               </div>
             </div>
+            <pre class="logo" aria-hidden="true">${LOGO}</pre>
           </div>
         </div>
       </div>

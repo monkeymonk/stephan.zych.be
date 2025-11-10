@@ -574,36 +574,90 @@ a:hover { text-decoration: underline; }
   margin-right: auto;
 }
 
-/* ── Article view modes: code (default, line-numbered) ⟷ reading ── */
+/* ── View modes: code (default, line-numbered) ⟷ reading ── */
 
-/* Toolbar (breadcrumb + nvim/glow toggle) */
-.sz-article__toolbar {
+/* Toolbars carrying the nvim/glow toggle (articles + pages) */
+.sz-article__toolbar,
+.sz-page__toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 14px 32px 0;
 }
-.sz-article__view { flex-shrink: 0; }
+.sz-page__toolbar { justify-content: flex-end; }
+.sz-article__view,
+.sz-page__view { flex-shrink: 0; }
 
-/* Hero shows only in reading view */
+/* Article hero shows only in reading view */
 .sz-article__hero { display: none; }
 html[data-view="reading"] .sz-article__hero { display: flex; }
 
 /* Content vertical spacing in code view */
-.sz-article__body .sz-content { padding-top: 18px; padding-bottom: 48px; }
+.sz-prose--numbered .sz-content { padding-top: 18px; padding-bottom: 48px; }
 
-/* Reading view: hide the line-number gutter, center the reading column */
-html[data-view="reading"] .sz-article__body .sz-gutter { display: none; }
-html[data-view="reading"] .sz-article__body.sz-prose--numbered {
+/* Reading view: hide the line-number gutter, center the reading column
+   (applies to both article bodies and page content) */
+html[data-view="reading"] .sz-prose--numbered .sz-gutter { display: none; }
+html[data-view="reading"] .sz-prose--numbered {
   display: block;
   max-width: 680px;
   margin: 0 auto;
 }
-html[data-view="reading"] .sz-article__body .sz-content {
+html[data-view="reading"] .sz-prose--numbered .sz-content {
   max-width: none;
   padding: 24px 32px 48px;
 }
+
+/* Header/footer: markdown version (code) ⟷ styled version (reading) */
+.sz-article__header,
+.sz-article__footer { display: none; }
+html[data-view="reading"] .sz-article__header { display: block; }
+html[data-view="reading"] .sz-article__footer { display: flex; }
+html[data-view="reading"] .sz-article__md-header,
+html[data-view="reading"] .sz-article__md-footer { display: none; }
+
+/* Markdown header (code view) — looks like the top of the source file */
+.sz-article__md-header { padding: 16px 32px 0; }
+.sz-article__md-header .md-h1 {
+  font-size: calc(var(--sz-font-size) * 1.5);
+  font-weight: 700;
+  color: var(--sz-mauve, #cba6f7);
+  line-height: 1.35;
+}
+.sz-article__md-header .md-hash { color: var(--sz-accent, #89b4fa); }
+.sz-article__md-header .md-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+  color: var(--sz-overlay1, #7f849c);
+  font-size: calc(var(--sz-font-size) * 0.9);
+}
+.sz-article__md-header .md-tag { color: var(--sz-lavender, #b4befe); }
+.sz-article__md-header .md-desc {
+  margin: 12px 0 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--sz-surface2, #585b70);
+  color: var(--sz-subtext0, #a6adc8);
+  font-style: italic;
+}
+
+/* Markdown footer (code view) */
+.sz-article__md-footer {
+  padding: 4px 32px 40px;
+  color: var(--sz-subtext0, #a6adc8);
+  font-size: calc(var(--sz-font-size) * 0.92);
+}
+.sz-article__md-footer .md-hr {
+  color: var(--sz-overlay0, #6c7086);
+  letter-spacing: 2px;
+  margin: 18px 0 12px;
+}
+.sz-article__md-footer .md-foot { margin: 4px 0; }
+.sz-article__md-footer a { color: var(--sz-accent, #89b4fa); text-decoration: none; }
+.sz-article__md-footer a:hover { text-decoration: underline; }
+.sz-article__md-footer strong { color: var(--sz-text, #cdd6f4); }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {

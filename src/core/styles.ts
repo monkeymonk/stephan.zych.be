@@ -33,6 +33,15 @@ export const focusRing = css`
   }
 `;
 
+// Lightly blinking colon for clock displays (tmux footer, contact card).
+export const clockStyles = css`
+  .clock-colon { animation: clock-blink 1s ease-in-out infinite; }
+  @keyframes clock-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @media (prefers-reduced-motion: reduce) {
+    .clock-colon { animation: none; }
+  }
+`;
+
 // Shared "TUI panel" chrome — a bordered box framed as command output:
 // a "❯ <command>" prompt header, then the result. No window chrome (we are
 // already inside the terminal). Used by the content widgets.
