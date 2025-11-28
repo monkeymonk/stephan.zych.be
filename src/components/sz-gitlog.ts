@@ -1,7 +1,8 @@
-import { LitElement, html, css } from 'lit';
+import { html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { panelStyles } from '../core/styles.js';
+import { panelStyles, mdStyles } from '../core/styles.js';
 import { jsonArrayAttribute } from '../core/data.js';
+import { ViewAwareElement } from '../core/view-aware.js';
 
 interface Commit {
   hash: string;
@@ -15,10 +16,10 @@ interface Commit {
  *   <sz-gitlog commits='[{"hash":"...","message":"...","date":"..."}]'></sz-gitlog>
  */
 @customElement('sz-gitlog')
-export class SzGitlog extends LitElement {
+export class SzGitlog extends ViewAwareElement {
   @property({ attribute: 'commits', converter: jsonArrayAttribute }) commits: Commit[] = [];
 
-  static styles = [panelStyles, css`
+  static styles = [panelStyles, mdStyles, css`
     :host { display: block; }
     .log {
       position: relative;
@@ -69,7 +70,18 @@ export class SzGitlog extends LitElement {
     }
   `];
 
-  render() {
+  renderCode() {
+    return html`
+      <div class="md">
+        <div class="md__h">experience</div>
+        <ul class="md__list">
+          ${this.commits.map(c => html`<li><span class="md__key">${c.hash}</span> ${c.message} <span class="md__dim">(${c.date})</span></li>`)}
+        </ul>
+      </div>
+    `;
+  }
+
+  renderGlow() {
     return html`
       <div class="panel">
         <div class="panel__cmd"><span class="sigil">❯</span>git log --graph --oneline</div>

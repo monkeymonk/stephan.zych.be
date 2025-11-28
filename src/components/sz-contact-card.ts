@@ -1,9 +1,10 @@
-import { LitElement, html, css } from 'lit';
+import { html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { panelStyles, focusRing, clockStyles } from '../core/styles.js';
+import { panelStyles, focusRing, clockStyles, mdStyles } from '../core/styles.js';
 import { clock, type ClockTime } from '../core/clock.js';
 import { actions } from '../core/actions.js';
 import { NOTIFY_ACTION } from '../features/notifications/actions.js';
+import { ViewAwareElement } from '../core/view-aware.js';
 
 /**
  * Terminal "contact card" — `cat ~/.contact` with copy-to-clipboard and a
@@ -11,7 +12,7 @@ import { NOTIFY_ACTION } from '../features/notifications/actions.js';
  *   <sz-contact-card email="..." github="..." linkedin="..."></sz-contact-card>
  */
 @customElement('sz-contact-card')
-export class SzContactCard extends LitElement {
+export class SzContactCard extends ViewAwareElement {
   @property({ attribute: 'email' }) email = '';
   @property({ attribute: 'github' }) github = '';
   @property({ attribute: 'linkedin' }) linkedin = '';
@@ -42,7 +43,7 @@ export class SzContactCard extends LitElement {
     return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
   }
 
-  static styles = [panelStyles, focusRing, clockStyles, css`
+  static styles = [panelStyles, focusRing, clockStyles, mdStyles, css`
     :host { display: block; }
     .row {
       display: flex;
@@ -99,7 +100,22 @@ export class SzContactCard extends LitElement {
     }
   `];
 
-  render() {
+  renderCode() {
+    return html`
+      <div class="md">
+        <div class="md__h">contact</div>
+        <ul class="md__list">
+          ${this.email ? html`<li><span class="md__key">email</span>: <a href="mailto:${this.email}">${this.email}</a></li>` : ''}
+          ${this.github ? html`<li><span class="md__key">github</span>: <a href="${this.github}" target="_blank" rel="noopener noreferrer">${this.host(this.github)}</a></li>` : ''}
+          ${this.linkedin ? html`<li><span class="md__key">linkedin</span>: <a href="${this.linkedin}" target="_blank" rel="noopener noreferrer">${this.host(this.linkedin)}</a></li>` : ''}
+          <li><span class="md__key">location</span>: Brussels · ${this.time.hh}<span class="clock-colon">:</span>${this.time.mm} CET</li>
+          <li><span class="md__key">status</span>: <span class="md__dim">open to projects</span></li>
+        </ul>
+      </div>
+    `;
+  }
+
+  renderGlow() {
     return html`
       <div class="panel">
         <div class="panel__body">

@@ -1,7 +1,8 @@
-import { LitElement, html, css } from 'lit';
+import { html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { panelStyles, reducedMotion } from '../core/styles.js';
+import { panelStyles, mdStyles, reducedMotion } from '../core/styles.js';
 import { jsonArrayAttribute } from '../core/data.js';
+import { ViewAwareElement } from '../core/view-aware.js';
 
 interface Lang { name: string; percent: number; text?: string; }
 
@@ -14,7 +15,7 @@ const BAR_COLORS = ['blue', 'mauve', 'green', 'peach', 'yellow', 'teal', 'lavend
  *   <sz-wakapi range="..." total="..." daily="..." languages='[...]'></sz-wakapi>
  */
 @customElement('sz-wakapi')
-export class SzWakapi extends LitElement {
+export class SzWakapi extends ViewAwareElement {
   @property({ attribute: 'range' }) range = '';
   @property({ attribute: 'total' }) total = '';
   @property({ attribute: 'daily' }) daily = '';
@@ -39,7 +40,7 @@ export class SzWakapi extends LitElement {
     this.observer?.disconnect();
   }
 
-  static styles = [panelStyles, css`
+  static styles = [panelStyles, mdStyles, css`
     :host { display: block; }
     .summary {
       display: flex;
@@ -85,7 +86,19 @@ export class SzWakapi extends LitElement {
     }
   `];
 
-  render() {
+  renderCode() {
+    return html`
+      <div class="md">
+        <div class="md__h">wakatime · ${this.range}</div>
+        <ul class="md__list">
+          <li><span class="md__key">total</span>: ${this.total}${this.daily ? html` <span class="md__dim">(~${this.daily}/day)</span>` : ''}</li>
+          ${this.languages.map(l => html`<li><span class="md__key">${l.name}</span> ${l.percent}%${l.text ? html` <span class="md__dim">· ${l.text}</span>` : ''}</li>`)}
+        </ul>
+      </div>
+    `;
+  }
+
+  renderGlow() {
     const fill = (pct: number) => (this.revealed || reducedMotion.matches ? pct : 0);
     return html`
       <div class="panel">
