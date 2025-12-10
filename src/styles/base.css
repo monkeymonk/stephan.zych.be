@@ -225,6 +225,25 @@ a:hover { text-decoration: underline; }
   font-size: var(--sz-font-size);
   margin: 0;
 }
+
+/* Per-code-block line numbers — shown only in the reading/glow view, where
+   the document line-number gutter is hidden. */
+pre.has-code-numbers { position: relative; }
+.code-gutter { display: none; }
+html[data-view="reading"] pre.has-code-numbers { padding-left: 3.6em; }
+html[data-view="reading"] .code-gutter {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2.3em;
+  padding-right: 0.7em;
+  text-align: right;
+  color: var(--sz-overlay0, #6c7086);
+  user-select: none;
+  box-shadow: inset -1px 0 0 0 var(--sz-surface1, #45475a);
+}
+html[data-view="reading"] .code-gutter span { display: block; }
 .sz-prose code {
   background: var(--sz-surface0, #313244);
   padding: 1px 5px;
