@@ -41,9 +41,33 @@ export class SzMarkdown extends LitElement {
     this.enhanceLinks();
     this.enhanceCheckboxes();
     this.wrapIframes();
+    this.numberCodeBlocks();
 
     if (this.lineNumbers) {
       this.addLineNumbers();
+    }
+  }
+
+  // Per-code-block line numbers. The document gutter (code view) already
+  // numbers these lines, so CSS shows this only in the reading/glow view
+  // where that gutter is hidden.
+  private numberCodeBlocks() {
+    const blocks = this.querySelectorAll<HTMLElement>('pre[class*="language-"]');
+    for (const pre of blocks) {
+      if (pre.dataset.numbered) continue;
+      const code = pre.querySelector('code');
+      if (!code) continue;
+      const lineCount = (code.textContent ?? '').replace(/\n+$/, '').split('\n').length;
+      if (lineCount < 2) continue;
+      const gutter = document.createElement('span');
+      gutter.className = 'code-gutter';
+      gutter.setAttribute('aria-hidden', 'true');
+      let inner = '';
+      for (let i = 1; i <= lineCount; i++) inner += `<span>${i}</span>`;
+      gutter.innerHTML = inner;
+      pre.insertBefore(gutter, pre.firstChild);
+      pre.classList.add('has-code-numbers');
+      pre.dataset.numbered = 'true';
     }
   }
 
