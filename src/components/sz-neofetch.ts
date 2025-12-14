@@ -1,8 +1,7 @@
-import { html, css } from 'lit';
+import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { panelStyles, mdStyles } from '../core/styles.js';
+import { panelStyles } from '../core/styles.js';
 import { jsonArrayAttribute } from '../core/data.js';
-import { ViewAwareElement } from '../core/view-aware.js';
 
 const LOGO = String.raw`
  ███████╗███████╗
@@ -19,11 +18,11 @@ const PALETTE = ['red', 'peach', 'yellow', 'green', 'teal', 'blue', 'mauve', 'la
  *   <sz-neofetch user="..." rows='[["OS","Brussels"], ...]'></sz-neofetch>
  */
 @customElement('sz-neofetch')
-export class SzNeofetch extends ViewAwareElement {
+export class SzNeofetch extends LitElement {
   @property({ attribute: 'user' }) user = '';
   @property({ attribute: 'rows', converter: jsonArrayAttribute }) rows: [string, string][] = [];
 
-  static styles = [panelStyles, mdStyles, css`
+  static styles = [panelStyles, css`
     :host { display: block; }
     .fetch {
       display: flex;
@@ -88,19 +87,7 @@ export class SzNeofetch extends ViewAwareElement {
     }
   `];
 
-  renderCode() {
-    return html`
-      <div class="md">
-        <div class="md__h">whoami</div>
-        <ul class="md__list">
-          <li><span class="md__key">user</span>: ${this.user}</li>
-          ${this.rows.map(([k, v]) => html`<li><span class="md__key">${k}</span>: ${v}</li>`)}
-        </ul>
-      </div>
-    `;
-  }
-
-  renderGlow() {
+  render() {
     const [name, host] = this.user.split('@');
     return html`
       <div class="panel">

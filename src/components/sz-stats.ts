@@ -1,8 +1,7 @@
-import { html, css } from 'lit';
+import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { panelStyles, mdStyles, reducedMotion } from '../core/styles.js';
+import { panelStyles, reducedMotion } from '../core/styles.js';
 import { jsonArrayAttribute } from '../core/data.js';
-import { ViewAwareElement } from '../core/view-aware.js';
 
 interface Counter { value: number; suffix?: string; label: string; }
 interface Skill { name: string; level: number; }
@@ -13,7 +12,7 @@ interface Skill { name: string; level: number; }
  * Counts up / fills bars when scrolled into view (respects reduced-motion).
  */
 @customElement('sz-stats')
-export class SzStats extends ViewAwareElement {
+export class SzStats extends LitElement {
   @property({ attribute: 'counters', converter: jsonArrayAttribute }) counters: Counter[] = [];
   @property({ attribute: 'skills', converter: jsonArrayAttribute }) skills: Skill[] = [];
 
@@ -55,7 +54,7 @@ export class SzStats extends ViewAwareElement {
     requestAnimationFrame(tick);
   }
 
-  static styles = [panelStyles, mdStyles, css`
+  static styles = [panelStyles, css`
     :host { display: block; }
     .counters {
       display: grid;
@@ -111,24 +110,7 @@ export class SzStats extends ViewAwareElement {
     }
   `];
 
-  renderCode() {
-    return html`
-      <div class="md">
-        <div class="md__h">by the numbers</div>
-        <ul class="md__list">
-          ${this.counters.map(c => html`<li><span class="md__key">${c.value}${c.suffix ?? ''}</span> ${c.label}</li>`)}
-        </ul>
-        ${this.skills.length ? html`
-          <div class="md__h" style="margin-top: 1em">stack</div>
-          <ul class="md__list">
-            ${this.skills.map(s => html`<li><span class="md__key">${s.name}</span> <span class="md__dim">${s.level}%</span></li>`)}
-          </ul>
-        ` : ''}
-      </div>
-    `;
-  }
-
-  renderGlow() {
+  render() {
     return html`
       <div class="panel">
         <div class="panel__cmd"><span class="sigil">❯</span>./stats --receipts</div>

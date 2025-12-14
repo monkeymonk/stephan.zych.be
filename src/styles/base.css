@@ -663,6 +663,13 @@ html[data-view="reading"] .sz-md-footer { display: none; }
   color: var(--sz-subtext0, #a6adc8);
   font-style: italic;
 }
+.sz-md-header .md-img {
+  display: block;
+  max-width: 100%;
+  max-height: 45vh;
+  margin: 16px 0 0;
+  border-radius: 6px;
+}
 
 .sz-md-footer { margin-top: 1.5em; color: var(--sz-subtext0, #a6adc8); }
 .sz-md-footer .md-hr { color: var(--sz-overlay0, #6c7086); letter-spacing: 2px; margin: 18px 0 12px; }

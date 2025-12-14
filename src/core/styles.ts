@@ -33,21 +33,6 @@ export const focusRing = css`
   }
 `;
 
-// Markdown-like rendering used by the content widgets in the code/"nvim"
-// view — a "## heading" and "- key: value" lists, matching the source look.
-export const mdStyles = css`
-  .md { color: var(--sz-subtext0, #a6adc8); margin: 1.4em 0; line-height: 1.7; }
-  .md__h { color: var(--sz-mauve, #cba6f7); font-weight: 700; margin: 0 0 6px; }
-  .md__h::before { content: "## "; color: var(--sz-accent, #89b4fa); }
-  .md__list { margin: 0; padding: 0; list-style: none; }
-  .md__list li { padding: 0; }
-  .md__list li::before { content: "- "; color: var(--sz-overlay0, #6c7086); }
-  .md__key { color: var(--sz-text, #cdd6f4); }
-  .md__dim { color: var(--sz-overlay1, #7f849c); }
-  .md a { color: var(--sz-accent, #89b4fa); text-decoration: none; }
-  .md a:hover { text-decoration: underline; }
-`;
-
 // Lightly blinking colon for clock displays (tmux footer, contact card).
 export const clockStyles = css`
   .clock-colon { animation: clock-blink 1s ease-in-out infinite; }
