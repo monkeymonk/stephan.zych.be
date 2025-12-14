@@ -49,6 +49,7 @@ layout: base.njk
       </div>
       {% endif %}
       {% if description %}<blockquote class="md-desc">{{ description }}</blockquote>{% endif %}
+      {% if poster %}<img class="md-img" src="{{ poster }}" alt="{{ heading or title }}">{% endif %}
     </div>
 
     {{ content | safe }}
