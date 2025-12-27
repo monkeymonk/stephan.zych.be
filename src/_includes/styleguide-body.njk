@@ -114,18 +114,6 @@ $ ./career.sh --tldr
 → now Lead Developer @ CBTW
 ```
 
-### Boxed panel (`sz-panel`)
-
-Wrap a code block (or any content) in a TUI panel framed as command output — handy for articles and projects.
-
-<sz-panel cmd="cat greet.ts">
-
-```typescript
-export const greet = (name: string): string => `Hello, ${name}!`;
-```
-
-</sz-panel>
-
 ## Tables
 
 | Feature | Status | Notes |
@@ -178,6 +166,53 @@ The portfolio is built with:
 <dd>Encapsulated DOM tree attached to an element, hidden from the main document.</dd>
 </dl>
 
+## Components
+
+Interactive widgets, droppable into any markdown page or article via custom tags (all data shown here is dummy). Toggle **nvim / glow** above to see how the panels — and the article header/footer — adapt to each view.
+
+### Identity card — `sz-neofetch`
+
+<sz-neofetch user="demo@example.com" rows='[["OS","Example OS"],["Role","Demo role"],["Uptime","N years"],["Stack","A · B · C"],["Status","available"]]'></sz-neofetch>
+
+### Experience timeline — `sz-gitlog`
+
+<sz-gitlog commits='[{"hash":"a1b2c3d","ref":"HEAD → main","message":"Current role @ Company","date":"2024—now"},{"hash":"e4f5a6b","message":"Previous role @ Other Co","date":"2020—2024"},{"hash":"0c1d2e3","message":"Earlier role","date":"2016—2020"}]'></sz-gitlog>
+
+### Stats & skills — `sz-stats`
+
+<sz-stats counters='[{"value":42,"suffix":"+","label":"things shipped"},{"value":8,"label":"years"},{"value":3,"label":"exits"}]' skills='[{"name":"TypeScript","level":92},{"name":"CSS / design","level":85},{"name":"Infrastructure","level":70}]'></sz-stats>
+
+### Coding activity — `sz-wakapi`
+
+<sz-wakapi range="Last 7 Days" total="12 hrs 30 mins" daily="1 hr 47 mins" languages='[{"name":"TypeScript","percent":48,"text":"6 hrs"},{"name":"CSS","percent":27,"text":"3 hrs 24 mins"},{"name":"Markdown","percent":15,"text":"1 hr 52 mins"},{"name":"JSON","percent":10,"text":"1 hr 14 mins"}]'></sz-wakapi>
+
+### Contact card — `sz-contact-card`
+
+<sz-contact-card email="demo@example.com" github="https://github.com/example" linkedin="https://linkedin.com/in/example"></sz-contact-card>
+
+### Boxed panel — `sz-panel`
+
+<sz-panel cmd="cat example.ts">
+
+```typescript
+export const greet = (name: string): string => `Hello, ${name}!`;
+```
+
+</sz-panel>
+
+### Article header
+
+Shown on blog posts and projects: a markdown-style header in the **nvim** view, a styled hero header in the **glow** view.
+
+<div class="sz-md-header"><div class="md-h1"><span class="md-hash"># </span>Example Article Title</div><div class="md-meta"><span class="md-date">2024-01-15</span><span class="md-tag">#demo</span><span class="md-tag">#example</span></div><blockquote class="md-desc">A one-line summary of what the article covers.</blockquote><img class="md-img" src="/assets/wallpapers/landscape-2.webp" alt="Example hero"></div>
+<div class="sz-article__hero"><img src="/assets/wallpapers/landscape-2.webp" alt="Example hero"></div>
+<header class="sz-article__header"><h1 class="sz-article__title">Example Article Title</h1><div class="sz-article__meta"><time>January 15, 2024</time><span class="sz-article__tags"><span class="sz-article__tag">demo</span><span class="sz-article__tag">example</span></span></div><p class="sz-article__description">A one-line summary of what the article covers.</p></header>
+
+### Article footer
+
+<div class="sz-md-footer"><div class="md-hr">---</div><div class="md-foot">written by <strong>Author Name</strong> · <a href="/about/">~/about</a></div><div class="md-foot">share: <a href="#">linkedin</a> · <a href="#">x</a> · <a href="#">bluesky</a> · <a href="#">email</a></div></div>
+<footer class="sz-article__footer"><div class="sz-article__author"><div class="sz-article__author-name">Author Name</div><p class="sz-article__author-bio">A short author bio line. <a href="/about/">More →</a></p></div><div class="sz-article__share"><span class="sz-article__share-label">Share</span><a href="#">LinkedIn</a><a href="#">X</a><a href="#">Bluesky</a><a href="#">Email</a></div></footer>
+
 ---
 
-That covers the supported elements, styled to match the **Catppuccin Mocha** theme with **render-markdown.nvim** inspired highlights.
+That covers every supported element and component, styled to match the **Catppuccin Mocha** theme with **render-markdown.nvim** inspired highlights.
