@@ -54,3 +54,8 @@ appState.subscribe(applyViewMode);
 
 // Initialize SPA router
 router.init();
+
+// A little something for the curious who open DevTools.
+import { printConsoleGreeting, installConsoleApi } from '../core/console-greeting.js';
+installConsoleApi();
+printConsoleGreeting();
