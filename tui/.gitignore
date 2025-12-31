@@ -1,0 +1,6 @@
+# SSH host private key — must never be committed.
+.ssh/
+/data/
+# Build artifacts
+sztui
+/sztui

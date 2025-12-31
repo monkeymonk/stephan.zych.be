@@ -1,0 +1,26 @@
+# Deploy the SSH TUI on a Docker VPS. Front it with `ssh ssh.zych.be` by
+# pointing port 22 (or a chosen port) at the container's 2222.
+#
+#   docker compose -f tui/compose.yaml up -d --build
+#
+# The build context is the repo root so the image can bake in src/content.
+
+services:
+  tui:
+    build:
+      context: ..
+      dockerfile: tui/Dockerfile
+    image: szych-tui
+    restart: unless-stopped
+    ports:
+      - "2222:2222" # map to "22:2222" on the host if this is the box's only SSH face
+    volumes:
+      - ssh-hostkey:/data/.ssh # stable host key → no client warnings on redeploy
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  ssh-hostkey:
