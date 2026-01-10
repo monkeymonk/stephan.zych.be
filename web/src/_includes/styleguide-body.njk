@@ -1,5 +1,13 @@
 Internal documentation. A complete, living showcase of every markdown element and style the site renders. Hidden from navigation, sitemap, and search (and `noindex`). Keep it in sync when styles change.
 
+## Article header
+
+How blog posts and projects are framed: a markdown-style header in the **markdown** view, a styled hero header in the **html** view (toggle above to compare).
+
+<div class="sz-md-header"><div class="md-h1"><span class="md-hash"># </span>Example Article Title</div><div class="md-meta"><span class="md-date">2024-01-15</span><span class="md-tag">#demo</span><span class="md-tag">#example</span></div><blockquote class="md-desc">A one-line summary of what the article covers.</blockquote><img class="md-img" src="/assets/wallpapers/landscape-2.webp" alt="Example hero" loading="lazy" decoding="async"></div>
+<div class="sz-article__hero"><img src="/assets/wallpapers/landscape-2.webp" alt="Example hero" loading="lazy" decoding="async"></div>
+<header class="sz-article__header"><h1 class="sz-article__title">Example Article Title</h1><div class="sz-article__meta"><time>January 15, 2024</time><span class="sz-article__tags"><span class="sz-article__tag">demo</span><span class="sz-article__tag">example</span></span></div><p class="sz-article__description">A one-line summary of what the article covers.</p></header>
+
 ## Headings
 
 All six levels, styled with the Catppuccin palette. The page title is rendered as the `h1`; in-body headings start at `h2`.
@@ -81,7 +89,7 @@ interface Project {
   tags: string[];
 }
 
-class Portfolio {
+class Notebook {
   private projects: Project[] = [];
 
   addProject(project: Project): void {
@@ -132,7 +140,7 @@ $ ./career.sh --tldr
 ## Images
 
 <figure>
-  <img src="/assets/wallpapers/landscape-1.webp" alt="Landscape wallpaper">
+  <img src="/assets/wallpapers/landscape-1.webp" alt="Landscape wallpaper" loading="lazy" decoding="async">
   <figcaption>One of the wallpapers used as the desktop background</figcaption>
 </figure>
 
@@ -149,7 +157,7 @@ Content below the rule.
 <details>
 <summary>Click to expand: Technical Architecture</summary>
 
-The portfolio is built with:
+This site is built with:
 
 - **Eleventy 3.x** for static site generation
 - **Lit 3.x** for web components
@@ -168,7 +176,7 @@ The portfolio is built with:
 
 ## Components
 
-Interactive widgets, droppable into any markdown page or article via custom tags (all data shown here is dummy). Toggle **nvim / glow** above to see how the panels — and the article header/footer — adapt to each view.
+Interactive widgets, droppable into any markdown page or article via custom tags (all data shown here is dummy). Toggle **markdown / html** above to see how the panels — and the article header/footer — adapt to each view.
 
 ### Identity card — `sz-neofetch`
 
@@ -200,15 +208,30 @@ export const greet = (name: string): string => `Hello, ${name}!`;
 
 </sz-panel>
 
-### Article header
+### Mermaid diagram — `sz-diagram`
 
-Shown on blog posts and projects: a markdown-style header in the **nvim** view, a styled hero header in the **glow** view.
+A fenced ` ```mermaid ` block renders as an interactive diagram, with an enlarge button that opens a zoom/pan overlay so dense graphs stay legible.
 
-<div class="sz-md-header"><div class="md-h1"><span class="md-hash"># </span>Example Article Title</div><div class="md-meta"><span class="md-date">2024-01-15</span><span class="md-tag">#demo</span><span class="md-tag">#example</span></div><blockquote class="md-desc">A one-line summary of what the article covers.</blockquote><img class="md-img" src="/assets/wallpapers/landscape-2.webp" alt="Example hero"></div>
-<div class="sz-article__hero"><img src="/assets/wallpapers/landscape-2.webp" alt="Example hero"></div>
-<header class="sz-article__header"><h1 class="sz-article__title">Example Article Title</h1><div class="sz-article__meta"><time>January 15, 2024</time><span class="sz-article__tags"><span class="sz-article__tag">demo</span><span class="sz-article__tag">example</span></span></div><p class="sz-article__description">A one-line summary of what the article covers.</p></header>
+```mermaid
+flowchart LR
+  A[Markdown] --> B{Build}
+  B -->|11ty| C[Web · HTML]
+  B -->|Go| D[TUI over SSH]
+  C --> E[Reader]
+  D --> E
+```
 
-### Article footer
+### Inline copy chip — `sz-copy`
+
+Click-to-copy for commands and snippets. Copies the `text` attribute, falling back to its slotted text: <sz-copy>ssh stephan.zych.be</sz-copy>
+
+### Outline rail — `sz-toc`
+
+A sticky outline (scroll-spy: highlights the current section, click to jump) plus a thin top progress bar. It reads headings straight from the rendered page, so it needs no data — auto-injected above every article body; drop `<sz-toc>` to add it elsewhere.
+
+<sz-toc></sz-toc>
+
+## Article footer
 
 <div class="sz-md-footer"><div class="md-hr">---</div><div class="md-foot">written by <strong>Author Name</strong> · <a href="/about/">~/about</a></div><div class="md-foot">share: <a href="#">linkedin</a> · <a href="#">x</a> · <a href="#">bluesky</a> · <a href="#">email</a></div></div>
 <footer class="sz-article__footer"><div class="sz-article__author"><div class="sz-article__author-name">Author Name</div><p class="sz-article__author-bio">A short author bio line. <a href="/about/">More →</a></p></div><div class="sz-article__share"><span class="sz-article__share-label">Share</span><a href="#">LinkedIn</a><a href="#">X</a><a href="#">Bluesky</a><a href="#">Email</a></div></footer>

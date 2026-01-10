@@ -30,7 +30,7 @@ func main() {
 	local := flag.Bool("local", false, "run the TUI directly in this terminal (no SSH)")
 	flag.Parse()
 
-	contentDir := env("CONTENT_DIR", "../src/content")
+	contentDir := env("CONTENT_DIR", "../content")
 	content, loadErr := LoadContent(contentDir)
 	if loadErr != nil {
 		log.Warn("content load failed", "dir", contentDir, "err", loadErr)

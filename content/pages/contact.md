@@ -10,4 +10,10 @@ Got an interesting problem, a team that needs a steadier technical floor, or jus
 
 <sz-contact-card email="{{ site.email }}" github="{{ site.socials.github }}" linkedin="{{ site.socials.linkedin }}"></sz-contact-card>
 
+Prefer a real terminal? Connect with <sz-copy>ssh stephan.zych.be</sz-copy> — same site, no browser.
+
 Prefer the keyboard? Press <kbd>:</kbd> anywhere and run `contact`, or `:whoami` to see who you're talking to first.
+
+---
+
+*Invoices and contracts go through **STEPHANZYCH** (STEPHAN ZYCH SRL) — VAT **BE 0804.229.671**, avenue de l'université 101, 1050 Ixelles, Belgium.*

@@ -3,7 +3,7 @@
 #
 #   docker compose -f tui/compose.yaml up -d --build
 #
-# The build context is the repo root so the image can bake in src/content.
+# The build context is the repo root so the image can bake in content/.
 
 services:
   tui:
