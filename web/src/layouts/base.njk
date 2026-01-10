@@ -3,16 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ title | default("Stephan Zych") }}</title>
-  <meta name="description" content="{{ description | default('Software developer portfolio') }}">
+  {%- set metaTitle = title | default(site.title) -%}
+  {%- set metaDescription = description | default(site.description) -%}
+  {%- set metaImage = site.url + (ogImage or poster or '/assets/wallpapers/landscape-1.webp') -%}
+  {%- set isArticle = section.name == 'blog' and date -%}
+  <title>{{ metaTitle }}</title>
+  <meta name="description" content="{{ metaDescription }}">
   {% if noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="{{ 'article' if isArticle else 'website' }}">
+  <meta property="og:site_name" content="{{ site.title }}">
+  <meta property="og:locale" content="en_US">
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
-  <meta property="og:title" content="{{ title | default('Stephan Zych') }}">
-  <meta property="og:description" content="{{ description | default('Software developer portfolio') }}">
-  <meta property="og:image" content="{{ site.url }}{{ ogImage | default('/assets/wallpapers/landscape-1.webp') }}">
+  <meta property="og:title" content="{{ metaTitle }}">
+  <meta property="og:description" content="{{ metaDescription }}">
+  <meta property="og:image" content="{{ metaImage }}">
+  {%- if isArticle %}
+  <meta property="article:published_time" content="{{ date | htmlDateString }}">
+  <meta property="article:author" content="{{ site.author }}">
+  {%- for tag in tags %}{% if tag !== 'blog' %}
+  <meta property="article:tag" content="{{ tag }}">{% endif %}{%- endfor %}
+  {%- endif %}
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ metaTitle }}">
+  <meta name="twitter:description" content="{{ metaDescription }}">
+  <meta name="twitter:image" content="{{ metaImage }}">
+  {%- if site.socials.twitter and site.socials.twitter != '#' %}
+  <meta name="twitter:creator" content="{{ site.socials.twitter }}">
+  {%- endif %}
+  {%- if isArticle %}
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":{{ metaTitle | dump | safe }},"description":{{ metaDescription | dump | safe }},"image":{{ metaImage | dump | safe }},"datePublished":{{ (date | htmlDateString) | dump | safe }},"url":{{ (site.url + page.url) | dump | safe }},"mainEntityOfPage":{{ (site.url + page.url) | dump | safe }},"author":{"@type":"Person","name":{{ site.author | dump | safe }},"url":{{ site.url | dump | safe }}}}</script>
+  {%- elif page.url == '/' or page.url == '/about/' %}
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":{{ site.author | dump | safe }},"url":{{ site.url | dump | safe }},"jobTitle":"Lead Developer & Frontend Architect","sameAs":[{{ site.socials.github | dump | safe }},{{ site.socials.linkedin | dump | safe }}]}</script>
+  {%- endif %}
   <meta name="theme-color" content="#1e1e2e">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles/reset.css">
@@ -40,7 +63,7 @@
   <sz-screen-shader aria-hidden="true"></sz-screen-shader>
 
   <sz-window-manager>
-    <sz-window id="terminal" titlebar="integrated" title="stephan.zych.be">
+    <sz-window id="terminal" titlebar="integrated" window-title="stephan.zych.be">
       <sz-tmux-bar slot="bar" active-path="{{ page.url }}" nav='{{ nav.tabs | dump }}'></sz-tmux-bar>
       <sz-tmux-panes>
         <sz-neovim slot="pane-0">
@@ -48,6 +71,7 @@
             {{ content | safe }}
           </main>
           <sz-palette shortcuts='{{ shortcuts | dump }}'></sz-palette>
+          <sz-links></sz-links>
           <sz-statusbar repo-url="{{ site.repoUrl }}" socials='{{ socialLinks | dump }}'></sz-statusbar>
         </sz-neovim>
       </sz-tmux-panes>
@@ -55,5 +79,6 @@
   </sz-window-manager>
 
   <sz-notifications></sz-notifications>
+  <sz-copyright-footer></sz-copyright-footer>
 </body>
 </html>

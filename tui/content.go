@@ -149,7 +149,7 @@ func loadSection(dir, section string) ([]Article, error) {
 	return out, nil
 }
 
-// LoadContent reads the markdown corpus from contentDir (the same src/content
+// LoadContent reads the markdown corpus from contentDir (the same content/
 // the website is built from).
 func LoadContent(contentDir string) (*Content, error) {
 	c := &Content{Pages: map[string]Article{}}

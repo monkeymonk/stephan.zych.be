@@ -16,6 +16,10 @@ const syntaxHighlight = require('@11ty/eleventy-plugin-syntaxhighlight');
 })();
 
 module.exports = function(eleventyConfig) {
+  // Build-time coding stats. Lives in lib/ rather than the data dir: dir.data
+  // is the shared content/data, which holds content only — never build code.
+  eleventyConfig.addGlobalData('wakapi', require('./lib/wakapi.js'));
+
   eleventyConfig.addPlugin(syntaxHighlight);
 
   eleventyConfig.addPassthroughCopy('src/assets');

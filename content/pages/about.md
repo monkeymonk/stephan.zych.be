@@ -2,7 +2,7 @@
 layout: page.njk
 title: About — Stéphan Zych
 heading: About
-description: Lead developer, frontend architect, recovering CTO. Fifteen years building the web's unglamorous foundations — and having opinions about them.
+description: Lead developer, frontend architect, recovering CTO. Fifteen years building the web's unglamorous foundations — and having opinions about them. Working at CBTW through my company STEPHANZYCH.
 permalink: /about/
 ---
 
@@ -10,7 +10,7 @@ permalink: /about/
 
 ## The short version
 
-Fifteen years turning *"can you just make it pop?"* into web platforms that survive contact with production. I co-founded a Brussels agency, **Cherry Pulp**, helped grow it from 6 to 20 people, shipped **200+ platforms**, and stuck around until it got acquired. These days I'm **Lead Developer at CBTW** — still suspiciously hands-on for someone with "lead" in the title.
+Fifteen years turning *"can you just make it pop?"* into web platforms that survive contact with production. I co-founded a Brussels agency, **Cherry Pulp**, helped grow it from 4 to 20 people, shipped **200+ platforms**, and stuck around until it got acquired. These days I'm **Lead Developer at CBTW**, working through my own company **STEPHANZYCH** — still suspiciously hands-on for someone with "lead" in the title.
 
 ## What I actually do
 
@@ -32,7 +32,7 @@ A few names you might recognise, who trusted me not to break their websites: **U
 
 <sz-wakapi range="{{ wakapi.range }}" total="{{ wakapi.total }}" daily="{{ wakapi.dailyAverage }}" languages='{{ wakapi.languages | dump }}'></sz-wakapi>
 
-Real coding stats from my self-hosted [Wakapi](https://wakapi.zych.link), baked in fresh on every deploy.
+Real coding stats from my self-hosted Wakapi instance, baked in fresh on every deploy.
 {% endif %}
 ## Plot twist
 
@@ -78,9 +78,16 @@ Really. Done properly — Bedrock, Sage, actual conventions — it ships institu
 </details>
 
 <details>
-<summary>Why does your portfolio look like a terminal?</summary>
+<summary>Why does this site look like a terminal?</summary>
 
 Because I like terminals, I had opinions, and "tasteful and forgettable" is the worse crime. While you're here, try typing <kbd>:</kbd> — or `:whoami`.
+
+</details>
+
+<details>
+<summary>Wait — can I actually SSH into this?</summary>
+
+Yes. <sz-copy>ssh stephan.zych.be</sz-copy> drops you into the same site as a real terminal UI — no browser, no JavaScript, just a Go program piped over SSH. Same content, rendered twice. Press <kbd>:</kbd> and run `ssh` to copy the command, and [read how it works](/blog/terminal-over-ssh/).
 
 </details>
 
@@ -94,3 +101,7 @@ That's most of what I do: raising the floor for a whole team through tooling, co
 ## Say hi
 
 I'm in Brussels 🇧🇪, I speak French natively and English professionally, and I'm always up for a good conversation about architecture, terminals, or why your build is slow. The fastest way is the [contact page](/contact/) — or type `:whoami` in the command palette to see who you're really talking to.
+
+---
+
+*The business behind the bytes: **STEPHANZYCH** (STEPHAN ZYCH SRL) — VAT **BE 0804.229.671**, Brussels. It's the company I work through, including my role at CBTW.*

@@ -9,7 +9,7 @@ const BAR_COLORS = ['blue', 'mauve', 'green', 'peach', 'yellow', 'teal', 'lavend
 
 /**
  * Coding activity from a self-hosted Wakapi instance. The numbers are fetched
- * at BUILD time (see src/data/wakapi.js) and injected via attributes — no API
+ * at BUILD time (see lib/wakapi.js) and injected via attributes — no API
  * key ever reaches the browser.
  *   <sz-wakapi range="..." total="..." daily="..." languages='[...]'></sz-wakapi>
  */

@@ -1,6 +1,11 @@
 # stephan.zych.be
 
-Personal portfolio and blog styled as a terminal environment. Built with Eleventy, Lit web components, and TypeScript.
+Personal portfolio and blog styled as a terminal environment — in two flavours
+that share one content source:
+
+- **`web/`** — a static site (Eleventy + Lit + TypeScript), deployed to GitHub Pages.
+- **`tui/`** — a real terminal version served over SSH (Go + Charm: Wish · Bubble Tea · Glamour).
+- **`content/`** — the markdown corpus (blog, projects, pages) both front-ends read.
 
 ## Features
 
@@ -26,13 +31,16 @@ Personal portfolio and blog styled as a terminal environment. Built with Elevent
 ## Getting Started
 
 ```bash
-npm install
-npm run dev
+# Web (static site)
+cd web && npm install && npm run dev
+
+# TUI (terminal version) — runs straight in your terminal
+cd tui && go run . --local
 ```
 
-This starts Eleventy's dev server and esbuild in watch mode concurrently.
+The web `dev` task starts Eleventy's dev server and esbuild in watch mode concurrently.
 
-## Scripts
+## Scripts (run inside `web/`)
 
 | Command | Description |
 |---------|-------------|
@@ -40,20 +48,34 @@ This starts Eleventy's dev server and esbuild in watch mode concurrently.
 | `npm run build` | Production build |
 | `npm run clean` | Remove build output |
 
-## Project Structure
+## Repository Structure
 
 ```
-src/
-  app/           Entry point and feature wiring
-  core/          Shared systems (state, actions, router, types)
-  features/      Isolated feature modules (window, tmux, neovim, effects, ...)
-  layouts/       Nunjucks templates and layout components
-  components/    Shared building blocks
-  widgets/       Interactive UI components
-  content/       Markdown content (blog, projects, pages)
-  data/          JSON data (site config, navigation, commands, themes)
-  styles/        Global CSS
-  assets/        Fonts, images, themes
+content/         Markdown corpus — single source of truth (blog, projects, pages)
+web/             Static site (Eleventy + Lit + TypeScript → GitHub Pages)
+  src/
+    app/         Entry point and feature wiring
+    core/        Shared systems (state, actions, router, types)
+    features/    Isolated feature modules (window, tmux, neovim, effects, ...)
+    layouts/     Nunjucks templates and layout components
+    components/  Shared building blocks and content widgets
+    data/        JSON data (site config, navigation, commands, themes)
+    styles/      Global CSS
+    assets/      Fonts, images, themes
+    content/     → symlink to ../../content (the shared corpus)
+tui/             SSH terminal version (Go + Charm: Wish · Bubble Tea · Glamour)
+docs/            Design notes and audits
+```
+
+Content lives once, at the repo root. The web build reads it through a symlink
+(`web/src/content`); the TUI reads it directly (`CONTENT_DIR`, default `../content`).
+
+## SSH TUI
+
+```bash
+cd tui
+go run . --local                              # dev: render in your terminal
+docker compose -f compose.yaml up -d --build  # deploy: serve over SSH on :2222
 ```
 
 ## License
