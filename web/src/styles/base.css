@@ -766,15 +766,19 @@ html[data-view="reading"] .sz-md-footer { display: none; }
    ═══════════════════════════════════════════════════ */
 
 .sz-article__breadcrumb {
-  max-width: 680px;
-  width: 100%;
-  margin: 0 auto;
   padding: 16px 32px 0;
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: calc(var(--sz-font-size) * 0.88);
   color: var(--sz-overlay1, #7f849c);
+}
+/* Code view keeps the breadcrumb flush-left with the content; reading view
+   centers it over the 680px reading column. */
+html[data-view="reading"] .sz-article__breadcrumb {
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
 }
 .sz-article__breadcrumb a {
   color: var(--sz-subtext0, #a6adc8);
