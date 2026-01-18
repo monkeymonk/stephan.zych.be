@@ -10,6 +10,8 @@ COPY tui/ ./
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /sztui .
 
 FROM alpine:3.20
+# tzdata so the statusline clock can resolve Europe/Brussels.
+RUN apk add --no-cache tzdata
 RUN adduser -D -u 10001 app
 WORKDIR /app
 COPY --from=build /sztui /usr/local/bin/sztui
