@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -18,7 +19,13 @@ const (
 	screenReader
 )
 
-const maxContentWidth = 90
+const maxContentWidth = 88
+
+type tickMsg time.Time
+
+func tick() tea.Cmd {
+	return tea.Every(time.Second, func(t time.Time) tea.Msg { return tickMsg(t) })
+}
 
 // menuItem is a row on the home screen.
 type menuItem struct {
@@ -43,12 +50,13 @@ type Model struct {
 
 	width, height int
 	screen        screen
-	prev          screen // where Esc returns to from the reader
+	prev          screen
+	clock         string
 
-	cursor    int       // home + list selection
-	listKind  string    // "projects" | "blog"
-	listTitle string    // breadcrumb label
-	listItems []Article // current list contents
+	cursor    int
+	listKind  string
+	listTitle string
+	listItems []Article
 
 	reader      viewport.Model
 	readerTitle string
@@ -57,19 +65,23 @@ type Model struct {
 
 // NewModel builds the initial model from already-loaded content.
 func NewModel(content *Content, loadErr error, width, height int) Model {
-	m := Model{content: content, loadErr: loadErr, width: width, height: height, screen: screenHome}
+	m := Model{
+		content: content, loadErr: loadErr,
+		width: width, height: height, screen: screenHome,
+		clock: clockString(time.Now()),
+	}
 	if width > 0 && height > 0 {
 		m.resize(width, height)
 	}
 	return m
 }
 
-func (m Model) Init() tea.Cmd { return nil }
+func (m Model) Init() tea.Cmd { return tick() }
 
 // --- layout ---------------------------------------------------------------
 
 func (m *Model) contentWidth() int {
-	w := m.width - 4
+	w := m.width - 6
 	if w > maxContentWidth {
 		w = maxContentWidth
 	}
@@ -81,7 +93,7 @@ func (m *Model) contentWidth() int {
 
 func (m *Model) resize(w, h int) {
 	m.width, m.height = w, h
-	vpHeight := h - 4 // title + breadcrumb + footer
+	vpHeight := h - 4 // 3-line header + 1-line statusline
 	if vpHeight < 3 {
 		vpHeight = 3
 	}
@@ -94,10 +106,9 @@ func (m *Model) resize(w, h int) {
 	}
 }
 
-// renderMarkdown turns an article body into ANSI for the viewport.
 func (m *Model) renderMarkdown(a Article) string {
 	r, err := glamour.NewTermRenderer(
-		glamour.WithStandardStyle("dark"),
+		glamour.WithStyles(catppuccinStyle()),
 		glamour.WithWordWrap(m.contentWidth()),
 	)
 	if err != nil {
@@ -130,6 +141,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.resize(msg.Width, msg.Height)
 		return m, nil
+
+	case tickMsg:
+		m.clock = clockString(time.Time(msg))
+		return m, tick()
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -175,9 +190,9 @@ func (m Model) updateHome(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.openReader(a, screenHome)
 			}
 		case item.kind == "list:projects":
-			m.enterList("projects", "~/projects", m.content.Projects)
+			m.enterList("projects", "projects", m.content.Projects)
 		case item.kind == "list:blog":
-			m.enterList("blog", "~/blog", m.content.Blog)
+			m.enterList("blog", "blog", m.content.Blog)
 		}
 	}
 	return m, nil
@@ -246,62 +261,75 @@ func (m Model) View() string {
 	}
 }
 
-func (m Model) titleBar() string {
-	brand := styleTitleBar.Render("stephan.zych.be")
-	tag := styleBrandDim.Render("  ·  lead dev · Brussels")
-	return brand + tag
+// header is the fixed 3-line top: brand bar, breadcrumb, blank.
+func (m Model) header(crumb string) string {
+	title := styleTitleBar.Render("stephan.zych.be") + styleBrandDim.Render("  ·  a portfolio you can ssh into")
+	return lipgloss.JoinVertical(lipgloss.Left, title, crumb, "")
 }
 
-func (m Model) footer(hints [][2]string) string {
-	parts := make([]string, 0, len(hints))
-	for _, h := range hints {
-		parts = append(parts, styleHelpKey.Render(h[0])+" "+styleHelp.Render(h[1]))
+// statusline renders the bottom vim/tmux-style bar across the full width.
+func (m Model) statusline(mode, path string, info ...string) string {
+	left := styleStMode.Render(mode) + styleStPath.Render(path)
+	right := ""
+	for _, s := range info {
+		right += styleStInfo.Render(s)
 	}
-	return styleHelp.Render(strings.Join(parts, styleHelp.Render("  ·  ")))
+	right += styleStTime.Render("󰥔 " + m.clock)
+	gap := m.width - lipgloss.Width(left) - lipgloss.Width(right)
+	if gap < 0 {
+		gap = 0
+	}
+	return left + styleStFill.Render(strings.Repeat(" ", gap)) + right
 }
 
-func (m Model) frame(breadcrumb, body, footer string) string {
-	var b strings.Builder
-	b.WriteString(m.titleBar() + "\n")
-	b.WriteString(breadcrumb + "\n\n")
-	b.WriteString(body)
-	// pad body to push footer to the bottom
-	lines := strings.Count(b.String(), "\n")
-	for i := lines; i < m.height-1; i++ {
-		b.WriteString("\n")
+// shell stacks the fixed header, a height-filled body, and the statusline.
+func (m Model) shell(top, body, status string) string {
+	bodyH := m.height - lipgloss.Height(top) - lipgloss.Height(status)
+	if bodyH < 1 {
+		bodyH = 1
 	}
-	b.WriteString(footer)
-	return b.String()
+	bodyBox := lipgloss.NewStyle().Width(m.width).Height(bodyH).MaxHeight(bodyH).Render(body)
+	return lipgloss.JoinVertical(lipgloss.Left, top, bodyBox, status)
 }
 
 func (m Model) viewHome() string {
-	crumb := styleBreadcrumb.Render("~")
-	var body strings.Builder
+	card := neofetchCard(m.width - 4)
+
+	var menu strings.Builder
 	for i, item := range homeMenu {
 		if i == m.cursor {
-			body.WriteString(styleItemSelected.Render("❯ "+item.label) + "  " + styleItemDesc.Render(item.desc) + "\n")
+			menu.WriteString(styleMenuCursor.Render("❯ ") + styleMenuLabelSel.Render(padRight(item.label, 12)) +
+				styleMenuDesc.Render("  "+item.desc) + "\n")
 		} else {
-			body.WriteString(styleItem.Render(item.label) + "\n")
+			menu.WriteString("  " + styleMenuLabel.Render(item.label) + "\n")
 		}
 	}
-	foot := m.footer([][2]string{{"↑/↓", "move"}, {"enter", "open"}, {"q", "quit"}})
-	return m.frame(crumb, body.String(), foot)
+
+	body := lipgloss.JoinVertical(lipgloss.Left, card, "", menu.String())
+	body = lipgloss.NewStyle().Padding(1, 0, 0, 2).Render(body)
+
+	top := m.header(styleBreadcrumb.Render("~"))
+	status := m.statusline("HOME", "~", "catppuccin-mocha", "utf-8")
+	return m.shell(top, body, status)
 }
 
 func (m Model) viewList() string {
-	crumb := styleBreadcrumb.Render("~") + styleCrumbSep.Render(" / ") + styleBreadcrumb.Render(strings.TrimPrefix(m.listTitle, "~/"))
+	crumb := styleBreadcrumb.Render("~") + styleCrumbSep.Render(" / ") + styleCrumbHere.Render(m.listTitle)
+
 	var body strings.Builder
 	if len(m.listItems) == 0 {
 		body.WriteString(styleHelp.Render("  (nothing here yet)\n"))
 	}
 	for i, a := range m.listItems {
-		marker := "  "
-		label := styleItem.Render(a.Title)
-		if i == m.cursor {
-			marker = styleItemSelected.Render("❯ ")
-			label = styleItemSelected.Render(a.Title)
+		sel := i == m.cursor
+		bar := "  "
+		title := styleListTitle.Render(a.Title)
+		if sel {
+			bar = styleListBar.Render("▌ ")
+			title = styleListSel.Render(a.Title)
 		}
-		body.WriteString(marker + label + "\n")
+		body.WriteString(bar + title + "\n")
+
 		meta := []string{}
 		if a.Date != "" {
 			meta = append(meta, styleDate.Render(a.Date))
@@ -315,29 +343,37 @@ func (m Model) viewList() string {
 		if len(meta) > 0 {
 			body.WriteString("    " + strings.Join(meta, " ") + "\n")
 		}
+		if sel && a.Description != "" {
+			body.WriteString("    " + styleDescDim.Render(truncate(a.Description, m.width-8)) + "\n")
+		}
+		body.WriteString("\n")
 	}
-	foot := m.footer([][2]string{{"↑/↓", "move"}, {"enter", "read"}, {"esc", "back"}})
-	return m.frame(crumb, body.String(), foot)
+
+	bodyStr := lipgloss.NewStyle().Padding(0, 0, 0, 2).Render(body.String())
+	top := m.header(crumb)
+	status := m.statusline("LIST", "~/"+m.listTitle, fmt.Sprintf("%d entries", len(m.listItems)))
+	return m.shell(top, bodyStr, status)
 }
 
 func (m Model) viewReader() string {
-	section := strings.TrimPrefix(m.listTitle, "~/")
+	section := m.listTitle
 	crumb := styleBreadcrumb.Render("~")
+	path := "~"
 	if m.prev == screenList {
 		crumb += styleCrumbSep.Render(" / ") + styleBreadcrumb.Render(section)
+		path += "/" + section
 	}
-	crumb += styleCrumbSep.Render(" / ") + styleSection.Render(m.readerTitle)
+	crumb += styleCrumbSep.Render(" / ") + styleCrumbHere.Render(m.readerTitle)
 
+	top := m.header(crumb)
 	scroll := fmt.Sprintf("%3.0f%%", m.reader.ScrollPercent()*100)
-	foot := lipgloss.JoinHorizontal(lipgloss.Left,
-		m.footer([][2]string{{"↑/↓", "scroll"}, {"esc", "back"}, {"q", "back"}}),
-		styleHelp.Render("   "+scroll),
-	)
+	status := m.statusline("READ", path, scroll, "j/k scroll", "esc back")
+	return m.shell(top, m.reader.View(), status)
+}
 
-	var b strings.Builder
-	b.WriteString(m.titleBar() + "\n")
-	b.WriteString(crumb + "\n")
-	b.WriteString(m.reader.View() + "\n")
-	b.WriteString(foot)
-	return b.String()
+func truncate(s string, max int) string {
+	if max < 4 || len(s) <= max {
+		return s
+	}
+	return s[:max-1] + "…"
 }
