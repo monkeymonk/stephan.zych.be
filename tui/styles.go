@@ -87,6 +87,34 @@ var (
 	styleHelp    = lipgloss.NewStyle().Foreground(lipgloss.Color(colOverlay0))
 	styleHelpKey = lipgloss.NewStyle().Foreground(lipgloss.Color(colSubtext0)).Bold(true)
 	styleError   = lipgloss.NewStyle().Foreground(lipgloss.Color(colRed)).Bold(true)
+
+	// ── window frame ────────────────────────────────────────
+	styleFrameBorder = lipgloss.NewStyle().Foreground(lipgloss.Color(colSurface1))
+	styleFrameTitle  = lipgloss.NewStyle().Foreground(lipgloss.Color(colAccent)).Bold(true)
+	styleFrameClock  = lipgloss.NewStyle().Foreground(lipgloss.Color(colMauve))
+	styleDotR        = lipgloss.NewStyle().Foreground(lipgloss.Color(colRed))
+	styleDotY        = lipgloss.NewStyle().Foreground(lipgloss.Color(colYellow))
+	styleDotG        = lipgloss.NewStyle().Foreground(lipgloss.Color(colGreen))
+
+	// ── splash ──────────────────────────────────────────────
+	styleSplashBase   = lipgloss.NewStyle().Foreground(lipgloss.Color(colBlue)).Bold(true)
+	styleSplashHot    = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Bold(true)
+	styleSplashGlow   = lipgloss.NewStyle().Foreground(lipgloss.Color(colLavender)).Bold(true)
+	styleSplashDomain = lipgloss.NewStyle().Foreground(lipgloss.Color(colMauve)).Bold(true)
+	styleSplashTag    = lipgloss.NewStyle().Foreground(lipgloss.Color(colSubtext0)).Italic(true)
+	styleSplashHint   = lipgloss.NewStyle().Foreground(lipgloss.Color(colOverlay0))
+
+	// ── command palette ─────────────────────────────────────
+	stylePalBox     = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(colAccent)).Padding(0, 1)
+	stylePalTitle   = lipgloss.NewStyle().Foreground(lipgloss.Color(colMauve)).Bold(true)
+	stylePalPrompt  = lipgloss.NewStyle().Foreground(lipgloss.Color(colGreen)).Bold(true)
+	stylePalItem    = lipgloss.NewStyle().Foreground(lipgloss.Color(colText))
+	stylePalItemSel = lipgloss.NewStyle().Foreground(lipgloss.Color(colCrust)).Background(lipgloss.Color(colAccent)).Bold(true)
+	stylePalIcon    = lipgloss.NewStyle().Foreground(lipgloss.Color(colBlue))
+	stylePalIconSel = lipgloss.NewStyle().Foreground(lipgloss.Color(colCrust)).Background(lipgloss.Color(colAccent))
+	stylePalSection = lipgloss.NewStyle().Foreground(lipgloss.Color(colOverlay0))
+	stylePalHint    = lipgloss.NewStyle().Foreground(lipgloss.Color(colOverlay0))
+	styleBackdrop   = lipgloss.Color(colSurface0)
 )
 
 // brusselsTZ is resolved once; falls back to local time when tzdata is absent.
