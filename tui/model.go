@@ -10,32 +10,29 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 )
 
 type screen int
 
 const (
-	screenHome screen = iota
+	screenSplash screen = iota
+	screenHome
 	screenList
 	screenReader
-	screenSearch
 	screenHelp
-)
-
-type inputMode int
-
-const (
-	modeNormal inputMode = iota
-	modeCommand
-	modeSearch
 )
 
 const maxContentWidth = 88
 
-type tickMsg time.Time
+type tickMsg time.Time // clock, once a second
+type animMsg time.Time // animation frames, ~24fps
 
 func tick() tea.Cmd {
 	return tea.Every(time.Second, func(t time.Time) tea.Msg { return tickMsg(t) })
+}
+func animTick() tea.Cmd {
+	return tea.Tick(time.Second/24, func(t time.Time) tea.Msg { return animMsg(t) })
 }
 
 // menuItem is a row on the home screen.
@@ -62,22 +59,28 @@ type Model struct {
 	width, height int
 	screen        screen
 	prev          screen // reader's back target
-	returnTo      screen // help/search back target
+	returnTo      screen // help back target
 	clock         string
 
-	mode    inputMode
 	input   textinput.Model
-	message string // transient command feedback (vim-style errors)
+	message string
 
 	cursor    int
 	listKind  string
 	listTitle string
 	listItems []Article
-	filtered  []Article // search results
 
 	reader      viewport.Model
 	readerTitle string
 	ready       bool
+
+	// animation / overlays
+	animating   bool
+	splashFrame int
+	paletteOpen   bool
+	palettePrefix string
+	palItems      []paletteItem
+	palFrame      int
 }
 
 // NewModel builds the initial model from already-loaded content.
@@ -91,9 +94,10 @@ func NewModel(content *Content, loadErr error, width, height int) Model {
 
 	m := Model{
 		content: content, loadErr: loadErr,
-		width: width, height: height, screen: screenHome,
-		clock: clockString(time.Now()),
-		input: ti,
+		width: width, height: height, screen: screenSplash,
+		clock:     clockString(time.Now()),
+		input:     ti,
+		animating: true,
 	}
 	if width > 0 && height > 0 {
 		m.resize(width, height)
@@ -101,12 +105,24 @@ func NewModel(content *Content, loadErr error, width, height int) Model {
 	return m
 }
 
-func (m Model) Init() tea.Cmd { return tick() }
+func (m Model) Init() tea.Cmd { return tea.Batch(tick(), animTick()) }
+
+func (m Model) needsAnim() bool {
+	return m.screen == screenSplash || (m.paletteOpen && m.palFrame < paletteRevealLen)
+}
 
 // --- layout ---------------------------------------------------------------
 
+// iw is the usable width inside the window border.
+func (m Model) iw() int {
+	if m.width < 4 {
+		return 1
+	}
+	return m.width - 2
+}
+
 func (m *Model) contentWidth() int {
-	w := m.width - 6
+	w := m.iw() - 4
 	if w > maxContentWidth {
 		w = maxContentWidth
 	}
@@ -118,8 +134,8 @@ func (m *Model) contentWidth() int {
 
 func (m *Model) resize(w, h int) {
 	m.width, m.height = w, h
-	m.input.Width = w - 4
-	vpHeight := h - 4 // 3-line header + 1-line statusline
+	m.input.Width = m.iw() - 4
+	vpHeight := h - 5 // border(2) + crumb + blank + statusline
 	if vpHeight < 3 {
 		vpHeight = 3
 	}
@@ -173,12 +189,27 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.clock = clockString(time.Time(msg))
 		return m, tick()
 
+	case animMsg:
+		if m.screen == screenSplash {
+			m.splashFrame++
+		}
+		if m.paletteOpen && m.palFrame < paletteRevealLen {
+			m.palFrame++
+		}
+		if m.needsAnim() {
+			return m, animTick()
+		}
+		m.animating = false
+		return m, nil
+
 	case tea.KeyMsg:
-		switch m.mode {
-		case modeCommand:
-			return m.updateCommand(msg)
-		case modeSearch:
-			return m.updateSearch(msg)
+		// boot splash: any key enters
+		if m.screen == screenSplash {
+			m.screen = screenHome
+			return m, nil
+		}
+		if m.paletteOpen {
+			return m.updatePalette(msg)
 		}
 		// normal mode
 		m.message = ""
@@ -186,9 +217,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		case ":":
-			return m.enterCommand()
+			return m.openPalette(":")
 		case "/":
-			return m.enterSearch()
+			return m.openPalette("/")
 		case "?":
 			m.returnTo = m.screen
 			m.screen = screenHelp
@@ -209,76 +240,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	return m, nil
-}
-
-// ── command mode (`:`) ──
-func (m Model) enterCommand() (tea.Model, tea.Cmd) {
-	m.mode = modeCommand
-	m.message = ""
-	m.input.Prompt = ":"
-	m.input.SetValue("")
-	return m, m.input.Focus()
-}
-
-func (m Model) updateCommand(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.String() {
-	case "esc", "ctrl+c":
-		m.mode = modeNormal
-		m.input.Blur()
-		return m, nil
-	case "enter":
-		cmd := m.executeCommand(m.input.Value())
-		m.mode = modeNormal
-		m.input.Blur()
-		return m, cmd
-	}
-	var cmd tea.Cmd
-	m.input, cmd = m.input.Update(msg)
-	return m, cmd
-}
-
-// ── search mode (`/`) ──
-func (m Model) enterSearch() (tea.Model, tea.Cmd) {
-	m.mode = modeSearch
-	m.message = ""
-	m.returnTo = m.screen
-	m.input.Prompt = "/"
-	m.input.SetValue("")
-	m.cursor = 0
-	m.refilter()
-	m.screen = screenSearch
-	return m, m.input.Focus()
-}
-
-func (m Model) updateSearch(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.String() {
-	case "esc", "ctrl+c":
-		m.mode = modeNormal
-		m.input.Blur()
-		m.screen = m.returnTo
-		return m, nil
-	case "enter":
-		if len(m.filtered) > 0 {
-			m.mode = modeNormal
-			m.input.Blur()
-			m.openReader(m.filtered[m.cursor], screenHome)
-		}
-		return m, nil
-	case "up", "ctrl+p":
-		if m.cursor > 0 {
-			m.cursor--
-		}
-		return m, nil
-	case "down", "ctrl+n":
-		if m.cursor < len(m.filtered)-1 {
-			m.cursor++
-		}
-		return m, nil
-	}
-	var cmd tea.Cmd
-	m.input, cmd = m.input.Update(msg)
-	m.refilter()
-	return m, cmd
 }
 
 func (m Model) updateHome(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -366,16 +327,20 @@ func (m Model) View() string {
 	if !m.ready {
 		return "loading…"
 	}
+	if m.screen == screenSplash {
+		return renderSplash(m)
+	}
 	if m.loadErr != nil {
 		return styleError.Render("content error: "+m.loadErr.Error()) + "\n"
+	}
+	if m.paletteOpen {
+		return m.viewPalette()
 	}
 	switch m.screen {
 	case screenList:
 		return m.viewList()
 	case screenReader:
 		return m.viewReader()
-	case screenSearch:
-		return m.viewSearch()
 	case screenHelp:
 		return m.viewHelp()
 	default:
@@ -383,51 +348,75 @@ func (m Model) View() string {
 	}
 }
 
-// header is the fixed 3-line top: brand bar, breadcrumb, blank.
-func (m Model) header(crumb string) string {
-	title := styleTitleBar.Render("stephan.zych.be") + styleBrandDim.Render("  ·  a portfolio you can ssh into")
-	return lipgloss.JoinVertical(lipgloss.Left, title, crumb, "")
+// frame wraps inner content in the full-window rounded border, with traffic
+// dots, the site title, and the clock embedded in the top edge.
+func (m Model) frame(inner string) string {
+	innerW := m.iw()
+	innerH := m.height - 2
+	bc := styleFrameBorder
+
+	dots := styleDotR.Render("●") + " " + styleDotY.Render("●") + " " + styleDotG.Render("●")
+	title := styleFrameTitle.Render("stephan.zych.be")
+	clock := styleFrameClock.Render("󰥔 " + m.clock)
+	left := bc.Render("╭─ ") + dots + bc.Render(" ─ ") + title + bc.Render(" ")
+	right := bc.Render(" ") + clock + bc.Render(" ─╮")
+	fillN := m.width - lipgloss.Width(left) - lipgloss.Width(right)
+	if fillN < 0 {
+		fillN = 0
+	}
+	top := left + bc.Render(strings.Repeat("─", fillN)) + right
+	bottom := bc.Render("╰" + strings.Repeat("─", innerW) + "╯")
+
+	rows := strings.Split(inner, "\n")
+	var b strings.Builder
+	b.WriteString(top + "\n")
+	for i := 0; i < innerH; i++ {
+		line := ""
+		if i < len(rows) {
+			line = rows[i]
+		}
+		b.WriteString(bc.Render("│") + fitLine(line, innerW) + bc.Render("│") + "\n")
+	}
+	b.WriteString(bottom)
+	return b.String()
 }
 
-// statusline renders the bottom vim/tmux-style bar across the full width.
+// statusline renders the bottom vim/tmux-style bar across the inner width.
 func (m Model) statusline(mode, path string, info ...string) string {
 	left := styleStMode.Render(mode) + styleStPath.Render(path)
 	right := ""
 	for _, s := range info {
 		right += styleStInfo.Render(s)
 	}
-	right += styleStTime.Render("󰥔 " + m.clock)
-	gap := m.width - lipgloss.Width(left) - lipgloss.Width(right)
+	gap := m.iw() - lipgloss.Width(left) - lipgloss.Width(right)
 	if gap < 0 {
 		gap = 0
 	}
 	return left + styleStFill.Render(strings.Repeat(" ", gap)) + right
 }
 
-// bottomBar swaps the statusline for the command line (or an error message)
-// when those are active — exactly like vim's command area.
+// bottomBar swaps the statusline for a transient error/info message.
 func (m Model) bottomBar(status string) string {
-	if m.mode == modeCommand {
-		return styleStFill.Width(m.width).Render(m.input.View())
-	}
 	if m.message != "" {
-		return styleCmdErr.Width(m.width).Render(m.message)
+		return styleCmdErr.Width(m.iw()).Render(m.message)
 	}
 	return status
 }
 
-// shell stacks the fixed header, a height-filled body, and the bottom bar.
-func (m Model) shell(top, body, status string) string {
-	bodyH := m.height - lipgloss.Height(top) - lipgloss.Height(status)
+// shell stacks breadcrumb, body (height-filled) and the bottom bar, then frames it.
+func (m Model) shell(crumb, body, status string) string {
+	W := m.iw()
+	bodyH := (m.height - 2) - 3
 	if bodyH < 1 {
 		bodyH = 1
 	}
-	bodyBox := lipgloss.NewStyle().Width(m.width).Height(bodyH).MaxHeight(bodyH).Render(body)
-	return lipgloss.JoinVertical(lipgloss.Left, top, bodyBox, status)
+	bodyBox := lipgloss.NewStyle().Width(W).Height(bodyH).MaxHeight(bodyH).Render(body)
+	inner := lipgloss.JoinVertical(lipgloss.Left, crumb, "", bodyBox, status)
+	return m.frame(inner)
 }
 
 func (m Model) viewHome() string {
-	card := neofetchCard(m.width - 4)
+	card := neofetchCard(m.iw() - 4)
 
 	var menu strings.Builder
 	for i, item := range homeMenu {
@@ -438,41 +427,25 @@ func (m Model) viewHome() string {
 			menu.WriteString("  " + styleMenuLabel.Render(item.label) + "\n")
 		}
 	}
-	hint := styleHelp.Render("\n  press ") + styleHelpKey.Render(":") + styleHelp.Render(" for commands · ") +
-		styleHelpKey.Render("/") + styleHelp.Render(" to search · ") + styleHelpKey.Render("?") + styleHelp.Render(" for help")
+	hint := styleHelp.Render("\n  ") + styleHelpKey.Render(":") + styleHelp.Render(" command palette · ") +
+		styleHelpKey.Render("/") + styleHelp.Render(" search · ") + styleHelpKey.Render("?") + styleHelp.Render(" help")
 
 	body := lipgloss.JoinVertical(lipgloss.Left, card, "", menu.String(), hint)
 	body = lipgloss.NewStyle().Padding(1, 0, 0, 2).Render(body)
 
-	top := m.header(styleBreadcrumb.Render("~"))
 	status := m.statusline("HOME", "~", "catppuccin-mocha", "utf-8")
-	return m.shell(top, body, m.bottomBar(status))
+	return m.shell(styleBreadcrumb.Render("~"), body, m.bottomBar(status))
 }
 
 func (m Model) viewList() string {
 	crumb := styleBreadcrumb.Render("~") + styleCrumbSep.Render(" / ") + styleCrumbHere.Render(m.listTitle)
-	bodyStr := lipgloss.NewStyle().Padding(0, 0, 0, 2).Render(m.renderItems(m.listItems, m.cursor, true))
-	top := m.header(crumb)
+	bodyStr := lipgloss.NewStyle().Padding(0, 0, 0, 2).Render(m.renderItems(m.listItems, m.cursor))
 	status := m.statusline("LIST", "~/"+m.listTitle, fmt.Sprintf("%d entries", len(m.listItems)))
-	return m.shell(top, bodyStr, m.bottomBar(status))
-}
-
-func (m Model) viewSearch() string {
-	crumb := styleBreadcrumb.Render("~") + styleCrumbSep.Render(" / ") + styleCrumbHere.Render("search")
-	body := m.renderItems(m.filtered, m.cursor, false)
-	if len(m.filtered) == 0 {
-		body = styleHelp.Render("  no matches")
-	}
-	bodyStr := lipgloss.NewStyle().Padding(0, 0, 0, 2).Render(body)
-	top := m.header(crumb)
-	// bottom is always the live search input here
-	bar := styleStFill.Width(m.width).Render(m.input.View() +
-		styleHelp.Render(fmt.Sprintf("   %d matches · ↑↓ move · enter open · esc cancel", len(m.filtered))))
-	return m.shell(top, bodyStr, bar)
+	return m.shell(crumb, bodyStr, m.bottomBar(status))
 }
 
 // renderItems renders a list of articles with the selected one highlighted.
-func (m Model) renderItems(items []Article, cursor int, showDesc bool) string {
+func (m Model) renderItems(items []Article, cursor int) string {
 	var body strings.Builder
 	if len(items) == 0 {
 		return styleHelp.Render("  (nothing here yet)")
@@ -491,9 +464,6 @@ func (m Model) renderItems(items []Article, cursor int, showDesc bool) string {
 		if a.Date != "" {
 			meta = append(meta, styleDate.Render(a.Date))
 		}
-		if a.Section != "" {
-			meta = append(meta, styleDescDim.Render(a.Section))
-		}
 		for _, t := range a.Tags {
 			if t == "blog" || t == "projects" {
 				continue
@@ -503,8 +473,8 @@ func (m Model) renderItems(items []Article, cursor int, showDesc bool) string {
 		if len(meta) > 0 {
 			body.WriteString("    " + strings.Join(meta, " ") + "\n")
 		}
-		if sel && showDesc && a.Description != "" {
-			body.WriteString("    " + styleDescDim.Render(truncate(a.Description, m.width-8)) + "\n")
+		if sel && a.Description != "" {
+			body.WriteString("    " + styleDescDim.Render(truncate(a.Description, m.iw()-8)) + "\n")
 		}
 		body.WriteString("\n")
 	}
@@ -521,17 +491,28 @@ func (m Model) viewReader() string {
 	}
 	crumb += styleCrumbSep.Render(" / ") + styleCrumbHere.Render(m.readerTitle)
 
-	top := m.header(crumb)
 	scroll := fmt.Sprintf("%3.0f%%", m.reader.ScrollPercent()*100)
 	status := m.statusline("READ", path, scroll, "j/k scroll", "esc back")
-	return m.shell(top, m.reader.View(), m.bottomBar(status))
+	return m.shell(crumb, m.reader.View(), m.bottomBar(status))
 }
 
 func (m Model) viewHelp() string {
-	top := m.header(styleBreadcrumb.Render("~") + styleCrumbSep.Render(" / ") + styleCrumbHere.Render("help"))
+	crumb := styleBreadcrumb.Render("~") + styleCrumbSep.Render(" / ") + styleCrumbHere.Render("help")
 	body := lipgloss.NewStyle().Padding(1, 0, 0, 2).Render(renderHelp())
 	status := m.statusline("HELP", "~/help", "esc to close")
-	return m.shell(top, body, m.bottomBar(status))
+	return m.shell(crumb, body, m.bottomBar(status))
+}
+
+// fitLine truncates/pads a (possibly styled) line to exactly n columns.
+func fitLine(s string, n int) string {
+	if n < 0 {
+		n = 0
+	}
+	s = ansi.Truncate(s, n, "")
+	if w := lipgloss.Width(s); w < n {
+		s += strings.Repeat(" ", n-w)
+	}
+	return s
 }
 
 func truncate(s string, max int) string {

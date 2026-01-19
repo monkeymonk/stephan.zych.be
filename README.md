@@ -78,9 +78,9 @@ go run . --local                              # dev: render in your terminal
 docker compose -f compose.yaml up -d --build  # deploy: serve over SSH on :2222
 ```
 
-Neovim-style controls: `j/k` move, `enter` open, `esc` back, `:` for ex commands
-(`:about`, `:projects`, `:blog`, `:<query>`, `:help`, `:q`), `/` to search all
-content, `?` for the keybinding help.
+Same controls as the web terminal: `:` opens the command palette, `/` searches all
+content, `tab` autocompletes, `?` shows help, `esc` closes. `j/k`/arrows move,
+`enter` opens, `esc`/`h` go back. An animated splash greets you on connect.
 
 ## License
 
