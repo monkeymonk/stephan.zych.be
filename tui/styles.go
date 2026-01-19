@@ -81,6 +81,7 @@ var (
 	styleStInfo = lipgloss.NewStyle().Foreground(lipgloss.Color(colSubtext0)).Background(lipgloss.Color(colSurface0)).Padding(0, 1)
 	styleStTime = lipgloss.NewStyle().Foreground(lipgloss.Color(colCrust)).Background(lipgloss.Color(colMauve)).Bold(true).Padding(0, 1)
 	styleStFill = lipgloss.NewStyle().Background(lipgloss.Color(colMantle))
+	styleCmdErr = lipgloss.NewStyle().Foreground(lipgloss.Color(colRed)).Background(lipgloss.Color(colMantle)).Bold(true)
 
 	// ── help / misc ─────────────────────────────────────────
 	styleHelp    = lipgloss.NewStyle().Foreground(lipgloss.Color(colOverlay0))

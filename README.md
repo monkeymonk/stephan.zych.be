@@ -78,6 +78,10 @@ go run . --local                              # dev: render in your terminal
 docker compose -f compose.yaml up -d --build  # deploy: serve over SSH on :2222
 ```
 
+Neovim-style controls: `j/k` move, `enter` open, `esc` back, `:` for ex commands
+(`:about`, `:projects`, `:blog`, `:<query>`, `:help`, `:q`), `/` to search all
+content, `?` for the keybinding help.
+
 ## License
 
 ISC
