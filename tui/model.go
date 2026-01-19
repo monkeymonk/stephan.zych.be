@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
@@ -17,6 +18,16 @@ const (
 	screenHome screen = iota
 	screenList
 	screenReader
+	screenSearch
+	screenHelp
+)
+
+type inputMode int
+
+const (
+	modeNormal inputMode = iota
+	modeCommand
+	modeSearch
 )
 
 const maxContentWidth = 88
@@ -50,13 +61,19 @@ type Model struct {
 
 	width, height int
 	screen        screen
-	prev          screen
+	prev          screen // reader's back target
+	returnTo      screen // help/search back target
 	clock         string
+
+	mode    inputMode
+	input   textinput.Model
+	message string // transient command feedback (vim-style errors)
 
 	cursor    int
 	listKind  string
 	listTitle string
 	listItems []Article
+	filtered  []Article // search results
 
 	reader      viewport.Model
 	readerTitle string
@@ -65,10 +82,18 @@ type Model struct {
 
 // NewModel builds the initial model from already-loaded content.
 func NewModel(content *Content, loadErr error, width, height int) Model {
+	ti := textinput.New()
+	ti.Prompt = ":"
+	ti.CharLimit = 80
+	ti.Cursor.Style = lipgloss.NewStyle().Foreground(lipgloss.Color(colAccent))
+	ti.PromptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(colAccent))
+	ti.TextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(colText))
+
 	m := Model{
 		content: content, loadErr: loadErr,
 		width: width, height: height, screen: screenHome,
 		clock: clockString(time.Now()),
+		input: ti,
 	}
 	if width > 0 && height > 0 {
 		m.resize(width, height)
@@ -93,6 +118,7 @@ func (m *Model) contentWidth() int {
 
 func (m *Model) resize(w, h int) {
 	m.width, m.height = w, h
+	m.input.Width = w - 4
 	vpHeight := h - 4 // 3-line header + 1-line statusline
 	if vpHeight < 3 {
 		vpHeight = 3
@@ -128,6 +154,7 @@ func (m *Model) renderMarkdown(a Article) string {
 
 func (m *Model) openReader(a Article, from screen) {
 	m.readerTitle = a.Title
+	m.listTitle = a.Section
 	m.reader.SetContent(m.renderMarkdown(a))
 	m.reader.GotoTop()
 	m.prev = from
@@ -147,9 +174,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tick()
 
 	case tea.KeyMsg:
+		switch m.mode {
+		case modeCommand:
+			return m.updateCommand(msg)
+		case modeSearch:
+			return m.updateSearch(msg)
+		}
+		// normal mode
+		m.message = ""
 		switch msg.String() {
-		case "ctrl+c", "Q":
+		case "ctrl+c":
 			return m, tea.Quit
+		case ":":
+			return m.enterCommand()
+		case "/":
+			return m.enterSearch()
+		case "?":
+			m.returnTo = m.screen
+			m.screen = screenHelp
+			return m, nil
 		}
 		switch m.screen {
 		case screenHome:
@@ -158,9 +201,84 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.updateList(msg)
 		case screenReader:
 			return m.updateReader(msg)
+		case screenHelp:
+			if k := msg.String(); k == "esc" || k == "q" || k == "h" {
+				m.screen = m.returnTo
+			}
+			return m, nil
 		}
 	}
 	return m, nil
+}
+
+// ── command mode (`:`) ──
+func (m Model) enterCommand() (tea.Model, tea.Cmd) {
+	m.mode = modeCommand
+	m.message = ""
+	m.input.Prompt = ":"
+	m.input.SetValue("")
+	return m, m.input.Focus()
+}
+
+func (m Model) updateCommand(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "esc", "ctrl+c":
+		m.mode = modeNormal
+		m.input.Blur()
+		return m, nil
+	case "enter":
+		cmd := m.executeCommand(m.input.Value())
+		m.mode = modeNormal
+		m.input.Blur()
+		return m, cmd
+	}
+	var cmd tea.Cmd
+	m.input, cmd = m.input.Update(msg)
+	return m, cmd
+}
+
+// ── search mode (`/`) ──
+func (m Model) enterSearch() (tea.Model, tea.Cmd) {
+	m.mode = modeSearch
+	m.message = ""
+	m.returnTo = m.screen
+	m.input.Prompt = "/"
+	m.input.SetValue("")
+	m.cursor = 0
+	m.refilter()
+	m.screen = screenSearch
+	return m, m.input.Focus()
+}
+
+func (m Model) updateSearch(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "esc", "ctrl+c":
+		m.mode = modeNormal
+		m.input.Blur()
+		m.screen = m.returnTo
+		return m, nil
+	case "enter":
+		if len(m.filtered) > 0 {
+			m.mode = modeNormal
+			m.input.Blur()
+			m.openReader(m.filtered[m.cursor], screenHome)
+		}
+		return m, nil
+	case "up", "ctrl+p":
+		if m.cursor > 0 {
+			m.cursor--
+		}
+		return m, nil
+	case "down", "ctrl+n":
+		if m.cursor < len(m.filtered)-1 {
+			m.cursor++
+		}
+		return m, nil
+	}
+	var cmd tea.Cmd
+	m.input, cmd = m.input.Update(msg)
+	m.refilter()
+	return m, cmd
 }
 
 func (m Model) updateHome(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -256,6 +374,10 @@ func (m Model) View() string {
 		return m.viewList()
 	case screenReader:
 		return m.viewReader()
+	case screenSearch:
+		return m.viewSearch()
+	case screenHelp:
+		return m.viewHelp()
 	default:
 		return m.viewHome()
 	}
@@ -282,7 +404,19 @@ func (m Model) statusline(mode, path string, info ...string) string {
 	return left + styleStFill.Render(strings.Repeat(" ", gap)) + right
 }
 
-// shell stacks the fixed header, a height-filled body, and the statusline.
+// bottomBar swaps the statusline for the command line (or an error message)
+// when those are active — exactly like vim's command area.
+func (m Model) bottomBar(status string) string {
+	if m.mode == modeCommand {
+		return styleStFill.Width(m.width).Render(m.input.View())
+	}
+	if m.message != "" {
+		return styleCmdErr.Width(m.width).Render(m.message)
+	}
+	return status
+}
+
+// shell stacks the fixed header, a height-filled body, and the bottom bar.
 func (m Model) shell(top, body, status string) string {
 	bodyH := m.height - lipgloss.Height(top) - lipgloss.Height(status)
 	if bodyH < 1 {
@@ -304,24 +438,47 @@ func (m Model) viewHome() string {
 			menu.WriteString("  " + styleMenuLabel.Render(item.label) + "\n")
 		}
 	}
+	hint := styleHelp.Render("\n  press ") + styleHelpKey.Render(":") + styleHelp.Render(" for commands · ") +
+		styleHelpKey.Render("/") + styleHelp.Render(" to search · ") + styleHelpKey.Render("?") + styleHelp.Render(" for help")
 
-	body := lipgloss.JoinVertical(lipgloss.Left, card, "", menu.String())
+	body := lipgloss.JoinVertical(lipgloss.Left, card, "", menu.String(), hint)
 	body = lipgloss.NewStyle().Padding(1, 0, 0, 2).Render(body)
 
 	top := m.header(styleBreadcrumb.Render("~"))
 	status := m.statusline("HOME", "~", "catppuccin-mocha", "utf-8")
-	return m.shell(top, body, status)
+	return m.shell(top, body, m.bottomBar(status))
 }
 
 func (m Model) viewList() string {
 	crumb := styleBreadcrumb.Render("~") + styleCrumbSep.Render(" / ") + styleCrumbHere.Render(m.listTitle)
+	bodyStr := lipgloss.NewStyle().Padding(0, 0, 0, 2).Render(m.renderItems(m.listItems, m.cursor, true))
+	top := m.header(crumb)
+	status := m.statusline("LIST", "~/"+m.listTitle, fmt.Sprintf("%d entries", len(m.listItems)))
+	return m.shell(top, bodyStr, m.bottomBar(status))
+}
 
-	var body strings.Builder
-	if len(m.listItems) == 0 {
-		body.WriteString(styleHelp.Render("  (nothing here yet)\n"))
+func (m Model) viewSearch() string {
+	crumb := styleBreadcrumb.Render("~") + styleCrumbSep.Render(" / ") + styleCrumbHere.Render("search")
+	body := m.renderItems(m.filtered, m.cursor, false)
+	if len(m.filtered) == 0 {
+		body = styleHelp.Render("  no matches")
 	}
-	for i, a := range m.listItems {
-		sel := i == m.cursor
+	bodyStr := lipgloss.NewStyle().Padding(0, 0, 0, 2).Render(body)
+	top := m.header(crumb)
+	// bottom is always the live search input here
+	bar := styleStFill.Width(m.width).Render(m.input.View() +
+		styleHelp.Render(fmt.Sprintf("   %d matches · ↑↓ move · enter open · esc cancel", len(m.filtered))))
+	return m.shell(top, bodyStr, bar)
+}
+
+// renderItems renders a list of articles with the selected one highlighted.
+func (m Model) renderItems(items []Article, cursor int, showDesc bool) string {
+	var body strings.Builder
+	if len(items) == 0 {
+		return styleHelp.Render("  (nothing here yet)")
+	}
+	for i, a := range items {
+		sel := i == cursor
 		bar := "  "
 		title := styleListTitle.Render(a.Title)
 		if sel {
@@ -334,6 +491,9 @@ func (m Model) viewList() string {
 		if a.Date != "" {
 			meta = append(meta, styleDate.Render(a.Date))
 		}
+		if a.Section != "" {
+			meta = append(meta, styleDescDim.Render(a.Section))
+		}
 		for _, t := range a.Tags {
 			if t == "blog" || t == "projects" {
 				continue
@@ -343,23 +503,19 @@ func (m Model) viewList() string {
 		if len(meta) > 0 {
 			body.WriteString("    " + strings.Join(meta, " ") + "\n")
 		}
-		if sel && a.Description != "" {
+		if sel && showDesc && a.Description != "" {
 			body.WriteString("    " + styleDescDim.Render(truncate(a.Description, m.width-8)) + "\n")
 		}
 		body.WriteString("\n")
 	}
-
-	bodyStr := lipgloss.NewStyle().Padding(0, 0, 0, 2).Render(body.String())
-	top := m.header(crumb)
-	status := m.statusline("LIST", "~/"+m.listTitle, fmt.Sprintf("%d entries", len(m.listItems)))
-	return m.shell(top, bodyStr, status)
+	return body.String()
 }
 
 func (m Model) viewReader() string {
 	section := m.listTitle
 	crumb := styleBreadcrumb.Render("~")
 	path := "~"
-	if m.prev == screenList {
+	if section != "" {
 		crumb += styleCrumbSep.Render(" / ") + styleBreadcrumb.Render(section)
 		path += "/" + section
 	}
@@ -368,7 +524,14 @@ func (m Model) viewReader() string {
 	top := m.header(crumb)
 	scroll := fmt.Sprintf("%3.0f%%", m.reader.ScrollPercent()*100)
 	status := m.statusline("READ", path, scroll, "j/k scroll", "esc back")
-	return m.shell(top, m.reader.View(), status)
+	return m.shell(top, m.reader.View(), m.bottomBar(status))
+}
+
+func (m Model) viewHelp() string {
+	top := m.header(styleBreadcrumb.Render("~") + styleCrumbSep.Render(" / ") + styleCrumbHere.Render("help"))
+	body := lipgloss.NewStyle().Padding(1, 0, 0, 2).Render(renderHelp())
+	status := m.statusline("HELP", "~/help", "esc to close")
+	return m.shell(top, body, m.bottomBar(status))
 }
 
 func truncate(s string, max int) string {
