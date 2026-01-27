@@ -1,7 +1,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { panelStyles, reducedMotion } from '../core/styles.js';
-import { jsonArrayAttribute } from '../core/data.js';
+import { panelStyles, reducedMotion } from '../../core/styles.js';
+import { jsonArrayAttribute } from '../../core/data.js';
+import { RevealController } from '../../controllers/reveal.js';
 
 interface Lang { name: string; percent: number; text?: string; }
 
@@ -21,23 +22,7 @@ export class SzWakapi extends LitElement {
   @property({ attribute: 'languages', converter: jsonArrayAttribute }) languages: Lang[] = [];
 
   @state() private revealed = false;
-  private observer?: IntersectionObserver;
-
-  connectedCallback() {
-    super.connectedCallback();
-    this.observer = new IntersectionObserver((entries) => {
-      if (entries.some(e => e.isIntersecting)) {
-        this.observer?.disconnect();
-        this.revealed = true;
-      }
-    }, { threshold: 0.35 });
-    this.observer.observe(this);
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    this.observer?.disconnect();
-  }
+  private revealOnView = new RevealController(this, () => { this.revealed = true; });
 
   static styles = [panelStyles, css`
     :host { display: block; }

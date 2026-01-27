@@ -1,9 +1,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { panelStyles, focusRing, clockStyles } from '../core/styles.js';
-import { clock, type ClockTime } from '../core/clock.js';
-import { actions } from '../core/actions.js';
-import { NOTIFY_ACTION } from '../features/notifications/actions.js';
+import { panelStyles, focusRing, clockStyles } from '../../core/styles.js';
+import { clock, type ClockTime } from '../../core/clock.js';
+import { copyText } from '../../core/clipboard.js';
 
 /**
  * Terminal "contact card" — `cat ~/.contact` with copy-to-clipboard and a
@@ -30,12 +29,7 @@ export class SzContactCard extends LitElement {
   }
 
   private async copyEmail() {
-    try {
-      await navigator.clipboard.writeText(this.email);
-      actions.dispatch(NOTIFY_ACTION.SHOW, { text: '✓ Email copied to clipboard', type: 'success' });
-    } catch {
-      actions.dispatch(NOTIFY_ACTION.SHOW, { text: 'Could not copy — select it manually', type: 'error' });
-    }
+    await copyText(this.email, '✓ Email copied to clipboard');
   }
 
   private host(url: string) {
