@@ -1,7 +1,7 @@
 import { html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { panelStyles } from '../core/styles.js';
-import { ViewAwareElement } from '../core/view-aware.js';
+import { panelStyles } from '../../core/styles.js';
+import { ViewAwareElement } from '../../core/view-aware.js';
 
 /**
  * A TUI panel for articles — wrap a code block or any content. In the reading
