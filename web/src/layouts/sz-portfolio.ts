@@ -19,12 +19,19 @@ export class SzPortfolio extends LitElement {
   })
   filters: string[] = [];
 
-  @property({ attribute: "page-size", type: Number }) pageSize = 8;
+  // Initial number of items shown, and the batch revealed each time the
+  // user scrolls to the bottom (lazy-load / infinite scroll).
+  @property({ attribute: "page-size", type: Number }) pageSize = 20;
+
+  // "grid" (default) renders slotted items as a tiled card grid (projects);
+  // "list" flows them as a plain block so a slotted list keeps its own styling (blog).
+  @property({ attribute: "layout" }) layout = "grid";
 
   @state() private activeFilter = "";
-  @state() private page = 1;
-  @state() private totalPages = 1;
+  @state() private visible = 0;
   @state() private matchedCount = 0;
+
+  private observer?: IntersectionObserver;
 
   static styles = [
     scrollbarStyles,
@@ -84,12 +91,25 @@ export class SzPortfolio extends LitElement {
           grid-template-columns: 1fr;
         }
       }
+      /* plain block: let the slotted list (e.g. .post-list) keep its own layout */
+      .list--list {
+        display: block;
+        grid-template-columns: none;
+        gap: 0;
+        background: transparent;
+        border: 0;
+      }
 
-      /* tmux-style status / pager footer */
+      /* zero-height marker observed to trigger the next lazy-load batch */
+      .sentinel {
+        height: 1px;
+      }
+
+      /* tmux-style status footer */
       .pager {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-end;
         gap: 12px;
         margin-top: 16px;
         padding-top: 12px;
@@ -97,35 +117,30 @@ export class SzPortfolio extends LitElement {
         font-size: calc(var(--sz-font-size, 13px) * 0.9);
         color: var(--sz-overlay1, #7f849c);
       }
-      .pager--static {
-        justify-content: flex-end;
-      }
       .pager__info {
         white-space: nowrap;
-      }
-      .pager__btn {
-        background: transparent;
-        border: 1px solid var(--sz-surface1, #45475a);
-        border-radius: 4px;
-        color: var(--sz-subtext, #a6adc8);
-        cursor: pointer;
-        font-family: inherit;
-        font-size: inherit;
-        padding: 3px 12px;
-        transition: all 0.2s;
-      }
-      .pager__btn:hover:not(:disabled) {
-        border-color: var(--sz-accent, #89b4fa);
-        color: var(--sz-text, #cdd6f4);
-      }
-      .pager__btn:disabled {
-        opacity: 0.4;
-        cursor: default;
       }
 
       @media (max-width: 768px) {
         :host {
           padding: 12px;
+        }
+        /* Filter tags: one full-bleed, horizontally-scrollable line instead of
+           wrapping into many rows. Negative margins let it scroll edge-to-edge. */
+        .filter-bar {
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          scrollbar-width: none;
+          margin-left: -12px;
+          margin-right: -12px;
+          padding-left: 12px;
+          padding-right: 12px;
+        }
+        .filter-bar::-webkit-scrollbar {
+          display: none;
+        }
+        .filter-btn {
+          flex-shrink: 0;
         }
       }
     `,
@@ -133,7 +148,7 @@ export class SzPortfolio extends LitElement {
 
   private toggleFilter(filter: string) {
     this.activeFilter = this.activeFilter === filter ? "" : filter;
-    this.page = 1;
+    this.visible = this.pageSize; // reset the lazy-load window on filter change
     this.dispatchEvent(
       new CustomEvent("filter-change", {
         detail: { filter: this.activeFilter },
@@ -144,18 +159,28 @@ export class SzPortfolio extends LitElement {
   }
 
   protected firstUpdated() {
+    this.visible = this.pageSize;
     this.applyView();
     const slot = this.shadowRoot?.querySelector("slot");
     slot?.addEventListener("slotchange", () => this.applyView());
+    this.setupObserver();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.observer?.disconnect();
   }
 
   protected updated(changed: Map<PropertyKey, unknown>) {
     if (
       changed.has("activeFilter") ||
-      changed.has("page") ||
+      changed.has("visible") ||
       changed.has("pageSize")
     ) {
       this.applyView();
+      // Keep filling while the sentinel stays in view (e.g. container taller
+      // than one batch): re-observing re-fires the callback with current state.
+      if (this.visible < this.matchedCount) this.reobserve();
     }
   }
 
@@ -178,32 +203,59 @@ export class SzPortfolio extends LitElement {
     const all = this.items;
     const matched = this.matched();
     this.matchedCount = matched.length;
-    this.totalPages = Math.max(1, Math.ceil(matched.length / this.pageSize));
-    if (this.page > this.totalPages) {
-      this.page = this.totalPages; // re-runs applyView via updated()
-      return;
-    }
-    const start = (this.page - 1) * this.pageSize;
-    const visible = new Set(matched.slice(start, start + this.pageSize));
+    const shown = new Set(matched.slice(0, this.visible));
     for (const el of all) {
-      el.style.display = visible.has(el) ? "" : "none";
+      el.style.display = shown.has(el) ? "" : "none";
+    }
+    this.applyGroups(shown);
+  }
+
+  // Month groups (blog archive): hide a group whose posts are all filtered out
+  // or beyond the lazy-load window, and keep its header count in sync with the
+  // visible posts. No-op for layouts without `.post-group` (e.g. projects).
+  private applyGroups(shown: Set<HTMLElement>) {
+    const groups = this.querySelectorAll<HTMLElement>(".post-group");
+    for (const group of groups) {
+      const posts = group.querySelectorAll<HTMLElement>("[data-tags]");
+      let count = 0;
+      for (const p of posts) if (shown.has(p)) count++;
+      group.style.display = count ? "" : "none";
+      const badge = group.querySelector<HTMLElement>(".post-month__count");
+      if (badge) badge.textContent = String(count);
     }
   }
 
-  private go(delta: number) {
-    const next = Math.min(this.totalPages, Math.max(1, this.page + delta));
-    if (next !== this.page) this.page = next;
+  private setupObserver() {
+    const sentinel = this.shadowRoot?.querySelector(".sentinel");
+    if (!sentinel) return;
+    // Both layouts scroll inside the host, so observe relative to it.
+    const root = this;
+    this.observer?.disconnect();
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) this.revealMore();
+      },
+      { root, rootMargin: "300px" },
+    );
+    this.observer.observe(sentinel);
   }
 
-  private get rangeLabel(): string {
-    if (this.matchedCount === 0) return "no entries";
-    const start = (this.page - 1) * this.pageSize + 1;
-    const end = Math.min(this.matchedCount, this.page * this.pageSize);
-    return `${start}–${end} of ${this.matchedCount}`;
+  private reobserve() {
+    const sentinel = this.shadowRoot?.querySelector(".sentinel");
+    if (!sentinel || !this.observer) return;
+    this.observer.unobserve(sentinel);
+    this.observer.observe(sentinel);
+  }
+
+  private revealMore() {
+    if (this.visible >= this.matchedCount) return;
+    this.visible = Math.min(this.matchedCount, this.visible + this.pageSize);
   }
 
   render() {
     const noun = this.matchedCount === 1 ? "entry" : "entries";
+    const shown = Math.min(this.visible, this.matchedCount);
+    const hasMore = shown < this.matchedCount;
     return html`
       ${this.filters.length > 0
         ? html`
@@ -229,36 +281,17 @@ export class SzPortfolio extends LitElement {
             </div>
           `
         : nothing}
-      <div class="list">
+      <div class="list list--${this.layout}">
         <slot></slot>
       </div>
-      ${this.totalPages > 1
-        ? html`
-            <div class="pager">
-              <button
-                class="pager__btn"
-                ?disabled=${this.page <= 1}
-                @click=${() => this.go(-1)}
-              >
-                ‹ prev
-              </button>
-              <span class="pager__info"
-                >${this.rangeLabel} · page ${this.page}/${this.totalPages}</span
-              >
-              <button
-                class="pager__btn"
-                ?disabled=${this.page >= this.totalPages}
-                @click=${() => this.go(1)}
-              >
-                next ›
-              </button>
-            </div>
-          `
-        : html`
-            <div class="pager pager--static">
-              <span class="pager__info">${this.matchedCount} ${noun}</span>
-            </div>
-          `}
+      <div class="sentinel" aria-hidden="true"></div>
+      <div class="pager">
+        <span class="pager__info">
+          ${hasMore
+            ? `${shown} of ${this.matchedCount} — scroll to load more`
+            : `${this.matchedCount} ${noun}`}
+        </span>
+      </div>
     `;
   }
 }

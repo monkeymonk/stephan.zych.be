@@ -3,11 +3,13 @@ import { EFFECT_ACTION } from '../../features/effects/actions.js';
 import { NOTIFY_ACTION } from '../../features/notifications/actions.js';
 import { WM_ACTION } from '../../features/window-manager/actions.js';
 import { SHADER_ACTION } from '../../features/screen-shader/actions.js';
+import { NEOVIM_ACTION } from '../../features/neovim/actions.js';
 import { registry } from '../../core/registry.js';
 import { router } from '../../core/router.js';
 import { appState } from '../../core/state.js';
-import { paletteRegistry } from '../../core/types.js';
-import type { PaletteSource, PaletteItem } from '../../core/types.js';
+import { paletteRegistry } from '../../core/palette.js';
+import type { PaletteSource, PaletteItem } from '../../core/palette.js';
+import { copyText } from '../../core/clipboard.js';
 
 export function wireNeovimPalette() {
   const commandSource: PaletteSource = {
@@ -33,6 +35,7 @@ export function wireNeovimPalette() {
             { name: 'view', values: ['code', 'reading'] },
           ] },
         { id: 'whoami', label: 'whoami', description: 'man page for one (1) developer' },
+        { id: 'ssh', label: 'ssh', description: 'Copy the SSH connect string for the terminal' },
         { id: 'matrix', label: 'matrix', description: 'Enter the Matrix' },
         { id: 'party', label: 'party', description: 'Celebrate!' },
         { id: 'sudo', label: 'sudo', description: 'Try root access' },
@@ -54,6 +57,11 @@ export function wireNeovimPalette() {
       if (item.id === 'windowed') { actions.dispatch(WM_ACTION.TOGGLE_MODE, { windowId: 'terminal' }); return; }
       if (item.id === 'fullpage') { actions.dispatch(WM_ACTION.MAXIMIZE, { windowId: 'terminal' }); return; }
       if (item.id === 'whoami') { router.navigate('/whoami/'); return; }
+      if (item.id === 'ssh') {
+        const cmd = 'ssh stephan.zych.be';
+        void copyText(cmd, `📋 Copied: ${cmd}`);
+        return;
+      }
       if (item.id === 'set' && args?.[0] === 'transparency' && args?.[1]) {
         appState.set('transparency', parseInt(args[1])); return;
       }
@@ -68,6 +76,7 @@ export function wireNeovimPalette() {
       if (item.id === 'sudo') { actions.dispatch(NOTIFY_ACTION.SHOW, { text: 'E: Are you sure you are not root?' }); return; }
       if (item.id === 'coffee') { actions.dispatch(NOTIFY_ACTION.SHOW, { text: '☕ Brewing...' }); return; }
       if (item.id === '42') { actions.dispatch(NOTIFY_ACTION.SHOW, { text: 'The answer to life, the universe, and everything.' }); return; }
+      if (item.id === 'help') { actions.dispatch(NEOVIM_ACTION.PALETTE_HELP); return; }
     },
   };
   paletteRegistry.register(commandSource);
@@ -77,12 +86,13 @@ export function wireNeovimPalette() {
     prefix: '/',
     placeholder: 'Search pages...',
     async getItems(query: string): Promise<PaletteItem[]> {
-      if (!query || query.length < 2) return [];
       const index = await registry.getSearchIndex();
-      const q = query.toLowerCase();
-      return index
-        .filter((entry) => entry.title.toLowerCase().includes(q) || entry.content.toLowerCase().includes(q))
-        .map((entry) => ({ id: entry.url, label: entry.title, description: entry.url }));
+      const q = query.trim().toLowerCase();
+      // Empty query: show the full blog/project/page list. Otherwise filter it.
+      const matches = q
+        ? index.filter((entry) => entry.title.toLowerCase().includes(q) || entry.content.toLowerCase().includes(q))
+        : index;
+      return matches.map((entry) => ({ id: entry.url, label: entry.title, description: entry.url }));
     },
     execute(item: PaletteItem) {
       router.navigate(item.id);
