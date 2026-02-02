@@ -1,6 +1,7 @@
 ---
 layout: base.njk
 ---
+<sz-toc></sz-toc>
 <article class="sz-article">
   <div class="sz-article__toolbar">
     {% if section %}
@@ -18,14 +19,15 @@ layout: base.njk
   {# Styled chrome — shown only in reading (glow) view #}
   {% if poster %}
   <div class="sz-article__hero">
-    <img src="{{ poster }}" alt="{{ title }}">
+    <img src="{{ poster }}" alt="{{ title }}" loading="lazy" decoding="async"{{ poster | imgDimAttrs | safe }}>
   </div>
   {% endif %}
   <header class="sz-article__header">
     <h1 class="sz-article__title">{{ heading or title }}</h1>
-    {% if date or tags %}
+    {% if date or tags or section.name == 'blog' %}
     <div class="sz-article__meta">
       {% if date %}<time datetime="{{ date | htmlDateString }}">{{ date | dateDisplay }}</time>{% endif %}
+      {% if section.name == 'blog' %}<span class="sz-article__read">{{ content | readingTime }} min read</span>{% endif %}
       {% if tags %}
       <span class="sz-article__tags">
         {% for tag in tags %}{% if tag !== 'blog' and tag !== 'projects' %}<span class="sz-article__tag">{{ tag }}</span>{% endif %}{% endfor %}
@@ -42,14 +44,15 @@ layout: base.njk
     {# Markdown header — inside the numbered body, shown in code view #}
     <div class="sz-md-header">
       <div class="md-h1"><span class="md-hash"># </span>{{ heading or title }}</div>
-      {% if date or tags %}
+      {% if date or tags or section.name == 'blog' %}
       <div class="md-meta">
         {% if date %}<span class="md-date">{{ date | htmlDateString }}</span>{% endif %}
+        {% if section.name == 'blog' %}<span class="md-read">{{ content | readingTime }} min read</span>{% endif %}
         {% if tags %}{% for tag in tags %}{% if tag !== 'blog' and tag !== 'projects' %}<span class="md-tag">#{{ tag }}</span>{% endif %}{% endfor %}{% endif %}
       </div>
       {% endif %}
       {% if description %}<blockquote class="md-desc">{{ description }}</blockquote>{% endif %}
-      {% if poster %}<img class="md-img" src="{{ poster }}" alt="{{ heading or title }}">{% endif %}
+      {% if poster %}<img class="md-img" src="{{ poster }}" alt="{{ heading or title }}" loading="lazy" decoding="async"{{ poster | imgDimAttrs | safe }}>{% endif %}
     </div>
 
     {{ content | safe }}
@@ -82,5 +85,34 @@ layout: base.njk
       <a href="mailto:?subject={{ shareText }}&body={{ shareUrl }}">Email</a>
     </div>
   </footer>
+  {% endif %}
+
+  {# Previous / next within the same section (blog or projects) #}
+  {% set sectionItems = collections[section.name] %}
+  {% if sectionItems %}
+  {% if section.name == 'blog' %}
+  {# blog is sorted newest-first, so read it chronologically: prev = older, next = newer #}
+  {% set prevItem = sectionItems | getNextCollectionItem %}
+  {% set nextItem = sectionItems | getPreviousCollectionItem %}
+  {% else %}
+  {% set prevItem = sectionItems | getPreviousCollectionItem %}
+  {% set nextItem = sectionItems | getNextCollectionItem %}
+  {% endif %}
+  {% if prevItem or nextItem %}
+  <nav class="sz-article__pager" aria-label="{{ section.name }} navigation">
+    {% if prevItem %}
+    <a class="sz-pager__link sz-pager__link--prev" href="{{ prevItem.url }}" rel="prev">
+      <span class="sz-pager__dir">← Prev</span>
+      <span class="sz-pager__title">{{ prevItem.data.title }}</span>
+    </a>
+    {% else %}<span class="sz-pager__spacer"></span>{% endif %}
+    {% if nextItem %}
+    <a class="sz-pager__link sz-pager__link--next" href="{{ nextItem.url }}" rel="next">
+      <span class="sz-pager__dir">Next →</span>
+      <span class="sz-pager__title">{{ nextItem.data.title }}</span>
+    </a>
+    {% else %}<span class="sz-pager__spacer"></span>{% endif %}
+  </nav>
+  {% endif %}
   {% endif %}
 </article>

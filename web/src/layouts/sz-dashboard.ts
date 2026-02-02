@@ -112,10 +112,22 @@ export class SzDashboard extends LitElement {
 
   /** Navigation tabs, injected by the template (nav='[...]'). */
   @property({ attribute: 'nav', converter: jsonArrayAttribute }) nav: NavTab[] = [];
+  /** ASCII wordmark lines, injected by the template (wordmark='[...]'). */
+  @property({ attribute: 'wordmark', converter: jsonArrayAttribute }) wordmark: string[] = [];
+  /** Rotating taglines, injected by the template (taglines='[...]'). */
+  @property({ attribute: 'taglines', converter: jsonArrayAttribute }) taglines: string[] = [];
+
+  private get asciiArt(): string {
+    return this.wordmark.length ? this.wordmark.join('\n') : ASCII_ART;
+  }
+
+  private get taglineList(): string[] {
+    return this.taglines.length ? this.taglines : TAGLINES;
+  }
 
   connectedCallback() {
     super.connectedCallback();
-    this.typewriter.cycle(TAGLINES, { pauseBetween: 3000, eraseSpeed: 30 });
+    this.typewriter.cycle(this.taglineList, { pauseBetween: 3000, eraseSpeed: 30 });
   }
 
   private get dashboardLinks() {
@@ -126,7 +138,7 @@ export class SzDashboard extends LitElement {
 
   render() {
     return html`
-      <div class="ascii">${ASCII_ART}</div>
+      <div class="ascii">${this.asciiArt}</div>
       <div class="tagline">
         ${this.typewriter.text}<span class="cursor"></span>
       </div>

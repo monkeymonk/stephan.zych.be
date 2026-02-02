@@ -7,6 +7,6 @@ layout: base.njk
 <sz-markdown{% if lineNumbers !== false %} line-numbers{% endif %}>
   <h1>{{ heading or title }}</h1>
   {% if date %}<p style="color: var(--sz-subtext)">{{ date | dateDisplay }}</p>{% endif %}
-  {% if poster %}<img src="{{ poster }}" alt="{{ title }}">{% endif %}
+  {% if poster %}<img src="{{ poster }}" alt="{{ title }}" loading="lazy" decoding="async"{{ poster | imgDimAttrs | safe }}>{% endif %}
   {{ content | safe }}
 </sz-markdown>

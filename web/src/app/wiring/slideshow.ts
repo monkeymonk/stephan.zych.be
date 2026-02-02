@@ -1,7 +1,7 @@
 import { actions } from '../../core/actions.js';
-import { SLIDESHOW_ACTION } from '../../components/slideshow-actions.js';
+import { SLIDESHOW_ACTION } from '../../components/background/slideshow-actions.js';
 import { registry } from '../../core/registry.js';
-import type { SlideshowApi } from '../../components/sz-slideshow.js';
+import type { SlideshowApi } from '../../components/background/sz-slideshow.js';
 
 export function wireSlideshow() {
   const slideshow = () =>

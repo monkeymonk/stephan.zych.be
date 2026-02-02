@@ -82,6 +82,15 @@ class SpaRouter {
         title: newTitle,
         attributes,
       } satisfies RouteChangedDetail);
+
+      // Move keyboard focus into the content region so arrow/space scrolling
+      // works immediately and a subsequent Tab starts from the page content
+      // (links, media, buttons). New (pushed) navigations also reset scroll to
+      // the top; popstate keeps the position the browser restores.
+      requestAnimationFrame(() => {
+        if (pushState) currentContent.scrollTop = 0;
+        currentContent.focus({ preventScroll: true });
+      });
     } catch {
       this.fallbackNavigate(path);
     }
