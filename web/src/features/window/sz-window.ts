@@ -31,7 +31,9 @@ let topZIndex = 100;
 @customElement('sz-window')
 export class SzWindow extends LitElement implements WindowApi {
   @property() titlebar: TitlebarMode = 'visible';
-  @property() title = '';
+  // Not `title`: that maps to the global HTML title attribute and shows a
+  // native tooltip on hover across the whole window. Use a dedicated attribute.
+  @property({ attribute: 'window-title' }) windowTitle = '';
   @property({ type: String }) width = '70vw';
   @property({ type: String }) height = '75vh';
   @property({ type: Number }) transparency = 95;
@@ -330,7 +332,7 @@ export class SzWindow extends LitElement implements WindowApi {
         class=${classes}
         style="${posStyle} ${sizeStyle} z-index: ${this.zIndex};"
         role="region"
-        aria-label=${this.title || 'Window'}
+        aria-label=${this.windowTitle || 'Window'}
       >
         ${this.renderResizeHandles()}
         <div class="window-bg" style="opacity: ${this.transparency / 100}" aria-hidden="true"></div>
@@ -356,7 +358,7 @@ export class SzWindow extends LitElement implements WindowApi {
         data-mode=${this.titlebar}
         @dblclick=${this.handleTitlebarDblClick}
       >
-        <span class="titlebar-title">${this.title}</span>
+        <span class="titlebar-title">${this.windowTitle}</span>
         <div class="controls" role="group" aria-label="Window controls">
           <button class="ctrl-btn" @click=${(e: MouseEvent) => this.handleControlClick(WINDOW_ACTION.FULLSCREEN_REQUEST, e)} title="Fullscreen (Alt+F)" aria-label="Fullscreen">
             <svg viewBox="0 0 10 10"><polyline points="1,3 1,1 3,1"/><polyline points="7,1 9,1 9,3"/><polyline points="9,7 9,9 7,9"/><polyline points="3,9 1,9 1,7"/></svg>
