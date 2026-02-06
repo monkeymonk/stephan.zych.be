@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, state, query, property } from 'lit/decorators.js';
-import { paletteRegistry, type PaletteSource, type PaletteItem } from '../../core/types.js';
+import { paletteRegistry, type PaletteSource, type PaletteItem } from '../../core/palette.js';
 import { actions } from '../../core/actions.js';
 import { NEOVIM_ACTION } from './actions.js';
 import { isInputFocused } from '../../core/keyboard.js';
@@ -26,6 +26,7 @@ export class SzPalette extends LitElement {
 
   private sources: PaletteSource[] = [];
   private unsubPaletteOpen?: () => void;
+  private unsubPaletteHelp?: () => void;
 
   static styles = [scrollbarStyles, focusRing, css`
     :host { display: contents; }
@@ -56,6 +57,8 @@ export class SzPalette extends LitElement {
       font-size: var(--sz-font-size, 13px);
       outline: none;
     }
+    /* The command/search input never shows the shared focus ring. */
+    input:focus-visible { outline: none; }
     .ghost {
       color: var(--sz-overlay0, #6c7086);
       pointer-events: none;
@@ -170,6 +173,11 @@ export class SzPalette extends LitElement {
         if (source) this.openWithSource(source);
       }
     });
+    this.unsubPaletteHelp = actions.on(NEOVIM_ACTION.PALETTE_HELP, () => {
+      // Dispatched from within the command's execute(), which is immediately
+      // followed by hide() (resetting helpOpen). Defer so we win the race.
+      queueMicrotask(() => this.showHelp());
+    });
   }
 
   disconnectedCallback() {
@@ -178,6 +186,7 @@ export class SzPalette extends LitElement {
     window.removeEventListener('keydown', this.handleCaptureTab, true);
     document.removeEventListener('click', this.handleOutsideClick, true);
     this.unsubPaletteOpen?.();
+    this.unsubPaletteHelp?.();
   }
 
   private handleCaptureTab = (e: KeyboardEvent) => {
@@ -339,6 +348,9 @@ export class SzPalette extends LitElement {
             id: `${matchedCommand.id}-${a.name}`,
             label: a.name,
             description: matchedCommand.description,
+            // Preserve nested values so intermediate args (e.g. `shader`) are
+            // drilled into rather than executed prematurely.
+            args: a.values && a.values.length > 0 ? a.values.map(v => ({ name: v })) : undefined,
           }));
 
         this.items = argItems;
@@ -494,8 +506,9 @@ export class SzPalette extends LitElement {
 
       if (this.selectedIndex >= 0 && this.items.length > 0) {
         const selected = this.items[this.selectedIndex];
-        // If item has args and first token not yet confirmed, autocomplete
-        if (selected.args && selected.args.length > 0 && this.confirmedTokens.length === 0) {
+        // If the selected item has further args/values, drill into them instead
+        // of executing — works at any depth (`set` → `shader` → `off`).
+        if (selected.args && selected.args.length > 0) {
           this.confirmSelection();
           return;
         }
@@ -533,7 +546,7 @@ export class SzPalette extends LitElement {
     const selected = this.items[index];
     const confirmed = this.confirmedTokens;
 
-    if (selected.args && selected.args.length > 0 && confirmed.length === 0) {
+    if (selected.args && selected.args.length > 0) {
       this.confirmSelection();
     } else if (confirmed.length > 0) {
       // Sub-command mode — execute parent command with args
