@@ -1,7 +1,8 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { panelStyles, reducedMotion } from '../core/styles.js';
-import { jsonArrayAttribute } from '../core/data.js';
+import { panelStyles, reducedMotion } from '../../core/styles.js';
+import { jsonArrayAttribute } from '../../core/data.js';
+import { RevealController } from '../../controllers/reveal.js';
 
 interface Counter { value: number; suffix?: string; label: string; }
 interface Skill { name: string; level: number; }
@@ -19,23 +20,7 @@ export class SzStats extends LitElement {
   @state() private display: number[] = [];
   @state() private revealed = false;
 
-  private observer?: IntersectionObserver;
-
-  connectedCallback() {
-    super.connectedCallback();
-    this.observer = new IntersectionObserver((entries) => {
-      if (entries.some(e => e.isIntersecting)) {
-        this.observer?.disconnect();
-        this.reveal();
-      }
-    }, { threshold: 0.35 });
-    this.observer.observe(this);
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    this.observer?.disconnect();
-  }
+  private revealOnView = new RevealController(this, () => this.reveal());
 
   private reveal() {
     this.revealed = true;

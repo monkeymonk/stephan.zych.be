@@ -1,5 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { copyText } from '../core/clipboard.js';
 
 @customElement('sz-markdown')
 export class SzMarkdown extends LitElement {
@@ -39,9 +40,11 @@ export class SzMarkdown extends LitElement {
   private enhanceContent() {
     this.enhanceHeadings();
     this.enhanceLinks();
+    this.enhanceImages();
     this.enhanceCheckboxes();
     this.wrapIframes();
     this.numberCodeBlocks();
+    this.addCopyButtons();
 
     if (this.lineNumbers) {
       this.addLineNumbers();
@@ -71,11 +74,33 @@ export class SzMarkdown extends LitElement {
     }
   }
 
+  // A copy button per fenced code block, hidden until the block is hovered.
+  private addCopyButtons() {
+    const blocks = this.querySelectorAll<HTMLElement>('pre[class*="language-"]');
+    for (const pre of blocks) {
+      if (pre.dataset.copy) continue;
+      const code = pre.querySelector('code');
+      if (!code) continue;
+      pre.dataset.copy = 'true';
+      pre.classList.add('has-copy');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'code-copy';
+      btn.textContent = 'copy';
+      btn.setAttribute('aria-label', 'Copy code to clipboard');
+      btn.addEventListener('click', () => {
+        void copyText(code.textContent ?? '', '✓ Code copied to clipboard');
+      });
+      pre.appendChild(btn);
+    }
+  }
+
   private enhanceHeadings() {
     const headings = this.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6');
     for (const h of headings) {
       if (h.dataset.enhanced) continue;
       h.dataset.enhanced = 'true';
+      const label = h.textContent?.trim() ?? '';
       const level = parseInt(h.tagName[1]);
       h.classList.add('sz-heading', `sz-heading--${level}`);
       const indicator = document.createElement('span');
@@ -83,6 +108,24 @@ export class SzMarkdown extends LitElement {
       indicator.textContent = '#'.repeat(level);
       indicator.setAttribute('aria-hidden', 'true');
       h.prepend(indicator);
+
+      // GitHub-style permalink: a shareable anchor revealed on hover/focus.
+      // Build-time slug ids exist on h2-h4, so only those get one.
+      if (h.id) {
+        const anchor = document.createElement('a');
+        anchor.className = 'sz-heading-anchor';
+        anchor.dataset.enhanced = 'true'; // skip enhanceLinks() icon injection
+        anchor.href = `#${h.id}`;
+        anchor.textContent = '§';
+        anchor.setAttribute('aria-label', `Permalink to “${label}”`);
+        anchor.addEventListener('click', () => {
+          void copyText(
+            `${location.origin}${location.pathname}#${h.id}`,
+            '🔗 Section link copied',
+          );
+        });
+        h.appendChild(anchor);
+      }
     }
   }
 
@@ -96,11 +139,26 @@ export class SzMarkdown extends LitElement {
       const href = a.getAttribute('href') || '';
       const isExternal = /^https?:\/\//.test(href) && !href.includes(location.hostname);
 
+      if (isExternal && !a.target) {
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+      }
+
       const icon = document.createElement('span');
       icon.className = 'sz-link-icon';
       icon.setAttribute('aria-hidden', 'true');
       icon.textContent = isExternal ? '🌐' : '🔗';
       a.prepend(icon);
+    }
+  }
+
+  private enhanceImages() {
+    const images = this.querySelectorAll<HTMLImageElement>('img');
+    for (const img of images) {
+      if (img.dataset.enhanced) continue;
+      img.dataset.enhanced = 'true';
+      if (!img.hasAttribute('loading')) img.setAttribute('loading', 'lazy');
+      if (!img.hasAttribute('decoding')) img.setAttribute('decoding', 'async');
     }
   }
 

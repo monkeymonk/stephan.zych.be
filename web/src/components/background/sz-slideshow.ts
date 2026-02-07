@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { reducedMotion, focusRing } from '../core/styles.js';
-import { actions } from '../core/actions.js';
+import { reducedMotion, focusRing } from '../../core/styles.js';
+import { actions } from '../../core/actions.js';
 import { SLIDESHOW_ACTION } from './slideshow-actions.js';
 
 /** Public contract consumed by the slideshow wiring. */

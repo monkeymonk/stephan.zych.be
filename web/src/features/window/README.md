@@ -7,7 +7,7 @@ Thin visual window shell with titlebar and traffic-light buttons.
 ### `<sz-window>`
 **Properties:**
 - `titlebar`: `'visible' | 'integrated' | 'hidden'` (default: `'visible'`)
-- `title`: string
+- `window-title`: string (not `title` — that triggers a native browser tooltip)
 - `buttons`: string[] (default: `['close', 'maximize', 'minimize']`)
 
 **Slots:**
