@@ -47,7 +47,6 @@ const DEFAULT_NAV: NavTab[] = [
 ];
 
 const DEFAULT_WALLPAPERS: string[] = [
-  '/assets/wallpapers/landscape-1.webp',
   '/assets/wallpapers/illustration-1.webp',
   '/assets/wallpapers/city-1.webp',
   '/assets/wallpapers/abstract-1.webp',
@@ -57,8 +56,7 @@ const DEFAULT_WALLPAPERS: string[] = [
   '/assets/wallpapers/dark-room.webp',
   '/assets/wallpapers/landscape-3.webp',
   '/assets/wallpapers/keyboard.webp',
-  '/assets/wallpapers/illustration-3.webp',
-  '/assets/wallpapers/illustration-4.webp',
+  '/assets/wallpapers/mountains-stars.webp',
 ];
 
 class Registry {

@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { panelStyles } from '../core/styles.js';
-import { jsonArrayAttribute } from '../core/data.js';
+import { panelStyles } from '../../core/styles.js';
+import { jsonArrayAttribute } from '../../core/data.js';
 
 const LOGO = String.raw`
  ███████╗███████╗

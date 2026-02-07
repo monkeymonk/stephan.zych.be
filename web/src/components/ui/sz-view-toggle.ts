@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { StateController } from '../core/state-controller.js';
-import { focusRing } from '../core/styles.js';
+import { StateController } from '../../core/state-controller.js';
+import { focusRing } from '../../core/styles.js';
 
 /**
  * Switches an article between the code-like (line-numbered, "nvim") view and
@@ -53,13 +53,13 @@ export class SzViewToggle extends LitElement {
           @click=${() => this.set('code')}
           aria-pressed=${mode === 'code'}
           title="Code view — line-numbered source"
-        >nvim</button>
+        >markdown</button>
         <button
           class=${mode === 'reading' ? 'active' : ''}
           @click=${() => this.set('reading')}
           aria-pressed=${mode === 'reading'}
           title="Reading view — rendered article"
-        >glow</button>
+        >html</button>
       </div>
     `;
   }

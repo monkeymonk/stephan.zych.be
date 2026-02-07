@@ -1,9 +1,12 @@
 import { LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { isInputFocused } from '../../core/keyboard.js';
 
 @customElement('sz-neovim')
 export class SzNeovim extends LitElement {
   @property({ type: Boolean, attribute: 'show-gutter' }) showGutter = false;
+
+  private mainContent: HTMLElement | null = null;
 
   // Light DOM for SEO — content is slotted from Eleventy templates
   createRenderRoot() { return this; }
@@ -23,10 +26,28 @@ export class SzNeovim extends LitElement {
     requestAnimationFrame(() => {
       const mainContent = this.querySelector('#main-content');
       if (mainContent instanceof HTMLElement) {
+        this.mainContent = mainContent;
         mainContent.style.flex = '1';
         mainContent.style.overflowY = 'auto';
         mainContent.style.overflowX = 'hidden';
       }
     });
+
+    // j/k scroll the page like ArrowDown/ArrowUp
+    document.addEventListener('keydown', this.handleScrollKeys);
   }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    document.removeEventListener('keydown', this.handleScrollKeys);
+  }
+
+  private handleScrollKeys = (e: KeyboardEvent) => {
+    if (e.key !== 'j' && e.key !== 'k') return;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.defaultPrevented || isInputFocused()) return;
+    if (!this.mainContent) return;
+    e.preventDefault();
+    this.mainContent.scrollBy({ top: e.key === 'j' ? 40 : -40 });
+  };
 }
