@@ -3,7 +3,7 @@
 Personal portfolio and blog styled as a terminal environment — in two flavours
 that share one content source:
 
-- **`web/`** — a static site (Eleventy + Lit + TypeScript), deployed to GitHub Pages.
+- **`web/`** — a static site (Eleventy + Lit + TypeScript), served by Caddy (or GitHub Pages).
 - **`tui/`** — a real terminal version served over SSH (Go + Charm: Wish · Bubble Tea · Glamour).
 - **`content/`** — the markdown corpus (blog, projects, pages) both front-ends read.
 
@@ -74,13 +74,38 @@ Content lives once, at the repo root. The web build reads it through a symlink
 
 ```bash
 cd tui
-go run . --local                              # dev: render in your terminal
-docker compose -f compose.yaml up -d --build  # deploy: serve over SSH on :2222
+go run . --local   # dev: render straight in your terminal (no SSH)
 ```
 
 Same controls as the web terminal: `:` opens the command palette, `/` searches all
 content, `tab` autocompletes, `?` shows help, `esc` closes. `j/k`/arrows move,
 `enter` opens, `esc`/`h` go back. An animated splash greets you on connect.
+
+The SSH server is hardened for a public port: a [distroless](https://github.com/GoogleContainerTools/distroless)
+non-root image (no shell to pivot into), idle/absolute session timeouts, and a
+concurrent-session cap. The host key persists in a volume so clients don't get
+identity-change warnings across redeploys.
+
+## Deployment
+
+One box serves both front-ends from the shared `content/` source:
+
+```bash
+# Prereq: move the host's own sshd off :22 (e.g. to 2200) and firewall it.
+docker compose up -d --build
+```
+
+- **`tui`** — distroless SSH server, host port `22` → container `2222`.
+- **`web`** — Caddy serving the built static site with automatic HTTPS
+  (`SITE_ADDRESS=stephan.zych.be`).
+
+`.github/workflows/deploy.yml` builds both images, pushes them to GHCR, and
+redeploys over SSH on push to `main`.
+
+**Web alternative:** drop the `web` service from `compose.yaml` and serve `web/`
+from GitHub Pages instead (a commented job in the workflow keeps that path ready).
+Pages gives you a free CDN and uptime independent of the box; self-hosting gives
+you one domain, one deploy, and no Pages dependency.
 
 ## License
 

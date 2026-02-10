@@ -3,9 +3,13 @@ import { build, context } from 'esbuild';
 const isDev = process.argv.includes('--watch');
 
 const config = {
-  entryPoints: ['src/app/index.ts'],
+  // Named entry so the output stays /assets/components.js; splitting emits
+  // shared/lazy chunks (e.g. the dynamically-imported mermaid) alongside it,
+  // so heavy diagram code is only fetched on pages that actually use it.
+  entryPoints: { components: 'src/app/index.ts' },
   bundle: true,
-  outfile: '_site/assets/components.js',
+  outdir: '_site/assets',
+  splitting: true,
   format: 'esm',
   target: 'es2022',
   sourcemap: isDev,

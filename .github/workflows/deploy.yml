@@ -1,38 +1,126 @@
-name: Deploy to GitHub Pages
+# Build the web + TUI images from the shared content/ source, push to GHCR, and
+# redeploy the stack on the self-hosted box.
+#
+# Required repo secrets:
+#   DEPLOY_HOST      ssh host of the server running compose.yaml
+#   DEPLOY_USER      ssh user there
+#   DEPLOY_SSH_KEY   private key for that user (deploy key)
+#   DEPLOY_PORT      host sshd port — the TUI owns :22, so sshd lives elsewhere (2200)
+#   DEPLOY_PATH      path to the checked-out repo on the server
+#   WAKAPI_API_URL / WAKAPI_API_KEY   optional — baked into the web image
+#
+# Once the GHCR packages are public, the server needs no registry login to pull.
+
+name: Deploy
+
 on:
   push:
     branches: [main]
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
 jobs:
-  build:
+  images:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - image: szych-tui
+            dockerfile: tui/Dockerfile
+          - image: szych-web
+            dockerfile: web/Dockerfile
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
-      - run: npm run build
-        env:
-          WAKAPI_API_KEY: ${{ secrets.WAKAPI_API_KEY }}
-          WAKAPI_API_URL: https://wakapi.zych.link
-      - uses: actions/upload-pages-artifact@v3
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
-          path: web/_site
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          build-args: |
+            WAKAPI_API_URL=${{ secrets.WAKAPI_API_URL }}
+            WAKAPI_API_KEY=${{ secrets.WAKAPI_API_KEY }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Scan the Go module for known vulnerabilities. Reports independently — does
+  # not gate deploy (add it to `deploy.needs` if you want it to block).
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26"
+          cache-dependency-path: tui/go.sum
+      - run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - run: govulncheck ./...
+        working-directory: tui
+
   deploy:
-    needs: build
+    needs: images
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Pull images and restart the stack
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            git pull --ff-only
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
+
+# ---------------------------------------------------------------------------
+# ALTERNATIVE: serve web/ from GitHub Pages instead of the self-hosted Caddy.
+# To use it, comment out the `images`/`deploy` jobs above (or drop the web image
+# from the matrix), remove the `web` service from compose.yaml, and enable this:
+#
+#   jobs:
+#     pages:
+#       runs-on: ubuntu-latest
+#       defaults:
+#         run:
+#           working-directory: web
+#       permissions:
+#         contents: read
+#         pages: write
+#         id-token: write
+#       environment:
+#         name: github-pages
+#         url: ${{ steps.deployment.outputs.page_url }}
+#       steps:
+#         - uses: actions/checkout@v4
+#         - uses: actions/setup-node@v4
+#           with:
+#             node-version: 24
+#             cache: npm
+#             cache-dependency-path: web/package-lock.json
+#         - run: npm ci
+#         - run: npm run build
+#           env:
+#             WAKAPI_API_KEY: ${{ secrets.WAKAPI_API_KEY }}
+#             WAKAPI_API_URL: ${{ secrets.WAKAPI_API_URL }}
+#         - uses: actions/upload-pages-artifact@v3
+#           with:
+#             path: web/_site
+#         - id: deployment
+#           uses: actions/deploy-pages@v4
+# ---------------------------------------------------------------------------
