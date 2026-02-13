@@ -11,7 +11,7 @@ permalink: /projects/
     {% endif %}
   {% endfor %}
 {% endfor %}
-<sz-portfolio filters="{{ allTags | join(',') }}" page-size="8">
+<sz-portfolio filters="{{ allTags | join(',') }}" page-size="20">
   {% for project in collections.projects %}
     <a class="project-pane" href="{{ project.url }}" data-tags="{{ project.data.tags | join(',') }}">
       <span class="project-pane__num" aria-hidden="true">{{ loop.index0 }}</span>
