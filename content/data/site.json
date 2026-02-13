@@ -1,9 +1,13 @@
 {
   "title": "Stéphan Zych",
-  "description": "Lead developer & frontend architect in Brussels. Fifteen years building maintainable, high-performance web platforms.",
+  "description": "Engineering notes & experiments by Stéphan Zych — a Brussels developer's personal technical space on developer experience, infrastructure, self-hosting, and the things worth building.",
   "url": "https://stephan.zych.be",
   "author": "Stéphan Zych",
   "email": "stephan@zych.be",
+  "company": "STEPHANZYCH",
+  "legalName": "STEPHAN ZYCH SRL",
+  "vat": "BE 0804.229.671",
+  "companyUrl": "https://stephanzych.be",
   "repoUrl": "https://github.com/monkeymonk/stephan.zych.be",
   "coffeeUrl": "https://buymeacoffee.com/monkeymonk",
   "socials": {

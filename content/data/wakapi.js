@@ -6,7 +6,7 @@
 // baked into the static site. If the key is absent (e.g. a contributor's PR
 // build) this returns null and the page simply omits the section.
 
-const API_URL = process.env.WAKAPI_API_URL || 'https://wakapi.zych.link';
+const API_URL = process.env.WAKAPI_API_URL;
 const API_KEY = process.env.WAKAPI_API_KEY;
 
 const PRETTY = {
@@ -18,8 +18,8 @@ const PRETTY = {
 };
 
 module.exports = async function wakapi() {
-  if (!API_KEY) {
-    console.warn('[wakapi] WAKAPI_API_KEY not set — skipping coding stats (fine for local / PR builds).');
+  if (!API_KEY || !API_URL) {
+    console.warn('[wakapi] WAKAPI_API_KEY / WAKAPI_API_URL not set — skipping coding stats (fine for local / PR builds).');
     return null;
   }
 

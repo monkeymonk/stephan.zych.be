@@ -3,31 +3,42 @@ layout: base.njk
 title: Blog — Stéphan Zych
 permalink: /blog/
 ---
-<div class="blog-index">
-  <header class="blog-index__head">
-    <span class="blog-index__cmd"><span class="blog-index__sigil">$</span> ls -lt ~/blog</span>
-    <span class="blog-index__count">{{ collections.blog | length }} post{% if (collections.blog | length) != 1 %}s{% endif %}</span>
-  </header>
-  <ul class="post-list">
-    {% for post in collections.blog %}
-    <li>
-      <a class="post-row" href="{{ post.url }}">
-        <span class="post-row__date">
-          <time datetime="{{ post.date | htmlDateString }}">{{ post.date | htmlDateString }}</time>
-          <span class="post-row__read">{{ post.templateContent | readingTime }} min read</span>
-        </span>
-        <span class="post-row__main">
-          <span class="post-row__title">{{ post.data.title }}</span>
-          <span class="post-row__desc">{{ post.data.description }}</span>
-          {% if post.data.tags %}
-          <span class="post-row__tags">
-            {% for tag in post.data.tags %}{% if tag !== 'blog' %}<span class="post-row__tag">{{ tag }}</span>{% endif %}{% endfor %}
-          </span>
-          {% endif %}
-        </span>
-        <span class="post-row__arrow">→</span>
-      </a>
-    </li>
+{% set allTags = [] %}
+{% for post in collections.blog %}
+  {% for tag in post.data.tags or [] %}
+    {% if tag !== 'blog' and tag not in allTags %}
+      {% set allTags = (allTags.push(tag), allTags) %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+<sz-portfolio layout="list" filters="{{ allTags | join(',') }}" page-size="10">
+  <div class="post-list">
+    {% for group in collections.blog | groupByMonth %}
+    <details class="post-group" data-month="{{ group.key }}" open>
+      <summary class="post-month">{{ group.label }}<span class="post-month__count">{{ group.posts | length }}</span></summary>
+      <ul class="post-group__items">
+        {% for post in group.posts %}
+        <li data-tags="{{ post.data.tags | join(',') }}">
+          <a class="post-row" href="{{ post.url }}">
+            <span class="post-row__date">
+              <time datetime="{{ post.date | htmlDateString }}">{{ post.date | htmlDateString }}</time>
+              <span class="post-row__read">{{ post.templateContent | readingTime }} min read</span>
+            </span>
+            <span class="post-row__main">
+              <span class="post-row__title">{{ post.data.title }}</span>
+              <span class="post-row__desc">{{ post.data.description }}</span>
+              {% if post.data.tags %}
+              <span class="post-row__tags">
+                {% for tag in post.data.tags %}{% if tag !== 'blog' %}<span class="post-row__tag">{{ tag }}</span>{% endif %}{% endfor %}
+              </span>
+              {% endif %}
+            </span>
+            <span class="post-row__arrow">→</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
     {% endfor %}
-  </ul>
-</div>
+  </div>
+</sz-portfolio>
