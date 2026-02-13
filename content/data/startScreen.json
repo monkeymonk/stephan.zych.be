@@ -1,0 +1,54 @@
+{
+  "wordmark": [
+    "███████╗████████╗███████╗██████╗ ██╗  ██╗ █████╗ ███╗   ██╗",
+    "██╔════╝╚══██╔══╝██╔════╝██╔══██╗██║  ██║██╔══██╗████╗  ██║",
+    "███████╗   ██║   █████╗  ██████╔╝███████║███████║██╔██╗ ██║",
+    "╚════██║   ██║   ██╔══╝  ██╔═══╝ ██╔══██║██╔══██║██║╚██╗██║",
+    "███████║   ██║   ███████╗██║     ██║  ██║██║  ██║██║ ╚████║",
+    "╚══════╝   ╚═╝   ╚══════╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝"
+  ],
+  "taglines": [
+    "Building software, tools, systems, and experiments.",
+    "Interested in developer experience, infrastructure, and technical ownership.",
+    "Exploring self-hosting, local AI, automation, and reproducible environments.",
+    "Writing about engineering decisions, workflows, and things worth building.",
+    "Making web platforms, game prototypes, developer tools, and strange side projects.",
+    "Trying to make technology more understandable, durable, and mine.",
+    "Currently learning through experiments, prototypes, and unfinished ideas.",
+    "A personal space for projects, notes, and technical curiosity."
+  ],
+  "items": [
+    {
+      "id": "about",
+      "label": "About",
+      "icon": "terminal",
+      "action": "navigate",
+      "target": "/about/",
+      "desc": "who I am, the short version"
+    },
+    {
+      "id": "projects",
+      "label": "Projects",
+      "icon": "folder",
+      "action": "navigate",
+      "target": "/projects/",
+      "desc": "selected work and case studies"
+    },
+    {
+      "id": "blog",
+      "label": "Blog",
+      "icon": "file",
+      "action": "navigate",
+      "target": "/blog/",
+      "desc": "writing, notes, experiments"
+    },
+    {
+      "id": "contact",
+      "label": "Contact",
+      "icon": "mail",
+      "action": "navigate",
+      "target": "/contact/",
+      "desc": "how to reach me"
+    }
+  ]
+}

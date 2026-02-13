@@ -4,17 +4,19 @@
     "rows": [
       ["OS", "Brussels, Belgium"],
       ["Role", "Lead Dev · Frontend Architect"],
+      ["Company", "STEPHANZYCH · VAT BE 0804.229.671"],
       ["Uptime", "15 years"],
       ["Shell", "zsh · tmux · neovim"],
       ["Editor", "neovim (btw)"],
       ["Stack", "TS · React · Laravel · Docker"],
       ["Shipped", "200+ platforms · 1 exit"],
       ["Langs", "FR (native) · EN (pro)"],
+      ["SSH", "ssh stephan.zych.be"],
       ["Status", "available to talk"]
     ]
   },
   "timeline": [
-    { "hash": "a1b2c3d", "ref": "HEAD → main", "message": "Lead Developer @ CBTW", "date": "2023—now" },
+    { "hash": "a1b2c3d", "ref": "HEAD → main", "message": "Lead Developer @ CBTW (via STEPHANZYCH)", "date": "2023—now" },
     { "hash": "d4e5f6a", "message": "Co-founder / CTO @ Cherry Pulp  (acquired)", "date": "2013—2024" },
     { "hash": "9a8b7c1", "message": "Freelance full-stack developer", "date": "2011—2016" },
     { "hash": "11f2e3d", "message": "Rich-media dev @ TBWA · Agency.com", "date": "2009—2013" }
