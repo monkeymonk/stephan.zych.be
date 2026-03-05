@@ -6,116 +6,150 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// Catppuccin Mocha — same palette as the website theme.
-const (
-	colBase     = "#1e1e2e"
-	colMantle   = "#181825"
-	colCrust    = "#11111b"
-	colText     = "#cdd6f4"
-	colSubtext1 = "#bac2de"
-	colSubtext0 = "#a6adc8"
-	colOverlay1 = "#7f849c"
-	colOverlay0 = "#6c7086"
-	colSurface2 = "#585b70"
-	colSurface1 = "#45475a"
-	colSurface0 = "#313244"
-	colBlue     = "#89b4fa"
-	colLavender = "#b4befe"
-	colSky      = "#89dceb"
-	colTeal     = "#94e2d5"
-	colGreen    = "#a6e3a1"
-	colYellow   = "#f9e2af"
-	colPeach    = "#fab387"
-	colMaroon   = "#eba0ac"
-	colRed      = "#f38ba8"
-	colMauve    = "#cba6f7"
-	colPink     = "#f5c2e7"
+// Styles holds one lipgloss.Style (or lipgloss.Color) per named style.
+// Construct with buildStyles; the zero value is not useful.
+type Styles struct {
+	// chrome
+	TitleBar  lipgloss.Style
+	BrandDim  lipgloss.Style
+	Breadcrumb lipgloss.Style
+	CrumbSep  lipgloss.Style
+	CrumbHere lipgloss.Style
+	// menu (home)
+	MenuCursor   lipgloss.Style
+	MenuLabelSel lipgloss.Style
+	MenuLabel    lipgloss.Style
+	MenuDesc     lipgloss.Style
+	// list
+	ListSel   lipgloss.Style
+	ListTitle lipgloss.Style
+	ListBar   lipgloss.Style
+	Date      lipgloss.Style
+	Tag       lipgloss.Style
+	DescDim   lipgloss.Style
+	// neofetch card
+	Card      lipgloss.Style
+	CardCmd   lipgloss.Style
+	CardCmdS  lipgloss.Style
+	User      lipgloss.Style
+	UserHost  lipgloss.Style
+	Rule      lipgloss.Style
+	Key       lipgloss.Style
+	Val       lipgloss.Style
+	StatusOn  lipgloss.Style
+	Logo      lipgloss.Style
+	// statusline
+	StInfo  lipgloss.Style
+	StTime  lipgloss.Style
+	StFill  lipgloss.Style
+	CmdErr  lipgloss.Style
+	// help / misc
+	Help    lipgloss.Style
+	HelpKey lipgloss.Style
+	Error   lipgloss.Style
+	// window frame
+	FrameBorder lipgloss.Style
+	FrameTitle  lipgloss.Style
+	// home dashboard
+	HomeWordmark lipgloss.Style
+	HomeTagline  lipgloss.Style
+	HomeKey      lipgloss.Style
+	HomeLink     lipgloss.Style
+	HomeLinkSel  lipgloss.Style
+	// tab strip
+	Tab       lipgloss.Style
+	TabActive lipgloss.Style
+	// splash
+	SplashBase lipgloss.Style
+	SplashHot  lipgloss.Style
+	SplashGlow lipgloss.Style
+	// command palette
+	PalBox     lipgloss.Style
+	PalTitle   lipgloss.Style
+	PalPrompt  lipgloss.Style
+	PalItem    lipgloss.Style
+	PalItemSel lipgloss.Style
+	PalIcon    lipgloss.Style
+	PalIconSel lipgloss.Style
+	PalSection lipgloss.Style
+	PalHint    lipgloss.Style
+	Backdrop   lipgloss.Color
+}
 
-	colAccent = colBlue
-)
-
-// paletteColors mirrors the neofetch swatch row on the web about page.
-var paletteColors = []string{colRed, colPeach, colYellow, colGreen, colTeal, colBlue, colMauve, colLavender}
-
-var (
-	// ── chrome ──────────────────────────────────────────────
-	styleTitleBar = lipgloss.NewStyle().Foreground(lipgloss.Color(colAccent)).Bold(true)
-	styleBrandDim = lipgloss.NewStyle().Foreground(lipgloss.Color(colOverlay0))
-
-	styleBreadcrumb = lipgloss.NewStyle().Foreground(lipgloss.Color(colSubtext0))
-	styleCrumbSep   = lipgloss.NewStyle().Foreground(lipgloss.Color(colSurface1))
-	styleCrumbHere  = lipgloss.NewStyle().Foreground(lipgloss.Color(colMauve)).Bold(true)
-
-	// ── menu (home) ─────────────────────────────────────────
-	styleMenuCursor   = lipgloss.NewStyle().Foreground(lipgloss.Color(colAccent)).Bold(true)
-	styleMenuLabelSel = lipgloss.NewStyle().Foreground(lipgloss.Color(colAccent)).Bold(true)
-	styleMenuLabel    = lipgloss.NewStyle().Foreground(lipgloss.Color(colText))
-	styleMenuDesc     = lipgloss.NewStyle().Foreground(lipgloss.Color(colOverlay0))
-
-	// ── list ────────────────────────────────────────────────
-	styleListSel   = lipgloss.NewStyle().Foreground(lipgloss.Color(colAccent)).Bold(true)
-	styleListTitle = lipgloss.NewStyle().Foreground(lipgloss.Color(colText))
-	styleListBar   = lipgloss.NewStyle().Foreground(lipgloss.Color(colAccent))
-	styleDate      = lipgloss.NewStyle().Foreground(lipgloss.Color(colGreen))
-	styleTag       = lipgloss.NewStyle().Foreground(lipgloss.Color(colLavender))
-	styleDescDim   = lipgloss.NewStyle().Foreground(lipgloss.Color(colOverlay0)).Italic(true)
-
-	// ── neofetch card ───────────────────────────────────────
-	styleCard = lipgloss.NewStyle().
+// buildStyles constructs a Styles from the given Theme. buildStyles(catppuccinMocha)
+// produces styles identical to the global styleX vars.
+func buildStyles(t Theme) Styles {
+	return Styles{
+		// chrome
+		TitleBar:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		BrandDim:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
+		Breadcrumb: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Subtext0)),
+		CrumbSep:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Surface1)),
+		CrumbHere: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Mauve)).Bold(true),
+		// menu (home)
+		MenuCursor:   lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		MenuLabelSel: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		MenuLabel:    lipgloss.NewStyle().Foreground(lipgloss.Color(t.Text)),
+		MenuDesc:     lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
+		// list
+		ListSel:   lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		ListTitle: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Text)),
+		ListBar:   lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)),
+		Date:      lipgloss.NewStyle().Foreground(lipgloss.Color(t.Green)),
+		Tag:       lipgloss.NewStyle().Foreground(lipgloss.Color(t.Lavender)),
+		DescDim:   lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)).Italic(true),
+		// neofetch card
+		Card: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color(colSurface1)).
-			Padding(0, 2)
-	styleCardCmd  = lipgloss.NewStyle().Foreground(lipgloss.Color(colSubtext0))
-	styleCardCmdS = lipgloss.NewStyle().Foreground(lipgloss.Color(colGreen)).Bold(true)
-	styleUser     = lipgloss.NewStyle().Foreground(lipgloss.Color(colGreen)).Bold(true)
-	styleUserHost = lipgloss.NewStyle().Foreground(lipgloss.Color(colText))
-	styleRule     = lipgloss.NewStyle().Foreground(lipgloss.Color(colSurface1))
-	styleKey      = lipgloss.NewStyle().Foreground(lipgloss.Color(colAccent)).Bold(true)
-	styleVal      = lipgloss.NewStyle().Foreground(lipgloss.Color(colSubtext0))
-	styleStatusOn = lipgloss.NewStyle().Foreground(lipgloss.Color(colGreen))
-	styleLogo     = lipgloss.NewStyle().Foreground(lipgloss.Color(colAccent)).Bold(true)
-
-	// ── statusline (vim/tmux style) ─────────────────────────
-	styleStMode = lipgloss.NewStyle().Foreground(lipgloss.Color(colCrust)).Background(lipgloss.Color(colAccent)).Bold(true).Padding(0, 1)
-	styleStPath = lipgloss.NewStyle().Foreground(lipgloss.Color(colText)).Background(lipgloss.Color(colSurface1)).Padding(0, 1)
-	styleStInfo = lipgloss.NewStyle().Foreground(lipgloss.Color(colSubtext0)).Background(lipgloss.Color(colSurface0)).Padding(0, 1)
-	styleStTime = lipgloss.NewStyle().Foreground(lipgloss.Color(colCrust)).Background(lipgloss.Color(colMauve)).Bold(true).Padding(0, 1)
-	styleStFill = lipgloss.NewStyle().Background(lipgloss.Color(colMantle))
-	styleCmdErr = lipgloss.NewStyle().Foreground(lipgloss.Color(colRed)).Background(lipgloss.Color(colMantle)).Bold(true)
-
-	// ── help / misc ─────────────────────────────────────────
-	styleHelp    = lipgloss.NewStyle().Foreground(lipgloss.Color(colOverlay0))
-	styleHelpKey = lipgloss.NewStyle().Foreground(lipgloss.Color(colSubtext0)).Bold(true)
-	styleError   = lipgloss.NewStyle().Foreground(lipgloss.Color(colRed)).Bold(true)
-
-	// ── window frame ────────────────────────────────────────
-	styleFrameBorder = lipgloss.NewStyle().Foreground(lipgloss.Color(colSurface1))
-	styleFrameTitle  = lipgloss.NewStyle().Foreground(lipgloss.Color(colAccent)).Bold(true)
-	styleFrameClock  = lipgloss.NewStyle().Foreground(lipgloss.Color(colMauve))
-	styleDotR        = lipgloss.NewStyle().Foreground(lipgloss.Color(colRed))
-	styleDotY        = lipgloss.NewStyle().Foreground(lipgloss.Color(colYellow))
-	styleDotG        = lipgloss.NewStyle().Foreground(lipgloss.Color(colGreen))
-
-	// ── splash ──────────────────────────────────────────────
-	styleSplashBase   = lipgloss.NewStyle().Foreground(lipgloss.Color(colBlue)).Bold(true)
-	styleSplashHot    = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Bold(true)
-	styleSplashGlow   = lipgloss.NewStyle().Foreground(lipgloss.Color(colLavender)).Bold(true)
-	styleSplashDomain = lipgloss.NewStyle().Foreground(lipgloss.Color(colMauve)).Bold(true)
-	styleSplashTag    = lipgloss.NewStyle().Foreground(lipgloss.Color(colSubtext0)).Italic(true)
-	styleSplashHint   = lipgloss.NewStyle().Foreground(lipgloss.Color(colOverlay0))
-
-	// ── command palette ─────────────────────────────────────
-	stylePalBox     = lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(colAccent)).Padding(0, 1)
-	stylePalTitle   = lipgloss.NewStyle().Foreground(lipgloss.Color(colMauve)).Bold(true)
-	stylePalPrompt  = lipgloss.NewStyle().Foreground(lipgloss.Color(colGreen)).Bold(true)
-	stylePalItem    = lipgloss.NewStyle().Foreground(lipgloss.Color(colText))
-	stylePalItemSel = lipgloss.NewStyle().Foreground(lipgloss.Color(colCrust)).Background(lipgloss.Color(colAccent)).Bold(true)
-	stylePalIcon    = lipgloss.NewStyle().Foreground(lipgloss.Color(colBlue))
-	stylePalIconSel = lipgloss.NewStyle().Foreground(lipgloss.Color(colCrust)).Background(lipgloss.Color(colAccent))
-	stylePalSection = lipgloss.NewStyle().Foreground(lipgloss.Color(colOverlay0))
-	stylePalHint    = lipgloss.NewStyle().Foreground(lipgloss.Color(colOverlay0))
-	styleBackdrop   = lipgloss.Color(colSurface0)
-)
+			BorderForeground(lipgloss.Color(t.Surface1)).
+			Padding(0, 2),
+		CardCmd:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Subtext0)),
+		CardCmdS: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Green)).Bold(true),
+		User:     lipgloss.NewStyle().Foreground(lipgloss.Color(t.Green)).Bold(true),
+		UserHost: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Text)),
+		Rule:     lipgloss.NewStyle().Foreground(lipgloss.Color(t.Surface1)),
+		Key:      lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		Val:      lipgloss.NewStyle().Foreground(lipgloss.Color(t.Subtext0)),
+		StatusOn: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Green)),
+		Logo:     lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		// statusline
+		StInfo: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Subtext0)).Background(lipgloss.Color(t.Surface0)).Padding(0, 1),
+		StTime: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Crust)).Background(lipgloss.Color(t.Mauve)).Bold(true).Padding(0, 1),
+		StFill: lipgloss.NewStyle().Background(lipgloss.Color(t.Mantle)),
+		CmdErr: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Red)).Background(lipgloss.Color(t.Mantle)).Bold(true),
+		// help / misc
+		Help:    lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
+		HelpKey: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Subtext0)).Bold(true),
+		Error:   lipgloss.NewStyle().Foreground(lipgloss.Color(t.Red)).Bold(true),
+		// window frame
+		FrameBorder: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Surface1)),
+		FrameTitle:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		// home dashboard
+		HomeWordmark: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Blue)).Bold(true),
+		HomeTagline:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Subtext0)).Italic(true),
+		HomeKey:      lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		HomeLink:     lipgloss.NewStyle().Foreground(lipgloss.Color(t.Text)),
+		HomeLinkSel:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		// tab strip
+		Tab:       lipgloss.NewStyle().Foreground(lipgloss.Color(t.Subtext0)).Background(lipgloss.Color(t.Surface0)).Padding(0, 1),
+		TabActive: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Crust)).Background(lipgloss.Color(t.Accent)).Bold(true).Padding(0, 1),
+		// splash
+		SplashBase: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Blue)).Bold(true),
+		SplashHot:  lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Bold(true),
+		SplashGlow: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Lavender)).Bold(true),
+		// command palette
+		PalBox:     lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(t.Accent)).Padding(0, 1),
+		PalTitle:   lipgloss.NewStyle().Foreground(lipgloss.Color(t.Mauve)).Bold(true),
+		PalPrompt:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Green)).Bold(true),
+		PalItem:    lipgloss.NewStyle().Foreground(lipgloss.Color(t.Text)),
+		PalItemSel: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Crust)).Background(lipgloss.Color(t.Accent)).Bold(true),
+		PalIcon:    lipgloss.NewStyle().Foreground(lipgloss.Color(t.Blue)),
+		PalIconSel: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Crust)).Background(lipgloss.Color(t.Accent)),
+		PalSection: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
+		PalHint:    lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
+		Backdrop:   lipgloss.Color(t.Surface0),
+	}
+}
 
 // brusselsTZ is resolved once; falls back to local time when tzdata is absent.
 var brusselsTZ = func() *time.Location {
