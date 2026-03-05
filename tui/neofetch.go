@@ -9,46 +9,39 @@ import (
 // SZ monogram, same spirit as the web sz-neofetch logo.
 var szLogo = []string{
 	"███████╗███████╗",
-	"╚══███╔╝╚══███╔╝",
-	"  ███╔╝   ███╔╝ ",
-	" ███╔╝   ███╔╝  ",
-	"███████╗███████╗",
+	"██╔════╝╚══███╔╝",
+	"███████╗  ███╔╝ ",
+	"╚════██║ ███╔╝  ",
+	"███████║███████╗",
 	"╚══════╝╚══════╝",
 }
 
-var fetchUser = "stephan@zych.be"
-
-var fetchRows = [][2]string{
-	{"OS", "Brussels, Belgium"},
-	{"Role", "Lead Dev · Frontend Architect"},
-	{"Uptime", "15 years"},
-	{"Shell", "zsh · tmux · neovim"},
-	{"Editor", "neovim (btw)"},
-	{"Stack", "TS · React · Laravel · Docker"},
-	{"Shipped", "200+ platforms · 1 exit"},
-	{"Status", "available to talk"},
-}
-
 // neofetchCard renders the identity card shown on the home screen.
-func neofetchCard(maxWidth int) string {
+func (m Model) neofetchCard(maxWidth int) string {
+	user := m.data.Profile.Identity.User
+	rows := m.data.Profile.Identity.Rows
+
 	// ── info column ──
 	var info strings.Builder
-	name, host, _ := strings.Cut(fetchUser, "@")
-	info.WriteString(styleUser.Render(name) + styleUserHost.Render("@"+host) + "\n")
-	info.WriteString(styleRule.Render(strings.Repeat("─", 28)) + "\n")
-	for _, r := range fetchRows {
-		key := styleKey.Render(padRight(r[0], 8))
-		if r[0] == "Status" {
-			info.WriteString(key + styleStatusOn.Render("● "+r[1]) + "\n")
+	name, host, _ := strings.Cut(user, "@")
+	info.WriteString(m.st.User.Render(name) + m.st.UserHost.Render("@"+host) + "\n")
+	info.WriteString(m.st.Rule.Render(strings.Repeat("─", 28)) + "\n")
+	for _, r := range rows {
+		if len(r) < 2 {
 			continue
 		}
-		info.WriteString(key + styleVal.Render(r[1]) + "\n")
+		key := m.st.Key.Render(padRight(r[0], 8))
+		if r[0] == "Status" {
+			info.WriteString(key + m.st.StatusOn.Render("● "+r[1]) + "\n")
+			continue
+		}
+		info.WriteString(key + m.st.Val.Render(r[1]) + "\n")
 	}
-	info.WriteString("\n" + paletteSwatches())
+	info.WriteString("\n" + m.paletteSwatches())
 	infoBlock := info.String()
 
 	// ── logo column ──
-	logo := styleLogo.Render(strings.Join(szLogo, "\n"))
+	logo := m.st.Logo.Render(strings.Join(szLogo, "\n"))
 
 	// Join side by side when wide enough, else stack the logo under the info.
 	body := infoBlock
@@ -56,20 +49,20 @@ func neofetchCard(maxWidth int) string {
 		body = lipgloss.JoinHorizontal(lipgloss.Top, infoBlock, "    ", logo)
 	}
 
-	header := styleCardCmdS.Render("❯ ") + styleCardCmd.Render("neofetch")
+	header := m.st.CardCmdS.Render("❯ ") + m.st.CardCmd.Render("neofetch")
 	card := lipgloss.JoinVertical(lipgloss.Left, header, "", body)
 
 	// Let the border size to the content; only cap when the terminal is narrow.
-	style := styleCard
+	style := m.st.Card
 	if maxWidth > 6 && lipgloss.Width(card)+6 > maxWidth {
-		style = styleCard.MaxWidth(maxWidth)
+		style = m.st.Card.MaxWidth(maxWidth)
 	}
 	return style.Render(card)
 }
 
-func paletteSwatches() string {
+func (m Model) paletteSwatches() string {
 	var b strings.Builder
-	for _, c := range paletteColors {
+	for _, c := range m.theme.Swatches {
 		b.WriteString(lipgloss.NewStyle().Background(lipgloss.Color(c)).Render("  "))
 	}
 	return b.String()
