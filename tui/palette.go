@@ -17,15 +17,49 @@ type paletteItem struct {
 	action func(m *Model) tea.Cmd
 }
 
-// navItems are the command-mode (`:`) actions.
+// navItems are the command-mode (`:`) actions, built from the shared nav data
+// plus the terminal-only help/quit commands.
 func (m *Model) navItems() []paletteItem {
-	return []paletteItem{
-		{"󰋜", "home", "go to start", func(m *Model) tea.Cmd { m.screen = screenHome; m.cursor = 0; return nil }},
-		{"󰉋", "projects", "section", func(m *Model) tea.Cmd { m.enterList("projects", "projects", m.content.Projects); return nil }},
-		{"󰂺", "blog", "section", func(m *Model) tea.Cmd { m.enterList("blog", "blog", m.content.Blog); return nil }},
-		{"󰋽", "help", "keys & commands", func(m *Model) tea.Cmd { m.returnTo = screenHome; m.screen = screenHelp; return nil }},
-		{"󰍃", "quit", "disconnect", func(m *Model) tea.Cmd { return tea.Quit }},
+	out := make([]paletteItem, 0, len(m.data.Nav.Tabs)+2)
+	for _, tab := range m.data.Nav.Tabs {
+		icon := iconGlyph(tab.Icon)
+		switch tab.Name {
+		case "home":
+			out = append(out, paletteItem{icon, "home", "go to start", func(m *Model) tea.Cmd { m.screen = screenHome; m.cursor = 0; return nil }})
+		case "projects":
+			out = append(out, paletteItem{icon, "projects", "section", func(m *Model) tea.Cmd { m.enterList("projects", "projects", m.content.Projects); return nil }})
+		case "blog":
+			out = append(out, paletteItem{icon, "blog", "section", func(m *Model) tea.Cmd { m.enterList("blog", "blog", m.content.Blog); return nil }})
+		default:
+			name := tab.Name
+			out = append(out, paletteItem{icon, name, "page", func(m *Model) tea.Cmd {
+				if a, ok := m.content.Pages[name]; ok {
+					m.openReader(a, screenHome)
+				}
+				return nil
+			}})
+		}
 	}
+	for _, name := range themeOrder {
+		name := name
+		out = append(out, paletteItem{"󰸌", "colorscheme " + name, "set theme", func(m *Model) tea.Cmd { m.setTheme(name); return nil }})
+	}
+	out = append(out,
+		paletteItem{"󰈙", "whoami", "man page for one (1) developer", func(m *Model) tea.Cmd {
+			if a, ok := m.content.Pages["whoami"]; ok {
+				m.openReader(a, screenHome)
+			}
+			return nil
+		}},
+		paletteItem{"󰌾", "sudo", "try root access", func(m *Model) tea.Cmd { m.message = "E: Are you sure you are not root?"; return nil }},
+		paletteItem{"󰅶", "coffee", "brew coffee", func(m *Model) tea.Cmd { m.message = "☕ Brewing..."; return nil }},
+		paletteItem{"󰊕", "42", "the answer", func(m *Model) tea.Cmd { m.message = "The answer to life, the universe, and everything."; return nil }},
+		paletteItem{"󰊠", "matrix", "enter the Matrix", func(m *Model) tea.Cmd { return m.startEffect("matrix") }},
+		paletteItem{"󰈸", "party", "celebrate!", func(m *Model) tea.Cmd { return m.startEffect("party") }},
+		paletteItem{"󰋽", "help", "keys & commands", func(m *Model) tea.Cmd { m.returnTo = screenHome; m.screen = screenHelp; return nil }},
+		paletteItem{"󰍃", "quit", "disconnect", func(m *Model) tea.Cmd { return tea.Quit }},
+	)
+	return out
 }
 
 func (m *Model) articleItems() []paletteItem {
@@ -38,12 +72,12 @@ func (m *Model) articleItems() []paletteItem {
 }
 
 // buildPaletteItems assembles items for the active prefix.
-// `:` → navigation/actions then articles; `/` → articles only (search).
+// `:` → navigation/actions only (commands); `/` → articles only (search).
 func (m *Model) buildPaletteItems(prefix string) []paletteItem {
 	if prefix == "/" {
 		return m.articleItems()
 	}
-	return append(m.navItems(), m.articleItems()...)
+	return m.navItems()
 }
 
 func (m Model) paletteFiltered() []paletteItem {
@@ -120,10 +154,9 @@ func (m Model) updatePalette(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 // viewPalette renders the centered palette over a dotted backdrop.
 func (m Model) viewPalette() string {
-	inner := lipgloss.Place(m.iw(), m.height-2, lipgloss.Center, lipgloss.Center, m.renderPaletteBox(),
-		lipgloss.WithWhitespaceForeground(styleBackdrop),
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, m.renderPaletteBox(),
+		lipgloss.WithWhitespaceForeground(m.st.Backdrop),
 		lipgloss.WithWhitespaceChars("·"))
-	return m.frame(inner)
 }
 
 func (m Model) renderPaletteBox() string {
@@ -144,12 +177,12 @@ func (m Model) renderPaletteBox() string {
 	}
 
 	var b strings.Builder
-	b.WriteString(stylePalTitle.Render(title) + "\n")
+	b.WriteString(m.st.PalTitle.Render(title) + "\n")
 	b.WriteString(m.input.View() + "\n")
-	b.WriteString(styleFrameBorder.Render(strings.Repeat("─", innerW)) + "\n")
+	b.WriteString(m.st.FrameBorder.Render(strings.Repeat("─", innerW)) + "\n")
 
 	if len(items) == 0 {
-		b.WriteString(stylePalHint.Render("  no matches"))
+		b.WriteString(m.st.PalHint.Render("  no matches"))
 	}
 
 	// scrolling window around the cursor, with an open-cascade reveal
@@ -169,20 +202,20 @@ func (m Model) renderPaletteBox() string {
 		it := items[i]
 		label := truncate(it.label, innerW-len(it.hint)-6)
 		if i == m.cursor {
-			row := stylePalIconSel.Render(it.icon+" ") + stylePalItemSel.Render(label)
+			row := m.st.PalIconSel.Render(it.icon+" ") + m.st.PalItemSel.Render(label)
 			pad := innerW - lipgloss.Width(row) - lipgloss.Width(it.hint) - 1
 			if pad < 1 {
 				pad = 1
 			}
-			row += stylePalItemSel.Render(strings.Repeat(" ", pad)) + stylePalItemSel.Render(it.hint+" ")
+			row += m.st.PalItemSel.Render(strings.Repeat(" ", pad)) + m.st.PalItemSel.Render(it.hint+" ")
 			b.WriteString(row)
 		} else {
-			row := stylePalIcon.Render(it.icon+" ") + stylePalItem.Render(label)
+			row := m.st.PalIcon.Render(it.icon+" ") + m.st.PalItem.Render(label)
 			pad := innerW - lipgloss.Width(row) - lipgloss.Width(it.hint)
 			if pad < 1 {
 				pad = 1
 			}
-			row += strings.Repeat(" ", pad) + stylePalSection.Render(it.hint)
+			row += strings.Repeat(" ", pad) + m.st.PalSection.Render(it.hint)
 			b.WriteString(row)
 		}
 		if i < end-1 {
@@ -190,11 +223,11 @@ func (m Model) renderPaletteBox() string {
 		}
 	}
 
-	b.WriteString("\n" + styleFrameBorder.Render(strings.Repeat("─", innerW)) + "\n")
-	b.WriteString(stylePalHint.Render("↑↓ move · tab complete · ⏎ open · esc close · ") +
-		stylePalSection.Render(itoa(len(items))+" results"))
+	b.WriteString("\n" + m.st.FrameBorder.Render(strings.Repeat("─", innerW)) + "\n")
+	b.WriteString(m.st.PalHint.Render("↑↓ move · tab complete · ⏎ open · esc close · ") +
+		m.st.PalSection.Render(itoa(len(items))+" results"))
 
-	return stylePalBox.Width(boxW - 2).Render(b.String())
+	return m.st.PalBox.Width(boxW - 2).Render(b.String())
 }
 
 func itoa(n int) string {

@@ -6,66 +6,73 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// Big SZ wordmark for the boot splash.
-var splashLogo = []string{
-	"███████╗███████╗",
-	"╚══███╔╝╚══███╔╝",
-	"  ███╔╝   ███╔╝ ",
-	" ███╔╝   ███╔╝  ",
-	"███████╗███████╗",
-	"╚══════╝╚══════╝",
+// splash typewriter timings, in animation frames (~24fps).
+const (
+	splashHoldFrames = 60 // fully-typed pause (~2.5s)
+	splashGapFrames  = 8  // blank between taglines
+)
+
+// splashTaglineText returns the typewriter state of the cycling taglines for
+// the given frame (frames since the tagline reveal began): type out, hold,
+// erase, brief gap, then the next tagline — looping forever like the web home.
+func splashTaglineText(taglines []string, frame int) string {
+	if frame < 0 || len(taglines) == 0 {
+		return ""
+	}
+	f := frame
+	for {
+		for _, t := range taglines {
+			r := []rune(t)
+			n := len(r)
+			cycle := n + splashHoldFrames + n + splashGapFrames
+			if f < cycle {
+				switch {
+				case f < n:
+					return string(r[:f+1])
+				case f < n+splashHoldFrames:
+					return t
+				case f < n+splashHoldFrames+n:
+					return string(r[:n-(f-(n+splashHoldFrames))])
+				default:
+					return ""
+				}
+			}
+			f -= cycle
+		}
+	}
 }
 
-const splashTagline = "a portfolio you can ssh into"
-
-// renderSplash draws the full-screen boot animation. splashFrame drives a
-// light sweep across the logo, a typed-out tagline, and a blinking prompt.
-func renderSplash(m Model) string {
-	logoW := lipgloss.Width(splashLogo[0])
-	sweep := m.splashFrame - 6 // start just left of the logo
-
-	var logo strings.Builder
-	for i, line := range splashLogo {
+// wordmarkView renders the home wordmark: a one-time light-sweep intro for the
+// first frames, then settling into the solid wordmark. Shared "splash" intro
+// now lives on the home screen itself.
+func (m Model) wordmarkView(lines []string, frame int) string {
+	if len(lines) == 0 {
+		return ""
+	}
+	logoW := lipgloss.Width(lines[0])
+	if frame > logoW+10 {
+		return m.st.HomeWordmark.Render(strings.Join(lines, "\n"))
+	}
+	sweep := frame - 6 // start just left of the logo
+	var b strings.Builder
+	for i, line := range lines {
 		col := 0
 		for _, r := range line {
-			st := styleSplashBase
+			st := m.st.SplashBase
 			if r != ' ' {
 				switch d := sweep - col; {
 				case d == 0:
-					st = styleSplashHot
+					st = m.st.SplashHot
 				case d == 1 || d == -1:
-					st = styleSplashGlow
+					st = m.st.SplashGlow
 				}
 			}
-			logo.WriteString(st.Render(string(r)))
+			b.WriteString(st.Render(string(r)))
 			col++
 		}
-		if i < len(splashLogo)-1 {
-			logo.WriteString("\n")
+		if i < len(lines)-1 {
+			b.WriteString("\n")
 		}
 	}
-
-	// Domain + tagline appear once the sweep has crossed the logo.
-	revealAt := logoW + 8
-	domain := ""
-	tag := ""
-	if m.splashFrame > revealAt {
-		domain = styleSplashDomain.Render("stephan.zych.be")
-		n := m.splashFrame - revealAt
-		if n > len(splashTagline) {
-			n = len(splashTagline)
-		}
-		tag = styleSplashTag.Render(splashTagline[:n])
-	}
-
-	// Blinking enter prompt after everything is in.
-	hint := " "
-	if m.splashFrame > revealAt+len(splashTagline)+4 && (m.splashFrame/12)%2 == 0 {
-		hint = styleSplashHint.Render("press any key to enter")
-	}
-
-	block := lipgloss.JoinVertical(lipgloss.Center,
-		logo.String(), "", domain, tag, "", hint)
-
-	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, block)
+	return b.String()
 }

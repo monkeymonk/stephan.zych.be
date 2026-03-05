@@ -29,21 +29,48 @@ type Content struct {
 	Blog     []Article
 }
 
+// widgetMarker brackets a native-widget placeholder left in article bodies; the
+// reader splits on these to render TUI widgets between prose segments.
+const (
+	widgetPrefix = "\x00WIDGET:"
+	widgetSuffix = "\x00"
+)
+
 var (
-	reIframe   = regexp.MustCompile(`(?is)<iframe[^>]*\bsrc="([^"]+)"[^>]*>.*?</iframe>`)
-	reSzTag    = regexp.MustCompile(`(?is)<sz-[a-z-]+[^>]*>.*?</sz-[a-z-]+>|<sz-[a-z-]+[^>]*/?>`)
-	reAnyTag   = regexp.MustCompile(`(?s)<[^>]+>`)
-	reBlankRun = regexp.MustCompile(`\n{3,}`)
+	reIframe     = regexp.MustCompile(`(?is)<iframe[^>]*\bsrc="([^"]+)"[^>]*>.*?</iframe>`)
+	reWidgetOpen = regexp.MustCompile(`(?is)<sz-(neofetch|gitlog|stats|wakapi|contact-card)\b[^>]*>`)
+	reSzTag      = regexp.MustCompile(`(?is)<sz-[a-z-]+[^>]*>.*?</sz-[a-z-]+>|<sz-[a-z-]+[^>]*/?>`)
+	reAnyTag     = regexp.MustCompile(`(?s)<[^>]+>`)
+	reBlankRun   = regexp.MustCompile(`\n{3,}`)
 )
 
 // stripHTML turns embedded HTML (which Glamour can't render meaningfully) into
 // terminal-friendly text: iframes become a video note, sz-* widgets are dropped,
-// remaining tags are unwrapped but their text content is kept.
+// remaining tags are unwrapped but their text content is kept. Fenced code
+// blocks are left verbatim — HTML-like tokens inside them (e.g. <br/> in a
+// mermaid diagram) are content, not markup. All HTML in the markdown corpus is
+// single-line, so the per-line stripping below is equivalent to the old whole-
+// body pass for prose.
 func stripHTML(body string) string {
-	body = reIframe.ReplaceAllString(body, "\n> ▶ video: $1\n")
-	body = reSzTag.ReplaceAllString(body, "")
-	body = reAnyTag.ReplaceAllString(body, "")
-	body = reBlankRun.ReplaceAllString(body, "\n\n")
+	lines := strings.Split(body, "\n")
+	inFence := false
+	for i, ln := range lines {
+		t := strings.TrimSpace(ln)
+		if strings.HasPrefix(t, "```") || strings.HasPrefix(t, "~~~") {
+			inFence = !inFence
+			continue
+		}
+		if inFence {
+			continue
+		}
+		s := ln
+		s = reIframe.ReplaceAllString(s, "\n> ▶ video: $1\n")
+		s = reWidgetOpen.ReplaceAllString(s, "\n"+widgetPrefix+"$1"+widgetSuffix+"\n")
+		s = reSzTag.ReplaceAllString(s, "")
+		s = reAnyTag.ReplaceAllString(s, "") // removes leftover </sz-…> closings and other tags
+		lines[i] = s
+	}
+	body = reBlankRun.ReplaceAllString(strings.Join(lines, "\n"), "\n\n")
 	return strings.TrimSpace(body)
 }
 

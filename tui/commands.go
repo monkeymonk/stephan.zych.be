@@ -17,6 +17,7 @@ var keySpecs = []commandSpec{
 	{"j / k  ·  ↑ / ↓", "move"},
 	{"g / G", "jump to top / bottom"},
 	{"enter / l", "open"},
+	{"[ / ]", "prev / next article"},
 	{"esc / h / q", "back"},
 	{":", "command palette"},
 	{"/", "search all content"},
@@ -49,10 +50,10 @@ func (m Model) allArticles() []Article {
 }
 
 // renderHelp builds the help screen body.
-func renderHelp() string {
-	head := lipgloss.NewStyle().Foreground(lipgloss.Color(colMauve)).Bold(true)
-	key := lipgloss.NewStyle().Foreground(lipgloss.Color(colAccent)).Bold(true)
-	desc := lipgloss.NewStyle().Foreground(lipgloss.Color(colSubtext0))
+func (m Model) renderHelp() string {
+	head := lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Mauve)).Bold(true)
+	key := lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Accent)).Bold(true)
+	desc := lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Subtext0))
 
 	var b strings.Builder
 	b.WriteString(head.Render("Keys") + "\n\n")
@@ -64,7 +65,7 @@ func renderHelp() string {
 		b.WriteString("  " + key.Render(padRight(c.usage, 28)) + desc.Render(c.desc) + "\n")
 	}
 	b.WriteString("\n" + desc.Render("  Same content as ") +
-		lipgloss.NewStyle().Foreground(lipgloss.Color(colBlue)).Render("https://stephan.zych.be") +
+		lipgloss.NewStyle().Foreground(lipgloss.Color(m.theme.Blue)).Render("https://stephan.zych.be") +
 		desc.Render(" — just over SSH."))
 	return b.String()
 }
