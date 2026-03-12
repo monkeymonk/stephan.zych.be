@@ -1,0 +1,34 @@
+# Internal high ports so Caddy runs as a non-root user without binding
+# privileged ports. Docker maps host 80/443 -> 8080/8443 (see compose.yaml);
+# ACME challenges still arrive on the public 80/443 and are forwarded in.
+{
+	http_port 8080
+	https_port 8443
+}
+
+# SITE_ADDRESS=stephan.zych.be in prod -> Caddy provisions HTTPS automatically.
+# Defaults to :8080 so `docker compose up` works locally without certificates.
+{$SITE_ADDRESS::8080} {
+	root * /srv
+	encode zstd gzip
+	file_server
+
+	header {
+		# HSTS — add `preload` only once you've committed to HTTPS-forever.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "SAMEORIGIN"
+		# No inline/eval scripts are used (verified across the bundle); mermaid is
+		# self-hosted and injects styles (hence style 'unsafe-inline'). Only the
+		# YouTube-nocookie embeds are third-party.
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; frame-src https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+		# Don't advertise the server software.
+		-Server
+	}
+
+	handle_errors {
+		rewrite * /404.html
+		file_server
+	}
+}
