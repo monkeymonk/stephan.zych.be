@@ -10,3 +10,11 @@ _references/
 .env
 .env.local
 .env.*.local
+
+# Personal go-live notes / server runbook — keep off git.
+/TODO.md
+ssh-hostkey-backup.tgz
+
+# Go build artifacts
+tui/sztui
+tui/tui
