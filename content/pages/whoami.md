@@ -23,7 +23,7 @@ STEPHAN(1)                   User Commands                   STEPHAN(1)
 
 ## DESCRIPTION
 
-Fifteen years of building web platforms, evolving from "the frontend guy" into the person who decides why your build is slow — and then fixes it. Co-founded **Cherry Pulp** (Brussels, 2013–2024): grew it 6 → 20 people, shipped 200+ platforms, exited to **CBTW** in 2023, where `stephan` now runs as Lead Developer.
+Fifteen years of building web platforms, evolving from "the frontend guy" into the person who decides why your build is slow — and then fixes it. Co-founded **Cherry Pulp** (Brussels, 2013–2024): grew it 4 → 20 people, shipped 200+ platforms, exited to **CBTW** in 2023, where `stephan` now runs as Lead Developer.
 
 Specialises in the foundations: architecture, tooling, conventions, and developer experience. Full-stack across the JavaScript and PHP ecosystems, with a frontend bias and an art-school backstory.
 

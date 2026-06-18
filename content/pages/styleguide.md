@@ -8,6 +8,6 @@ eleventyExcludeFromCollections: true
 noindex: true
 ---
 
-The **code-like** template by default — line numbers, neovim styling. Click **glow** in the toolbar (or run `:set view reading`) to see the readable version of this same content.
+The **code-like** template by default — line numbers, neovim styling. Click **html** in the toolbar (or run `:set view reading`) to see the readable version of this same content.
 
 {% include "styleguide-body.njk" %}
