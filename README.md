@@ -7,6 +7,15 @@ that share one content source:
 - **`tui/`** — a real terminal version served over SSH (Go + Charm: Wish · Bubble Tea · Glamour).
 - **`content/`** — the markdown corpus (blog, projects, pages) both front-ends read.
 
+## Preview
+
+| Web (Eleventy) | Terminal (SSH) |
+|----------------|----------------|
+| [![Web front-end](assets/web.webp)](https://stephan.zych.be) | [![SSH TUI](assets/tui.webp)](https://stephan.zych.be) |
+
+Both rendered from the same `content/`. Regenerate the stills (and the per-page
+shots used in blog posts) with `make screenshots`.
+
 ## Features
 
 - Terminal-inspired UI with window management, tmux-style tabs and panes

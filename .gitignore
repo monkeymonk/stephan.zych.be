@@ -2,6 +2,7 @@ node_modules/
 _site/
 dist/
 .cache/
+.vhs-tmp/
 *.log
 _references/
 .worktrees/
