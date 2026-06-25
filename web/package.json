@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "concurrently \"npx @11ty/eleventy --serve\" \"node esbuild.config.mjs --watch\"",
     "build": "node esbuild.config.mjs && npx @11ty/eleventy",
+    "screenshot": "node screenshot.mjs",
     "clean": "rm -rf _site dist"
   },
   "keywords": [],
@@ -19,6 +20,7 @@
     "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.2",
     "concurrently": "^9.2.1",
     "esbuild": "^0.20.2",
+    "playwright": "^1.49.0",
     "typescript": "^5.9.3"
   }
 }
