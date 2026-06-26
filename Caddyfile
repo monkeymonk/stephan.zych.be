@@ -11,20 +11,68 @@
 {$SITE_ADDRESS::8080} {
 	root * /srv
 	encode zstd gzip
-	file_server
 
-	header {
-		# HSTS — add `preload` only once you've committed to HTTPS-forever.
-		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		X-Frame-Options "SAMEORIGIN"
-		# No inline/eval scripts are used (verified across the bundle); mermaid is
-		# self-hosted and injects styles (hence style 'unsafe-inline'). Only the
-		# YouTube-nocookie embeds are third-party.
-		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; frame-src https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
-		# Don't advertise the server software.
-		-Server
+	# Cookieless, RGPD-compliant audience measurement: log to a file that
+	# GoAccess turns into the /_stats report. The client IP is masked HERE,
+	# before it touches disk (last IPv4 octet / low IPv6 bits zeroed), so no
+	# directly-identifying data is ever persisted -> no consent banner needed.
+	log {
+		output file /logs/access.log {
+			roll_size 10MiB
+			roll_keep 5
+			roll_keep_for 720h
+		}
+		format filter {
+			wrap json
+			fields {
+				# Mask BOTH IP fields Caddy emits: remote_ip is the socket peer,
+				# client_ip is the resolved client (what GoAccess actually reads).
+				# Miss either and a full IP lands on disk / in the report.
+				request>remote_ip ip_mask {
+					ipv4 24
+					ipv6 32
+				}
+				request>client_ip ip_mask {
+					ipv4 24
+					ipv6 32
+				}
+			}
+		}
+	}
+
+	# Private, auth-gated GoAccess dashboard. Its report inlines JS/CSS, which the
+	# site's strict CSP would block, so the policy is relaxed for THIS path only —
+	# the public site keeps the strict policy in the handle block below.
+	handle /_stats* {
+		basic_auth {
+			{$STATS_USER} {$STATS_AUTH_HASH}
+		}
+		# GoAccess's report renders client-side via inline scripts and `eval`, and
+		# inlines a base64 data: font — all of which the strict site CSP forbids.
+		# Relax it for THIS auth-gated path only.
+		header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
+		root * /logs
+		rewrite * /report.html
+		file_server
+	}
+
+	# Public site.
+	handle {
+		file_server
+
+		header {
+			# HSTS — add `preload` only once you've committed to HTTPS-forever.
+			Strict-Transport-Security "max-age=31536000; includeSubDomains"
+			X-Content-Type-Options "nosniff"
+			Referrer-Policy "strict-origin-when-cross-origin"
+			X-Frame-Options "SAMEORIGIN"
+			# No inline/eval scripts are used (verified across the bundle); mermaid is
+			# self-hosted and injects styles (hence style 'unsafe-inline'). Only the
+			# YouTube-nocookie embeds are third-party.
+			Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; frame-src https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+			# Don't advertise the server software.
+			-Server
+		}
 	}
 
 	handle_errors {
