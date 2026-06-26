@@ -8,6 +8,9 @@
 #   DEPLOY_PORT      host sshd port — the TUI owns :22, so sshd lives elsewhere (2200)
 #   DEPLOY_PATH      path to the checked-out repo on the server
 #   WAKAPI_API_URL / WAKAPI_API_KEY   optional — baked into the web image
+#   STATS_USER             username for the private /_stats GoAccess dashboard
+#   STATS_AUTH_HASH_B64    base64 of `caddy hash-password` output (base64 so the
+#                          bcrypt `$`s survive transit; decoded on the host below)
 #
 # Once the GHCR packages are public, the server needs no registry login to pull.
 
@@ -81,12 +84,20 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT || '2200' }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # Forward the stats creds into the remote shell; compose reads them via
+          # the bare `environment:` entries in compose.yaml.
+          envs: STATS_USER,STATS_AUTH_HASH_B64
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             git fetch origin main && git reset --hard origin/main
+            export STATS_USER
+            export STATS_AUTH_HASH="$(printf '%s' "$STATS_AUTH_HASH_B64" | base64 -d)"
             docker compose pull
             docker compose up -d
             docker image prune -f
+        env:
+          STATS_USER: ${{ secrets.STATS_USER }}
+          STATS_AUTH_HASH_B64: ${{ secrets.STATS_AUTH_HASH_B64 }}
 
 # ---------------------------------------------------------------------------
 # ALTERNATIVE: serve web/ from GitHub Pages instead of the self-hosted Caddy.

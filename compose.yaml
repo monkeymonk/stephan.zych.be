@@ -37,13 +37,23 @@ services:
     image: ghcr.io/monkeymonk/szych-web:latest
     restart: unless-stopped
     environment:
-      SITE_ADDRESS: stephan.zych.be # Caddy auto-HTTPS; set to :8080 for local runs
+      # Caddy auto-HTTPS in prod; override SITE_ADDRESS=:8080 for local runs.
+      - SITE_ADDRESS=${SITE_ADDRESS:-stephan.zych.be}
+      # Basic-auth credentials for the private /_stats dashboard, read from the
+      # shell that runs compose. In CI they're forwarded from GitHub secrets by
+      # .github/workflows/deploy.yml; for a local run, export them inline:
+      #   STATS_USER=you \
+      #   STATS_AUTH_HASH="$(docker run --rm caddy:2-alpine caddy hash-password --plaintext pw)" \
+      #   docker compose up -d
+      - STATS_USER
+      - STATS_AUTH_HASH
     ports:
       - "80:8080" # Caddy listens unprivileged inside; host exposes the standard ports
       - "443:8443"
     volumes:
       - caddy-data:/data # provisioned certificates persist here
       - caddy-config:/config
+      - analytics:/logs # anonymized access log in; GoAccess report.html out
     read_only: true
     tmpfs:
       - /tmp
@@ -52,7 +62,42 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  # Turns Caddy's anonymized access log into a static HTML dashboard, served by
+  # Caddy at /_stats (behind basic-auth). Runs as the same uid 1000 as the web
+  # service so it shares the /logs volume without any chown/CAP_CHOWN.
+  goaccess:
+    image: allinurl/goaccess:1.9.4
+    restart: unless-stopped
+    user: "1000:1000"
+    depends_on:
+      - web # let web seed the /logs volume ownership first
+    environment:
+      - HOME=/tmp # no home dir for uid 1000; keep GoAccess scratch off the rootfs
+    entrypoint: ["/bin/sh", "-c"]
+    # Poll fast until the access log first appears (avoids a blank /_stats on a
+    # cold deploy), then regenerate the report every 5 minutes.
+    command:
+      - 'while true; do
+         if [ -f /logs/access.log ]; then
+         goaccess /logs/access.log -o /logs/report.html --log-format=CADDY
+         --html-report-title="stephan.zych.be" --anonymize-ip --no-global-config;
+         sleep 300;
+         else sleep 5; fi;
+         done'
+    volumes:
+      - analytics:/logs
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    pids_limit: 64
+
 volumes:
   ssh-hostkey:
   caddy-data:
   caddy-config:
+  analytics: # shared access log + generated GoAccess report
