@@ -374,6 +374,9 @@ html[data-view="reading"] .code-gutter span { display: block; }
   display: block;
   max-width: 100%;
   margin: 0;
+  /* Thin border so a screenshot whose edges match the page background still
+     reads as a distinct frame instead of bleeding into the page. */
+  border: 1px solid var(--sz-surface1, #45475a);
 }
 .sz-prose figure { margin: 0; text-align: center; }
 .sz-prose figure img { margin: 0; }
