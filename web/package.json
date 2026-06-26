@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "dev": "concurrently \"npx @11ty/eleventy --serve\" \"node esbuild.config.mjs --watch\"",
-    "build": "node esbuild.config.mjs && npx @11ty/eleventy",
+    "build": "npx @11ty/eleventy && node esbuild.config.mjs",
     "screenshot": "node screenshot.mjs",
     "clean": "rm -rf _site dist"
   },
