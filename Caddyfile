@@ -73,6 +73,25 @@
 			# Don't advertise the server software.
 			-Server
 		}
+
+		# Cache-Control for static assets — file_server sends none by default, so
+		# repeat visitors re-download everything. Content-hashed JS and fonts are
+		# immutable; the stable-named entry bundle must revalidate so a cached copy
+		# never imports a hashed chunk that a later deploy has removed. Stylesheets
+		# keep stable names and can change on redeploy, hence a short TTL.
+		@hashedjs {
+			path /assets/*.js
+			not path /assets/components.js
+		}
+		@fonts path *.woff2
+		@media path *.webp *.png *.jpg *.jpeg *.gif *.svg *.ico *.avif *.mp3 *.ogg *.wav
+		@styles path *.css
+		@entry path /assets/components.js
+		header @hashedjs Cache-Control "public, max-age=31536000, immutable"
+		header @fonts    Cache-Control "public, max-age=31536000, immutable"
+		header @media    Cache-Control "public, max-age=2592000"
+		header @styles   Cache-Control "public, max-age=86400"
+		header @entry    Cache-Control "no-cache"
 	}
 
 	handle_errors {
