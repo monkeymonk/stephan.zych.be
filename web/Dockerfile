@@ -26,7 +26,7 @@ FROM caddy:2-alpine@sha256:98eb57d882ccd5213d1688764db10c1ca2c58a1ca3a6717a3411a
 # `cap_drop: ALL`; we bind high ports instead, so strip the file capability.
 RUN apk add --no-cache libcap \
     && addgroup -g 1000 web && adduser -D -u 1000 -G web web \
-    && mkdir -p /data /config && chown -R 1000:1000 /data /config \
+    && mkdir -p /data /config /logs && chown -R 1000:1000 /data /config /logs \
     && setcap -r /usr/bin/caddy \
     && apk del libcap
 COPY Caddyfile /etc/caddy/Caddyfile

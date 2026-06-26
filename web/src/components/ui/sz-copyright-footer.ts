@@ -38,6 +38,7 @@ export class SzCopyrightFooter extends LitElement {
 
   render() {
     return html`<span>© Stéphan Zych</span> ·
-      <a href="/terms-and-conditions/">Terms &amp; Conditions</a>`;
+      <a href="/terms-and-conditions/">Terms &amp; Conditions</a> ·
+      <a href="/privacy/">Privacy</a>`;
   }
 }
