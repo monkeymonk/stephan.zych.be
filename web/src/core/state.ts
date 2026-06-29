@@ -6,6 +6,7 @@ export interface AppStateSchema {
   transparency: number;
   shaderMode: 'off' | 'css' | 'webgl';
   viewMode: 'code' | 'reading';
+  fontScale: number;
 }
 
 const STORAGE_KEY = 'sz-state-v1';
@@ -18,6 +19,7 @@ const defaults: AppStateSchema = {
   transparency: 95,
   shaderMode: 'css',
   viewMode: 'code',
+  fontScale: 1,
 };
 
 type Listener = () => void;
