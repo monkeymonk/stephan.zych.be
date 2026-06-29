@@ -12,7 +12,11 @@
 }
 
 :root {
-  --sz-font-size: 13px;
+  /* Accessibility text-size multiplier (sz-tmux-bar's "aA" control sets it
+     inline on <html>); everything scales off --sz-font-size, so this scales
+     the whole site at once. */
+  --sz-font-scale: 1;
+  --sz-font-size: calc(13px * var(--sz-font-scale));
   --sz-line-height: 1.6;
   --sz-line-px: calc(var(--sz-font-size) * var(--sz-line-height));
   font-family: 'JetBrains Mono', monospace;

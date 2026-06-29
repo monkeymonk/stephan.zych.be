@@ -68,6 +68,14 @@ applyViewMode();
 appState.subscribe(applyViewMode);
 mobile.addEventListener('change', applyViewMode);
 
+// Apply saved text-size scale (accessibility "aA" control) by setting the
+// --sz-font-scale multiplier inline on <html>, which wins over the :root
+// default and rescales the whole site. Kept in sync with appState.
+const applyFontScale = () =>
+  document.documentElement.style.setProperty('--sz-font-scale', String(appState.get('fontScale')));
+applyFontScale();
+appState.subscribe(applyFontScale);
+
 // Initialize SPA router
 router.init();
 
