@@ -73,6 +73,10 @@ export class SzNotifications extends LitElement {
         transform: translateY(0);
       }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      .toast { animation: none; }
+    }
   `;
 
   connectedCallback(): void {

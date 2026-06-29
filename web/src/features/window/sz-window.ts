@@ -88,6 +88,10 @@ export class SzWindow extends LitElement implements WindowApi {
       cursor: grabbing;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .window { transition: none; }
+    }
+
     .window.hidden {
       transform: scale(0.9);
       opacity: 0;
@@ -155,27 +159,30 @@ export class SzWindow extends LitElement implements WindowApi {
       gap: 8px;
     }
     .ctrl-btn {
+      /* 16px dot, but a 24px hit target (transparent border) for WCAG 2.5.8. */
+      box-sizing: content-box;
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      border: none;
+      border: 4px solid transparent;
+      background-clip: padding-box;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0;
-      background: var(--sz-surface1, #45475a);
+      background-color: var(--sz-surface1, #45475a);
       color: var(--sz-subtext, #a6adc8);
       line-height: 1;
-      transition: background 0.2s, color 0.2s;
+      transition: background-color 0.2s, color 0.2s;
     }
     .ctrl-btn:hover, .ctrl-btn:focus-visible {
-      background: var(--sz-overlay0, #6c7086);
+      background-color: var(--sz-overlay0, #6c7086);
       color: var(--sz-text, #cdd6f4);
       outline: none;
     }
     .ctrl-btn.close:hover {
-      background: var(--sz-red, #f38ba8);
+      background-color: var(--sz-red, #f38ba8);
       color: var(--sz-crust, #11111b);
     }
     .ctrl-btn svg {

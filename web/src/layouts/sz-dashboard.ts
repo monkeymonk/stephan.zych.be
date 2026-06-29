@@ -58,6 +58,9 @@ export class SzDashboard extends LitElement {
     @keyframes blink {
       50% { opacity: 0; }
     }
+    @media (prefers-reduced-motion: reduce) {
+      .cursor { animation: none; }
+    }
     .links {
       display: flex;
       flex-direction: column;

@@ -82,6 +82,11 @@ export class SzStatusbar extends LitElement {
       color: var(--sz-subtext, #a6adc8);
       text-decoration: none;
       transition: color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      min-height: 24px;
     }
     .social-link:hover {
       color: var(--sz-accent, #89b4fa);
