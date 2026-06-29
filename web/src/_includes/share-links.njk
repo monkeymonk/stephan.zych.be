@@ -1,0 +1,10 @@
+{# Social share links, shared by the article code-view and reading-view footers.
+   shareUrl / shareText must already be urlencoded. caps switches label casing;
+   sep is the literal separator placed between links. #}
+{% macro shareLinks(shareUrl, shareText, caps=false, sep=" · ") -%}
+{%- set li = "LinkedIn" if caps else "linkedin" -%}
+{%- set xx = "X" if caps else "x" -%}
+{%- set bs = "Bluesky" if caps else "bluesky" -%}
+{%- set em = "Email" if caps else "email" -%}
+<a href="https://www.linkedin.com/sharing/share-offsite/?url={{ shareUrl }}" target="_blank" rel="noopener noreferrer">{{ li }}</a>{{ sep | safe }}<a href="https://twitter.com/intent/tweet?url={{ shareUrl }}&text={{ shareText }}" target="_blank" rel="noopener noreferrer">{{ xx }}</a>{{ sep | safe }}<a href="https://bsky.app/intent/compose?text={{ shareText }}%20{{ shareUrl }}" target="_blank" rel="noopener noreferrer">{{ bs }}</a>{{ sep | safe }}<a href="mailto:?subject={{ shareText }}&body={{ shareUrl }}">{{ em }}</a>
+{%- endmacro %}

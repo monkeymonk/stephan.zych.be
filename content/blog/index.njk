@@ -3,14 +3,7 @@ layout: base.njk
 title: Blog — Stéphan Zych
 permalink: /blog/
 ---
-{% set allTags = [] %}
-{% for post in collections.blog %}
-  {% for tag in post.data.tags or [] %}
-    {% if tag !== 'blog' and tag not in allTags %}
-      {% set allTags = (allTags.push(tag), allTags) %}
-    {% endif %}
-  {% endfor %}
-{% endfor %}
+{% set allTags = collections.blog | collectTags(['blog']) %}
 <sz-portfolio layout="list" filters="{{ allTags | join(',') }}" page-size="10">
   <div class="post-list">
     {% for group in collections.blog | groupByMonth %}
