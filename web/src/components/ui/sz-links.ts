@@ -173,16 +173,18 @@ export class SzLinks extends LitElement {
   render() {
     if (!this.open) return nothing;
     return html`
-      <div class="overlay" role="dialog" aria-label="Links in this article">
+      <div class="overlay" role="dialog" aria-modal="true" aria-label="Links in this article">
         <div class="panel">
           <div class="head">
             <span class="title">🔗 links in this article</span>
             <span class="count">${this.items.length}</span>
           </div>
-          <div class="list">
+          <div class="list" role="listbox" aria-label="Links in this article">
             ${this.items.map((item, i) => html`
               <div
                 class="item ${i === this.selected ? 'selected' : ''}"
+                role="option"
+                aria-selected=${i === this.selected}
                 @click=${() => { this.selected = i; this.follow(); }}
               >
                 <span class="idx">${i + 1}</span>

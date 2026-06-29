@@ -611,10 +611,13 @@ export class SzPalette extends LitElement {
     return html`
       <div class="overlay">
         ${this.items.length > 0 ? html`
-          <div class="suggestions">
+          <div class="suggestions" role="listbox" id="sz-palette-listbox" aria-label="Suggestions">
             ${this.items.map((item, i) => html`
               <div
                 class="suggestion ${i === this.selectedIndex ? 'selected' : ''}"
+                role="option"
+                id="sz-palette-opt-${i}"
+                aria-selected=${i === this.selectedIndex}
                 @click=${() => this.clickSuggestion(i)}
               >
                 <span>
@@ -632,6 +635,12 @@ export class SzPalette extends LitElement {
           <span class="prefix">${this.activeSource.prefix}</span>
           <input
             type="text"
+            role="combobox"
+            aria-label="Command palette"
+            aria-expanded=${this.items.length > 0}
+            aria-controls="sz-palette-listbox"
+            aria-autocomplete="list"
+            aria-activedescendant=${this.items.length > 0 ? `sz-palette-opt-${this.selectedIndex}` : nothing}
             .value=${this.input}
             @input=${this.handleInput}
             @keydown=${this.handleKeydown}
