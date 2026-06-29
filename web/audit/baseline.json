@@ -1,0 +1,99 @@
+{
+  "generatedAt": "2026-06-29T19:58:30.462Z",
+  "base": "http://127.0.0.1:34769",
+  "routes": {
+    "/": {
+      "desktop": {
+        "performance": 100,
+        "accessibility": 96,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "mobile": {
+        "performance": 88,
+        "accessibility": 96,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "axe": {
+        "violations": 0,
+        "ids": []
+      }
+    },
+    "/about/": {
+      "desktop": {
+        "performance": 99,
+        "accessibility": 96,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "mobile": {
+        "performance": 87,
+        "accessibility": 96,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "axe": {
+        "violations": 0,
+        "ids": []
+      }
+    },
+    "/blog/": {
+      "desktop": {
+        "performance": 100,
+        "accessibility": 96,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "mobile": {
+        "performance": 87,
+        "accessibility": 96,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "axe": {
+        "violations": 0,
+        "ids": []
+      }
+    },
+    "/blog/terminal-over-ssh/": {
+      "desktop": {
+        "performance": 93,
+        "accessibility": 97,
+        "best-practices": 96,
+        "seo": 100
+      },
+      "mobile": {
+        "performance": 71,
+        "accessibility": 97,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "axe": {
+        "violations": 0,
+        "ids": []
+      }
+    },
+    "/projects/": {
+      "desktop": {
+        "performance": 100,
+        "accessibility": 92,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "mobile": {
+        "performance": 86,
+        "accessibility": 92,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "axe": {
+        "violations": 2,
+        "ids": [
+          "color-contrast(13)",
+          "scrollable-region-focusable(1)"
+        ]
+      }
+    }
+  }
+}
