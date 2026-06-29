@@ -1,6 +1,7 @@
 ---
 layout: base.njk
 ---
+{% import "share-links.njk" as share %}
 <sz-toc></sz-toc>
 <article class="sz-article">
   <div class="sz-article__toolbar">
@@ -65,7 +66,7 @@ layout: base.njk
     <div class="sz-md-footer">
       <div class="md-hr">---</div>
       <div class="md-foot">written by <strong>{{ site.author }}</strong> · <a href="/about/">~/about</a></div>
-      <div class="md-foot">share: <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ shareUrl }}" target="_blank" rel="noopener noreferrer">linkedin</a> · <a href="https://twitter.com/intent/tweet?url={{ shareUrl }}&text={{ shareText }}" target="_blank" rel="noopener noreferrer">x</a> · <a href="https://bsky.app/intent/compose?text={{ shareText }}%20{{ shareUrl }}" target="_blank" rel="noopener noreferrer">bluesky</a> · <a href="mailto:?subject={{ shareText }}&body={{ shareUrl }}">email</a></div>
+      <div class="md-foot">share: {{ share.shareLinks(shareUrl, shareText) }}</div>
     </div>
     {% endif %}
   </sz-markdown>
@@ -81,10 +82,7 @@ layout: base.njk
     </div>
     <div class="sz-article__share">
       <span class="sz-article__share-label">Share</span>
-      <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ shareUrl }}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-      <a href="https://twitter.com/intent/tweet?url={{ shareUrl }}&text={{ shareText }}" target="_blank" rel="noopener noreferrer">X</a>
-      <a href="https://bsky.app/intent/compose?text={{ shareText }}%20{{ shareUrl }}" target="_blank" rel="noopener noreferrer">Bluesky</a>
-      <a href="mailto:?subject={{ shareText }}&body={{ shareUrl }}">Email</a>
+      {{ share.shareLinks(shareUrl, shareText, true, "\n      ") }}
     </div>
   </footer>
   {% endif %}
