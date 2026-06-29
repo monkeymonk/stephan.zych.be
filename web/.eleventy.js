@@ -84,6 +84,14 @@ module.exports = function(eleventyConfig) {
     return collection.getFilteredByGlob('src/content/projects/**/*.md');
   });
 
+  // Posts belonging to a series (by slug), ordered by their `order` front matter.
+  // Used by the in-article series nav to list sibling parts.
+  eleventyConfig.addFilter('seriesPosts', (posts, slug) => {
+    return (posts || [])
+      .filter(p => p.data.series === slug)
+      .sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
+  });
+
   // Estimate reading time in minutes from rendered content
   eleventyConfig.addFilter('readingTime', content => {
     const words = (content || '').replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;

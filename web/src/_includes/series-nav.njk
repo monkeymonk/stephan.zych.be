@@ -1,0 +1,21 @@
+{%- if series %}
+{%- set meta = seriesData[series] %}
+{%- set parts = collections.blog | seriesPosts(series) %}
+{%- if parts | length %}
+<nav class="sz-series" aria-label="Article series">
+  <p class="sz-series__label">Part {{ order or 1 }} of <strong>{{ meta.name if meta else series }}</strong></p>
+  {%- if meta and meta.description %}
+  <p class="sz-series__desc">{{ meta.description }}</p>
+  {%- endif %}
+  <ol class="sz-series__list">
+    {%- for post in parts %}
+    {%- if post.url == page.url %}
+    <li class="sz-series__item is-current"><span aria-current="page">{{ post.data.title }}</span></li>
+    {%- else %}
+    <li class="sz-series__item"><a href="{{ post.url }}">{{ post.data.title }}</a></li>
+    {%- endif %}
+    {%- endfor %}
+  </ol>
+</nav>
+{%- endif %}
+{%- endif %}

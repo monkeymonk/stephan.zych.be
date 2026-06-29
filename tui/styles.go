@@ -26,6 +26,7 @@ type Styles struct {
 	ListBar   lipgloss.Style
 	Date      lipgloss.Style
 	Tag       lipgloss.Style
+	Series    lipgloss.Style
 	DescDim   lipgloss.Style
 	// neofetch card
 	Card      lipgloss.Style
@@ -97,6 +98,7 @@ func buildStyles(t Theme) Styles {
 		ListBar:   lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)),
 		Date:      lipgloss.NewStyle().Foreground(lipgloss.Color(t.Green)),
 		Tag:       lipgloss.NewStyle().Foreground(lipgloss.Color(t.Lavender)),
+		Series:    lipgloss.NewStyle().Foreground(lipgloss.Color(t.Peach)).Bold(true),
 		DescDim:   lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)).Italic(true),
 		// neofetch card
 		Card: lipgloss.NewStyle().
