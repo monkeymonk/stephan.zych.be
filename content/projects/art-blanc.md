@@ -22,7 +22,11 @@ Delivered at Cherry Pulp on a custom **WordPress** foundation:
 
 ## My role
 
-I handled the **WordPress** build end to end — backend and frontend — from the custom theme and venue structures to the timeline itself. The **growing-tree animation** was the technically demanding piece: a sequence that had to stay smooth and on-brand while syncing to scroll.
+I handled the **WordPress** build end to end — backend and frontend — from the custom theme and venue structures to the timeline itself.
+
+## The interesting part
+
+The **growing-tree animation** was the technically demanding piece. Syncing a branching, organic sequence to scroll position — rather than a fixed timer — meant keeping animation state consistent as visitors moved through the timeline at any speed, forwards or backwards. It had to read as crafted and deliberate, not decorative, while staying smooth on the full range of devices visiting an event-venue site.
 
 ## Outcome
 
