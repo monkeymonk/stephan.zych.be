@@ -24,6 +24,10 @@ Delivered at Cherry Pulp on **WordPress**:
 
 I built the **WordPress** backend and frontend.
 
+## The interesting part
+
+**Multilingual** content management for a wide-reaching public programme raises a practical question: who keeps it up to date? The editorial structures had to be straightforward enough that non-technical staff could publish training updates, FabLab news, and programme changes themselves — without developer involvement. Getting the **WordPress** admin experience right for that kind of editor was the key judgement call here.
+
 ## Outcome
 
 Orange Digital Center got an accessible, multilingual site presenting its free programme, maintainable by its own team. Live at [orangedigitalcenter.be](https://orangedigitalcenter.be).

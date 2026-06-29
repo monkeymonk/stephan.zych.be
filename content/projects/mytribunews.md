@@ -33,6 +33,10 @@ Behind it, we moved the platform onto a horizontally scalable architecture:
 
 The frontend — the **Vue.js** compositor and its upload flow — plus architectural direction on the front-of-house side.
 
+## The interesting part
+
+The **Vue.js** compositor had two competing requirements: it had to feel immediate and responsive as a composition tool, while simultaneously handling massive batch uploads and staying tightly coupled to a CPU-heavy generation pipeline. A slow upload or a broken layout state meant a lost magazine. Keeping the UI snappy and consistent across devices while the backend queued and processed thousands of generation jobs concurrently — via the **Redis**-backed task system — was the core tension that shaped every frontend architecture decision.
+
 ## Outcome
 
 Magazines kept generating within hours even as usage grew exponentially, and the platform held performance and availability through its peaks. The result: an editor people actually enjoyed using, and a system that scaled with the company instead of against it.
