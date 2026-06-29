@@ -1,19 +1,20 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, state, property } from 'lit/decorators.js';
-import { StateController } from '../../core/state-controller.js';
-import type { SocialLink } from '../../core/registry.js';
-import { jsonArrayAttribute } from '../../core/data.js';
-import { focusRing } from '../../core/styles.js';
-import { actions, ROUTER_ACTION } from '../../core/actions.js';
-import type { RouteChangedDetail } from '../../core/router.js';
+import { LitElement, html, css } from "lit";
+import { customElement, state, property } from "lit/decorators.js";
+import { StateController } from "../../core/state-controller.js";
+import type { SocialLink } from "../../core/registry.js";
+import { jsonArrayAttribute } from "../../core/data.js";
+import { focusRing } from "../../core/styles.js";
+import { actions, ROUTER_ACTION } from "../../core/actions.js";
+import type { RouteChangedDetail } from "../../core/router.js";
 
-@customElement('sz-statusbar')
+@customElement("sz-statusbar")
 export class SzStatusbar extends LitElement {
   /** Injected by the template. */
-  @property({ attribute: 'repo-url' }) repoUrl = '';
-  @property({ attribute: 'socials', converter: jsonArrayAttribute }) socials: SocialLink[] = [];
+  @property({ attribute: "repo-url" }) repoUrl = "";
+  @property({ attribute: "socials", converter: jsonArrayAttribute })
+  socials: SocialLink[] = [];
 
-  private stateCtrl = new StateController(this, ['theme', 'windowMode']);
+  private stateCtrl = new StateController(this, ["theme", "windowMode"]);
   private routeUnsub?: () => void;
 
   @state() private route = window.location.pathname;
@@ -94,23 +95,29 @@ export class SzStatusbar extends LitElement {
     .socials {
       display: flex;
       align-items: center;
-      gap: 6px;
+      /* gap 0: 24px icon hit targets (WCAG 2.5.8) keep ~12px between glyphs. */
+      gap: 0;
       margin-right: 5px;
     }
 
     @media (max-width: 768px) {
-      .center { display: none; }
-      .info, .separator { display: none; }
+      .center {
+        display: none;
+      }
+      .info,
+      .separator {
+        display: none;
+      }
     }
   `;
 
   private routeToPath(route: string): string {
-    if (route === '/') return '~/index';
-    return '~' + route.replace(/\/$/, '').replace(/\//g, '/');
+    if (route === "/") return "~/index";
+    return "~" + route.replace(/\/$/, "").replace(/\//g, "/");
   }
 
   render() {
-    const theme = this.stateCtrl.get('theme');
+    const theme = this.stateCtrl.get("theme");
 
     return html`
       <div class="segment" role="status">
@@ -118,7 +125,9 @@ export class SzStatusbar extends LitElement {
         <span class="route">${this.routeToPath(this.route)}</span>
       </div>
       <div class="segment center">
-        <a class="branch" href="${this.repoUrl}" target="_blank" rel="noopener"><sz-icon name="git-branch" size="12"></sz-icon> main</a>
+        <a class="branch" href="${this.repoUrl}" target="_blank" rel="noopener"
+          ><sz-icon name="git-branch" size="12"></sz-icon> main</a
+        >
       </div>
       <div class="segment">
         <span class="info">${theme}</span>
@@ -126,11 +135,19 @@ export class SzStatusbar extends LitElement {
         <span class="info">utf-8</span>
         <span class="separator">|</span>
         <span class="socials">
-          ${this.socials.map(link => html`
-            <a class="social-link" href="${link.url}" target="${link.url.startsWith('mailto:') ? '' : '_blank'}" rel="noopener" aria-label="${link.label}">
-              <sz-icon name="${link.icon}" size="12"></sz-icon>
-            </a>
-          `)}
+          ${this.socials.map(
+            (link) => html`
+              <a
+                class="social-link"
+                href="${link.url}"
+                target="${link.url.startsWith("mailto:") ? "" : "_blank"}"
+                rel="noopener"
+                aria-label="${link.label}"
+              >
+                <sz-icon name="${link.icon}" size="12"></sz-icon>
+              </a>
+            `,
+          )}
         </span>
       </div>
     `;
