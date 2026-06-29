@@ -4,7 +4,7 @@ import { paletteRegistry, type PaletteSource, type PaletteItem } from '../../cor
 import { actions } from '../../core/actions.js';
 import { NEOVIM_ACTION } from './actions.js';
 import { isInputFocused } from '../../core/keyboard.js';
-import { scrollbarStyles, focusRing } from '../../core/styles.js';
+import { scrollbarStyles, focusRing, mobileQuery } from '../../core/styles.js';
 import type { Shortcut } from '../../core/registry.js';
 import { jsonArrayAttribute } from '../../core/data.js';
 
@@ -245,7 +245,7 @@ export class SzPalette extends LitElement {
     }
 
     if (isInputFocused()) return;
-    if (window.innerWidth <= 768) return;
+    if (mobileQuery.matches) return;
 
     // Open palette for matching prefix key
     if (!this.open) {

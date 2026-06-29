@@ -220,12 +220,17 @@ export class SzWindow extends LitElement implements WindowApi {
 
     @media (max-width: 768px) {
       .window {
+        box-sizing: border-box;
         width: 100vw !important;
         height: 100dvh !important;
         top: 0;
         left: 0;
         transform: none;
         border-radius: 0;
+        /* Fullscreen on phones — the show/resize animation just feels laggy. */
+        transition: none;
+        /* Clear notches / home indicator on edge-to-edge phones (0 elsewhere). */
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
       }
       .titlebar {
         cursor: default;
