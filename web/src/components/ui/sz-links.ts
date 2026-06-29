@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { isInputFocused } from '../../core/keyboard.js';
-import { scrollbarStyles } from '../../core/styles.js';
+import { scrollbarStyles, mobileQuery } from '../../core/styles.js';
 
 interface LinkItem {
   text: string;
@@ -142,7 +142,7 @@ export class SzLinks extends LitElement {
 
     if (e.key !== 'l' || e.ctrlKey || e.metaKey || e.altKey) return;
     if (isInputFocused()) return;
-    if (window.innerWidth <= 768) return;
+    if (mobileQuery.matches) return;
     const items = this.collect();
     if (items.length === 0) return;
     e.preventDefault();
