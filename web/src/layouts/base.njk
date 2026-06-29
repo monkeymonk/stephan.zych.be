@@ -38,12 +38,14 @@
   {%- endif %}
   <meta name="theme-color" content="#1e1e2e">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/styles/reset.css">
   <link rel="stylesheet" href="/styles/base.css">
+  {% if section.name == 'blog' or section.name == 'projects' or page.fileSlug == 'styleguide' %}
   <link rel="stylesheet" href="/styles/prism-catppuccin.css">
-  <link rel="stylesheet" href="/assets/themes/catppuccin-mocha.css">
-  <link rel="stylesheet" href="/assets/themes/gruvbox-dark.css">
-  <link rel="stylesheet" href="/assets/themes/tokyonight.css">
+  {% endif %}
+  {# Only the default theme ships render-blocking; others load on demand (app/index.ts). #}
+  <link rel="stylesheet" id="theme-css-catppuccin-mocha" href="/assets/themes/catppuccin-mocha.css">
   <script type="module" src="/assets/components.js"></script>
 </head>
 <body>

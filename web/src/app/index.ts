@@ -46,10 +46,24 @@ import '../layouts/sz-portfolio.js';
 // Wire features together (must run after feature imports)
 import './wiring/index.js';
 
-// Apply saved theme
+// Apply saved theme. Only the default theme's CSS is shipped render-blocking in
+// the page <head>; any other theme's stylesheet is fetched on demand the first
+// time it's selected (or restored from a saved preference), so the common case
+// loads two fewer stylesheets.
+function ensureThemeCss(theme: string) {
+  const id = `theme-css-${theme}`;
+  if (document.getElementById(id)) return; // default theme is already in <head>
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = `/assets/themes/${theme}.css`;
+  document.head.appendChild(link);
+}
+ensureThemeCss(appState.get('theme'));
 document.documentElement.setAttribute('data-theme', appState.get('theme'));
 actions.on(THEME_ACTION.SET, (a) => {
   const theme = a.payload as string;
+  ensureThemeCss(theme);
   appState.set('theme', theme);
   document.documentElement.setAttribute('data-theme', theme);
 });

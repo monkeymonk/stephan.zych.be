@@ -20,7 +20,7 @@ layout: base.njk
   {# Styled chrome — shown only in reading (glow) view #}
   {% if poster %}
   <div class="sz-article__hero">
-    <img src="{{ poster }}" alt="{{ title }}" loading="lazy" decoding="async"{{ poster | imgDimAttrs | safe }}>
+    <img src="{{ poster }}" alt="{{ title }}" fetchpriority="high" decoding="async"{{ poster | imgDimAttrs | safe }}>
   </div>
   {% endif %}
   <header class="sz-article__header">
