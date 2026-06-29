@@ -24,6 +24,10 @@ Delivered at Cherry Pulp on a custom **WordPress** foundation:
 
 I handled the implementation end to end — building the **WordPress** backend (custom post types, product logic, admin) and the frontend theme on top of it.
 
+## The interesting part
+
+One catalogue, two very different buyer expectations. A **B2B** client ordering corporate gift hampers regularly has completely different needs from an individual buying a one-off personalised gift — and both had to feel at home in the same storefront without the product model becoming a tangle of special cases. The custom post types and product logic in **WordPress** had to be flexible enough to support personalised basket composition while staying maintainable for a non-technical team.
+
 ## Outcome
 
 Melting Pom got a storefront that matches how it actually sells — personalised baskets, to businesses and individuals — and that its own team can keep running. Live at [meltingpom.be](https://www.meltingpom.be).

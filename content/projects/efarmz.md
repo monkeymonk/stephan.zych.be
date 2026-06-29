@@ -25,6 +25,10 @@ A complete re-platform at Cherry Pulp, delivered by a team of around ten enginee
 
 I built the **interface, UI and UX** hand-in-hand with the designer, and the **custom e-shop** end to end — the complete purchase path, including the **customizable products** — alongside technical direction and frontend architecture across the rebuild.
 
+## The interesting part
+
+The **customizable products** — boxes customers compose themselves — were the hardest UI problem. A purchase path that lets someone freely assemble their own box has far more states and edge cases than a standard add-to-cart flow, and it had to feel simple under COVID-peak load while the **ERP integration** was syncing stock changes in real time. Keeping the interface coherent and order data accurate while both the UI and the backend were under simultaneous pressure was the central tension of the rebuild.
+
 ## Outcome
 
 The new platform carried eFarmz through the unprecedented order peaks of the COVID crisis with real-time ERP sync intact, and the work contributed to an **E-commerce of the Year** award plus public recognition at the BeCommerce and Feweb awards.

@@ -24,6 +24,10 @@ Delivered at Cherry Pulp:
 
 I built the **whole frontend** and a good part of the **backend** — including the schematic/graph implementation that turns the installation data into a visual the owners can actually reason about.
 
+## The interesting part
+
+The **schematic/graph view** was the piece that mattered most. Cooling installations are physical, spatial, and hierarchical — equipment connected in specific sequences with specific relationships — and the brief was to render that as something a building owner (not a technician) could actually read. Turning structured equipment data into a legible graph layout, with meaningful visual hierarchy, was the core design and engineering problem here.
+
 ## Outcome
 
 Building owners got a single place to manage cooling budgets, consumption, and equipment, with their installations rendered as a clear visual schematic rather than a spreadsheet.
