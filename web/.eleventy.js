@@ -84,6 +84,19 @@ module.exports = function(eleventyConfig) {
     return collection.getFilteredByGlob('src/content/projects/**/*.md');
   });
 
+  // Collect the unique tags across a collection (order preserved), skipping any
+  // in `exclude`. Used by the blog and projects index filter bars.
+  eleventyConfig.addFilter('collectTags', (collection, exclude) => {
+    const skip = new Set(exclude || []);
+    const tags = [];
+    for (const item of collection || []) {
+      for (const tag of item.data.tags || []) {
+        if (!skip.has(tag) && !tags.includes(tag)) tags.push(tag);
+      }
+    }
+    return tags;
+  });
+
   // Posts belonging to a series (by slug), ordered by their `order` front matter.
   // Used by the in-article series nav to list sibling parts.
   eleventyConfig.addFilter('seriesPosts', (posts, slug) => {

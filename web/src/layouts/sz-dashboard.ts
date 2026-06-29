@@ -5,17 +5,6 @@ import { jsonArrayAttribute } from '../core/data.js';
 import { TypewriterController } from '../controllers/typewriter.js';
 import { focusRing } from '../core/styles.js';
 
-const ASCII_ART = `
-███████╗████████╗███████╗██████╗ ██╗  ██╗ █████╗ ███╗   ██╗
-██╔════╝╚══██╔══╝██╔════╝██╔══██╗██║  ██║██╔══██╗████╗  ██║
-███████╗   ██║   █████╗  ██████╔╝███████║███████║██╔██╗ ██║
-╚════██║   ██║   ██╔══╝  ██╔═══╝ ██╔══██║██╔══██║██║╚██╗██║
-███████║   ██║   ███████╗██║     ██║  ██║██║  ██║██║ ╚████║
-╚══════╝   ╚═╝   ╚══════╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝
-`;
-
-const TAGLINES = ['A personal space for projects, notes, and technical curiosity.'];
-
 @customElement('sz-dashboard')
 export class SzDashboard extends LitElement {
   private typewriter = new TypewriterController(this, { speed: 60 });
@@ -123,11 +112,11 @@ export class SzDashboard extends LitElement {
   @property({ attribute: 'taglines', converter: jsonArrayAttribute }) taglines: string[] = [];
 
   private get asciiArt(): string {
-    return this.wordmark.length ? this.wordmark.join('\n') : ASCII_ART;
+    return this.wordmark.join('\n');
   }
 
   private get taglineList(): string[] {
-    return this.taglines.length ? this.taglines : TAGLINES;
+    return this.taglines;
   }
 
   connectedCallback() {
