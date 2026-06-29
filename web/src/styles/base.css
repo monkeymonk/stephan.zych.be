@@ -861,19 +861,15 @@ html[data-view="reading"] .sz-md-footer { display: none; }
 }
 .project-pane__tags {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: auto;
   padding-top: 14px;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
-.project-pane__tags::-webkit-scrollbar { display: none; }
 .project-pane__tag {
-  flex-shrink: 0;
   white-space: nowrap;
   font-size: calc(var(--sz-font-size) * 0.76);
-  color: var(--sz-overlay1, #7f849c);
+  color: var(--sz-subtext0, #a6adc8);
 }
 .project-pane__tag::before { content: "#"; opacity: 0.5; }
 
