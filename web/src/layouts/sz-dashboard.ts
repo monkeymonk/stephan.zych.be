@@ -14,13 +14,7 @@ const ASCII_ART = `
 ╚══════╝   ╚═╝   ╚══════╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝
 `;
 
-const TAGLINES = [
-  'Software Developer',
-  'Web Components Enthusiast',
-  'Terminal Lover',
-  'Open Source Contributor',
-  'Creative Coder',
-];
+const TAGLINES = ['A personal space for projects, notes, and technical curiosity.'];
 
 @customElement('sz-dashboard')
 export class SzDashboard extends LitElement {
@@ -51,6 +45,17 @@ export class SzDashboard extends LitElement {
       color: var(--sz-subtext, #a6adc8);
       min-height: 24px;
       margin-bottom: 32px;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
     .cursor {
       display: inline-block;
@@ -138,8 +143,9 @@ export class SzDashboard extends LitElement {
 
   render() {
     return html`
-      <div class="ascii">${this.asciiArt}</div>
-      <div class="tagline">
+      <div class="ascii" aria-hidden="true">${this.asciiArt}</div>
+      <p class="sr-only">${this.taglineList.join('. ')}</p>
+      <div class="tagline" aria-hidden="true">
         ${this.typewriter.text}<span class="cursor"></span>
       </div>
       <div class="links">
