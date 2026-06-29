@@ -23,7 +23,11 @@ Delivered at Cherry Pulp:
 
 ## My role
 
-I built the **whole SaaS frontend** — the customer-facing UI and UX. The most interesting parts were the **storage calculator** and the interface customers use to **actually manage their storage**: turning a logistics workflow into something clean and obvious to use.
+I built the **whole SaaS frontend** — the customer-facing UI and UX.
+
+## The interesting part
+
+The **storage calculator** and the active storage-management interface were where the real UX work lived. A calculator that gives a customer confidence in how much space they actually need — and a price they understand before committing — is a different problem from a generic form. And the management interface had to turn a fundamentally logistical workflow (items in, items out, invoicing) into something customers could navigate without thinking about it.
 
 ## Outcome
 

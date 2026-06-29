@@ -24,6 +24,10 @@ Delivered at Cherry Pulp:
 
 I built the shared **WordPress** theme that unifies the four sites, and implemented the **integrations wiring those sites into the distributed API** — the links that let content and data flow between the sites and the platform. I didn't work on the **Laravel** application or the API itself; my part was the connective layer between the websites and it.
 
+## The interesting part
+
+A single **WordPress** theme serving four distinct brand audiences is a specificity problem: the theme has to be flexible enough to express each brand individually, but structured enough that changes don't cascade unpredictably across all four sites. The integration layer added a second axis of complexity — frontend templates had to remain stable as data shapes and sources changed behind them through the **distributed API**.
+
 ## Outcome
 
 Four Daoust brands now share one design and one platform — consistent to visitors, and far lighter to maintain than four separate sites. Live at [daoust.be](https://www.daoust.be).

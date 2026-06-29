@@ -24,6 +24,10 @@ Delivered at Cherry Pulp:
 
 I built it end to end — the **Ionic React** mobile app and the **Laravel** API behind it.
 
+## The interesting part
+
+Cross-platform mobile development with **Ionic React** means writing once and shipping to both iOS and Android — but the abstraction layer has to hold up across two runtimes with different rendering engines, input models, and store requirements. The interesting judgement call was building an API-first backend in **Laravel** that served as a genuine single source of truth, so the mobile layer never had to decide which platform's data was authoritative.
+
 ## Outcome
 
 Abattoir got one cross-platform app on a single codebase and API, rather than two native builds to keep in sync. Live at [abattoir.be](https://www.abattoir.be).

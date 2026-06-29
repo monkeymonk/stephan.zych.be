@@ -30,6 +30,10 @@ I started as head of frontend and grew into the technical owner — co-founder, 
 - Built and maintained the boilerplates, conventions, and tooling behind every project
 - Mentored a team that peaked at 12 developers, 4 designers, and 3 project managers, and ran hiring, onboarding, and knowledge sharing
 
+## The interesting part
+
+The unglamorous truth of running a busy agency is that the work that doesn't ship is what lets everything else ship. Building and maintaining the boilerplates, **CLI tooling**, and conventions across 200+ concurrent and sequential projects — flexible enough for diverse clients, but structured enough that a developer joining the team could pick them up immediately — was a continuous engineering and organisational challenge in its own right. Getting the foundations right was the multiplier for everything the studio built.
+
 ## Outcome
 
 Cherry Pulp grew from a 4-person room into a 20-person studio, shipped **200+ platforms** — for Unicef, Oxfam, Engie, Delhaize, Telenet, KBC Brussels, Monizze, Solidaris, RTL, RTBF, eFarmz, and more — and was acquired by **CBTW** in 2023. The throughline I took from it: the work that doesn't ship — the conventions, the tooling, the shared foundations — is exactly what lets everything else ship faster. It's the throughline of everything I've done since.

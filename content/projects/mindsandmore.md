@@ -23,6 +23,10 @@ Delivered at Cherry Pulp:
 
 I handled the UI/UX upgrade — implementing the refreshed front-end and the **motion and animation effects** that give the site its polish.
 
+## The interesting part
+
+Upgrading **motion and animation** on an existing site — rather than building fresh — means working within constraints that weren't designed for it. The challenge was finding where new interaction layers could be threaded in cleanly: what could be enhanced, what had to be left alone, and how to make the additions feel native rather than bolted on to something that already existed.
+
 ## Outcome
 
 minds&more got a noticeably more polished, modern feel — same substance, sharper experience. Live at [mindsandmore.biz](https://www.mindsandmore.biz).

@@ -24,6 +24,10 @@ Delivered at Cherry Pulp:
 
 Frontend architecture and the technical foundations bridging the marketing site and the classroom app — built as a platform designed to **evolve substantially over time**, with the room to keep adding features and growing well beyond its first release.
 
+## The interesting part
+
+Bridging two very different surfaces — a public **WordPress** marketing site and a dedicated classroom application at a separate subdomain — meant designing a frontend architecture that held them together without coupling them. The deeper challenge was building for two audiences (teachers and 3–11 year-olds) sharing the same system, while leaving the platform genuinely open to evolve as the programme grew well past its first release.
+
 ## Outcome
 
 What started as a website became a product: a connected-classroom platform now linking **12,000+ students across 570+ schools and 595 classes** — built to keep evolving as the programme grows.

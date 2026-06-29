@@ -23,6 +23,10 @@ Delivered at Cherry Pulp:
 
 I worked on the backend and on the deployment system of the day — the build-and-release workflow that got the site live and kept updates repeatable.
 
+## The interesting part
+
+My part here was the **deployment pipeline** — the build-and-release workflow behind the site. A landing page looks simple, but a brittle deployment process means every content update becomes a manual incident. The investment in making the release workflow repeatable and reliable was the non-obvious part: it's what let the site be maintained long after the initial build, without agency intervention every time.
+
 ## Outcome
 
 The network got a friendly, persuasive front door for recruiting members, on infrastructure the agency could deploy and maintain reliably. Live at [reseauentreprendrebruxelles.org](https://www.reseauentreprendrebruxelles.org).
