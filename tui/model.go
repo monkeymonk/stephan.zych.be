@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -499,6 +500,9 @@ func (m *Model) startEffect(kind string) tea.Cmd {
 func (m *Model) openReader(a Article, from screen) {
 	a.Body = m.resolveSiteVars(a.Body)
 	a.Body = m.resolveConditionals(a.Body)
+	if nav := m.seriesNavMarkdown(a); nav != "" {
+		a.Body = nav + "\n" + a.Body // sits after the title/description, before the body
+	}
 	m.readerArticle = a
 	m.readerList, m.readerIndex = m.sectionSequence(a)
 	m.readerTitle = a.Title
@@ -514,6 +518,57 @@ func (m *Model) openReader(a Article, from screen) {
 		m.activeTab = a.Slug
 	}
 	m.screen = screenReader
+}
+
+// seriesParts returns the blog posts in a's series, ordered by their `order`
+// front matter — the TUI mirror of the web `seriesPosts` filter.
+func (m Model) seriesParts(series string) []Article {
+	if series == "" {
+		return nil
+	}
+	var parts []Article
+	for _, p := range m.content.Blog {
+		if p.Series == series {
+			parts = append(parts, p)
+		}
+	}
+	sort.SliceStable(parts, func(i, j int) bool { return parts[i].Order < parts[j].Order })
+	return parts
+}
+
+// seriesNavMarkdown builds the in-article series block (Medium-style part list)
+// that the web renders from series-nav.njk: a "Part N of <series>" lead, the
+// series blurb, then every part — the current one marked, the rest as links to
+// /blog/<slug>/ that the reader's link extraction makes navigable.
+func (m Model) seriesNavMarkdown(a Article) string {
+	parts := m.seriesParts(a.Series)
+	if len(parts) == 0 {
+		return ""
+	}
+	meta := m.data.Series[a.Series]
+	name := meta.Name
+	if name == "" {
+		name = a.Series
+	}
+	order := a.Order
+	if order < 1 {
+		order = 1
+	}
+	var b strings.Builder
+	fmt.Fprintf(&b, "**Part %d of %s**", order, name)
+	if meta.Description != "" {
+		b.WriteString(" — " + meta.Description)
+	}
+	b.WriteString("\n\n")
+	for i, p := range parts {
+		if p.Slug == a.Slug {
+			fmt.Fprintf(&b, "%d. **%s** — you’re reading it\n", i+1, p.Title)
+		} else {
+			fmt.Fprintf(&b, "%d. [%s](/blog/%s/)\n", i+1, p.Title, p.Slug)
+		}
+	}
+	b.WriteString("\n---\n")
+	return b.String()
 }
 
 // sectionSequence returns the ordered list the article belongs to (for prev/
@@ -984,6 +1039,17 @@ func (m Model) renderItems(items []Article, cursor int) string {
 		body.WriteString(bar + title + "\n")
 
 		meta := []string{}
+		if a.Series != "" {
+			name := m.data.Series[a.Series].Name
+			if name == "" {
+				name = a.Series
+			}
+			badge := "◆ " + name
+			if a.Order > 0 {
+				badge += fmt.Sprintf(" · part %d", a.Order)
+			}
+			meta = append(meta, m.st.Series.Render(badge))
+		}
 		if a.Date != "" {
 			meta = append(meta, m.st.Date.Render(a.Date))
 		}

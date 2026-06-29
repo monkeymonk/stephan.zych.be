@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -18,6 +19,8 @@ type Article struct {
 	Description string
 	Date        string
 	Tags        []string
+	Series      string // series slug (blog posts only); "" when not part of a series
+	Order       int    // 1-based position within the series
 	Body        string // markdown, HTML pre-stripped for terminal rendering
 	Section     string // "pages" | "projects" | "blog"
 }
@@ -117,6 +120,21 @@ func normalizeDate(d string) string {
 	return d
 }
 
+func metaInt(m map[string]any, key string) int {
+	switch t := m[key].(type) {
+	case int:
+		return t
+	case int64:
+		return int(t)
+	case float64:
+		return int(t)
+	case string:
+		n, _ := strconv.Atoi(strings.TrimSpace(t))
+		return n
+	}
+	return 0
+}
+
 func metaTags(m map[string]any) []string {
 	v, ok := m["tags"]
 	if !ok {
@@ -152,6 +170,8 @@ func readArticle(path, section string) (Article, error) {
 		Description: metaString(meta, "description"),
 		Date:        normalizeDate(metaString(meta, "date")),
 		Tags:        metaTags(meta),
+		Series:      metaString(meta, "series"),
+		Order:       metaInt(meta, "order"),
 		Body:        stripHTML(body),
 		Section:     section,
 	}, nil

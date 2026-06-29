@@ -82,6 +82,13 @@ type SiteMeta struct {
 	} `json:"socials"`
 }
 
+// SeriesMeta is one entry of seriesData.json (display name + blurb), keyed by
+// series slug. Shared with the web build's series-nav.
+type SeriesMeta struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 // SiteData is the centralized config shared with the web build (content/data/*.json).
 type SiteData struct {
 	Nav         NavData
@@ -89,6 +96,7 @@ type SiteData struct {
 	StartScreen StartScreenData
 	Shortcuts   []Shortcut
 	Site        SiteMeta
+	Series      map[string]SeriesMeta
 	Wakapi      *WakapiStats
 }
 
@@ -101,6 +109,7 @@ func LoadData(dataDir string) *SiteData {
 	readJSON(filepath.Join(dataDir, "startScreen.json"), &d.StartScreen)
 	readJSON(filepath.Join(dataDir, "shortcuts.json"), &d.Shortcuts)
 	readJSON(filepath.Join(dataDir, "site.json"), &d.Site)
+	readJSON(filepath.Join(dataDir, "seriesData.json"), &d.Series)
 	return d
 }
 
