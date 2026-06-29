@@ -7,7 +7,12 @@ import type { NavTab } from "../../core/registry.js";
 import { jsonArrayAttribute } from "../../core/data.js";
 import { focusRing, clockStyles } from "../../core/styles.js";
 import { clock, type ClockTime } from "../../core/clock.js";
+import { StateController } from "../../core/state-controller.js";
 import { TMUX_ACTION } from "./actions.js";
+
+// Text-size steps for the accessibility "aA" control. Multipliers feed
+// --sz-font-scale, which rescales the whole site (see base.css :root).
+const FONT_SCALES = [1, 1.15, 1.3, 1.5];
 
 @customElement("sz-tmux-bar")
 export class SzTmuxBar extends LitElement {
@@ -15,6 +20,7 @@ export class SzTmuxBar extends LitElement {
   @property({ attribute: "nav", converter: jsonArrayAttribute }) nav: NavTab[] =
     [];
   @state() private time: ClockTime = clock.time;
+  private fontCtrl = new StateController(this, ["fontScale"]);
 
   private clockUnsub?: () => void;
   private routeUnsub?: () => void;
@@ -95,6 +101,36 @@ export class SzTmuxBar extends LitElement {
       color: var(--sz-crust, #11111b);
       font-weight: 700;
     }
+    .font-size {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 0 10px;
+      background: none;
+      border: none;
+      color: var(--sz-subtext, #a6adc8);
+      font-family: inherit;
+      line-height: 1;
+      cursor: pointer;
+      transition:
+        color 0.2s,
+        background 0.2s;
+    }
+    .font-size:hover,
+    .font-size:focus-visible {
+      color: var(--sz-text, #cdd6f4);
+      background: var(--sz-surface0, #313244);
+      outline: none;
+    }
+    /* Single inline run so the two letters share a baseline, while the run as
+       a whole is centered in the bar. */
+    .font-size .aa {
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .font-size .a-small { font-size: 0.78em; }
+    .font-size .a-large { font-size: 1.1em; font-weight: 700; }
     .right-arrow {
       width: 0;
       height: 0;
@@ -199,6 +235,13 @@ export class SzTmuxBar extends LitElement {
     actions.dispatch("neovim:palette-open", { prefix: "/" });
   };
 
+  // Step to the next text size, wrapping back to 100% after the largest.
+  private cycleFontScale = () => {
+    const current = this.fontCtrl.get("fontScale");
+    const idx = FONT_SCALES.findIndex((s) => Math.abs(s - current) < 0.001);
+    this.fontCtrl.set("fontScale", FONT_SCALES[(idx + 1) % FONT_SCALES.length]);
+  };
+
   render() {
     const tabs = this.nav;
 
@@ -225,6 +268,14 @@ export class SzTmuxBar extends LitElement {
         </svg>
       </button>
       <div class="right">
+        <button
+          class="font-size"
+          @click=${this.cycleFontScale}
+          aria-label="Text size: ${Math.round(this.fontCtrl.get("fontScale") * 100)}%. Click to change."
+          title="Text size: ${Math.round(this.fontCtrl.get("fontScale") * 100)}% — click to enlarge"
+        >
+          <span class="aa"><span class="a-small">a</span><span class="a-large">A</span></span>
+        </button>
         <slot name="widget">
           <div class="right-arrow"></div>
           <span class="right-item accent">${this.time.hh}<span class="clock-colon">:</span>${this.time.mm}</span>
