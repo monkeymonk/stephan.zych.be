@@ -72,6 +72,11 @@ export class SzStartScreen extends LitElement {
       outline-offset: 4px;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .item { transition: none; }
+      .item:hover { transform: none; }
+    }
+
     .icon-wrap {
       width: 44px;
       height: 44px;
