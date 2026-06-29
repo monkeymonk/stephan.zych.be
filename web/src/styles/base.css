@@ -1077,3 +1077,43 @@ button:focus-visible {
 .sz-content > *:last-child {
   margin-bottom: 0;
 }
+
+/* In-article series nav — lists the parts of a series, current one marked */
+.sz-series {
+  margin: 24px 0;
+  padding: 16px 20px;
+  border: 1px solid var(--sz-surface1, #45475a);
+  border-left: 3px solid var(--sz-accent, #89b4fa);
+  border-radius: 6px;
+  background: var(--sz-surface0, #313244);
+}
+.sz-series__label {
+  margin: 0;
+  font-size: 0.85em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sz-subtext, #a6adc8);
+}
+.sz-series__label strong { color: var(--sz-text, #cdd6f4); }
+.sz-series__desc {
+  margin: 6px 0 12px;
+  color: var(--sz-subtext, #a6adc8);
+}
+.sz-series__list {
+  margin: 0;
+  padding-left: 1.4em;
+}
+.sz-series__item { margin: 2px 0; }
+.sz-series__item.is-current span {
+  color: var(--sz-text, #cdd6f4);
+  font-weight: 700;
+}
+.sz-series__item.is-current::marker { color: var(--sz-accent, #89b4fa); }
+.post-row__series {
+  display: inline-block;
+  font-size: 0.78em;
+  color: var(--sz-accent, #89b4fa);
+  background: color-mix(in srgb, var(--sz-accent, #89b4fa) 12%, transparent);
+  padding: 0 6px;
+  border-radius: 3px;
+}
