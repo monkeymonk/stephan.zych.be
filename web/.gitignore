@@ -1,0 +1,2 @@
+# Audit reports — keep only the committed baseline
+audit/report-*.json
