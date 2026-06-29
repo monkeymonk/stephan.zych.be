@@ -307,8 +307,10 @@ export class SzWindow extends LitElement implements WindowApi {
   }
 
   get isFullscreen(): boolean {
-    const el = this.shadowRoot?.querySelector('.window');
-    return document.fullscreenElement === el;
+    // .window lives in this element's shadow root, so the Fullscreen API
+    // retargets document.fullscreenElement to the shadow host (this element),
+    // not the inner .window — compare against the host.
+    return document.fullscreenElement === this;
   }
 
   render() {
