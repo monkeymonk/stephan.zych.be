@@ -48,6 +48,10 @@
   {# Only the default theme ships render-blocking; others load on demand (app/index.ts). #}
   <link rel="stylesheet" id="theme-css-catppuccin-mocha" href="/assets/themes/catppuccin-mocha.css">
   <script type="module" src="/assets/components.js"></script>
+  {%- if site.analyticsId %}
+  {# Self-hosted, cookieless Umami — no cookies/localStorage, so no consent banner. #}
+  <script defer src="https://analytics.zych.be/script.js" data-website-id="{{ site.analyticsId }}"></script>
+  {%- endif %}
 </head>
 <body>
   <script type="application/json" id="sz-nav-data">{{ nav | dump | safe }}</script>

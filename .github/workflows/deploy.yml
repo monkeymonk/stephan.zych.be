@@ -86,18 +86,22 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           # Forward the stats creds into the remote shell; compose reads them via
           # the bare `environment:` entries in compose.yaml.
-          envs: STATS_USER,STATS_AUTH_HASH_B64
+          envs: STATS_USER,STATS_AUTH_HASH_B64,UMAMI_DB_PASSWORD,UMAMI_APP_SECRET,ANALYTICS_ADDRESS
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
             git fetch origin main && git reset --hard origin/main
             export STATS_USER
             export STATS_AUTH_HASH="$(printf '%s' "$STATS_AUTH_HASH_B64" | base64 -d)"
+            export UMAMI_DB_PASSWORD UMAMI_APP_SECRET ANALYTICS_ADDRESS
             docker compose pull
             docker compose up -d
             docker image prune -f
         env:
           STATS_USER: ${{ secrets.STATS_USER }}
           STATS_AUTH_HASH_B64: ${{ secrets.STATS_AUTH_HASH_B64 }}
+          UMAMI_DB_PASSWORD: ${{ secrets.UMAMI_DB_PASSWORD }}
+          UMAMI_APP_SECRET: ${{ secrets.UMAMI_APP_SECRET }}
+          ANALYTICS_ADDRESS: analytics.zych.be
 
 # ---------------------------------------------------------------------------
 # ALTERNATIVE: serve web/ from GitHub Pages instead of the self-hosted Caddy.
