@@ -1,7 +1,7 @@
 # stephan.zych.be
 
-Personal portfolio and blog styled as a terminal environment — in two flavours
-that share one content source:
+A personal technical space — engineering notes & experiments — styled as a
+terminal environment, in two flavours that share one content source:
 
 - **`web/`** — a static site (Eleventy + Lit + TypeScript), served by Caddy (or GitHub Pages).
 - **`tui/`** — a real terminal version served over SSH (Go + Charm: Wish · Bubble Tea · Glamour).
@@ -26,7 +26,7 @@ shots used in blog posts) with `make screenshots`.
 - Animated background with grain/grid overlays
 - Easter egg commands
 - Responsive design with `prefers-reduced-motion` support
-- ~19KB gzipped JS bundle
+- Lean, code-split JS — desktop-only and per-page code load on demand, not eagerly
 
 ## Tech Stack
 
@@ -107,6 +107,10 @@ docker compose up -d --build
 - **`tui`** — distroless SSH server, host port `22` → container `2222`.
 - **`web`** — Caddy serving the built static site with automatic HTTPS
   (`SITE_ADDRESS=stephan.zych.be`).
+- **`goaccess`** — turns Caddy's IP-masked access log into a private,
+  basic-auth `/_stats` dashboard (no cookies, no banner).
+- **`umami` + `umami-db`** — self-hosted, cookieless analytics at
+  `analytics.zych.be`, shared by all three sites.
 
 `.github/workflows/deploy.yml` builds both images, pushes them to GHCR, and
 redeploys over SSH on push to `main`.
