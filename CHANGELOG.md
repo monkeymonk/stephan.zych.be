@@ -9,6 +9,10 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+### Added
+- Company-name mentions (STEPHANZYCH / STEPHAN ZYCH SRL) now link to the company
+  site (https://stephanzych.be) on the about, contact, privacy, and terms pages.
+
 ## [1.0.0] - 2026-06-30
 
 ### Added

@@ -13,7 +13,7 @@ Privacy notice — **STEPHAN ZYCH** · Governing law: Belgium (GDPR / RGPD)
 
 ## Controller
 
-- **Controller:** STEPHAN ZYCH (SRL)
+- **Controller:** [STEPHAN ZYCH (SRL)](https://stephanzych.be)
 - **Registered office:** avenue de l'université, 101 — 1050 Ixelles, Belgium
 - **VAT:** BE 0804.229.671
 - **Contact:** stephan@zych.be
