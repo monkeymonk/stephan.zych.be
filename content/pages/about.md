@@ -10,7 +10,7 @@ permalink: /about/
 
 ## The short version
 
-Fifteen years turning *"can you just make it pop?"* into web platforms that survive contact with production. I co-founded a Brussels agency, **Cherry Pulp**, helped grow it from 4 to 20 people, shipped **200+ platforms**, and stuck around until it got acquired. These days I'm **Lead Developer at CBTW**, working through my own company **STEPHANZYCH** — still suspiciously hands-on for someone with "lead" in the title.
+Fifteen years turning *"can you just make it pop?"* into web platforms that survive contact with production. I co-founded a Brussels agency, **Cherry Pulp**, helped grow it from 4 to 20 people, shipped **200+ platforms**, and stuck around until it got acquired. These days I'm **Lead Developer at CBTW**, working through my own company **[STEPHANZYCH](https://stephanzych.be)** — still suspiciously hands-on for someone with "lead" in the title.
 
 ## What I actually do
 
@@ -104,4 +104,4 @@ I'm in Brussels 🇧🇪, I speak French natively and English professionally, an
 
 ---
 
-*The business behind the bytes: **STEPHANZYCH** (STEPHAN ZYCH SRL) — VAT **BE 0804.229.671**, Brussels. It's the company I work through, including my role at CBTW.*
+*The business behind the bytes: **[STEPHANZYCH](https://stephanzych.be)** (STEPHAN ZYCH SRL) — VAT **BE 0804.229.671**, Brussels. It's the company I work through, including my role at CBTW.*
