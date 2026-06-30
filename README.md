@@ -120,6 +120,12 @@ from GitHub Pages instead (a commented job in the workflow keeps that path ready
 Pages gives you a free CDN and uptime independent of the box; self-hosting gives
 you one domain, one deploy, and no Pages dependency.
 
+## Versioning
+
+Releases follow [Semantic Versioning](https://semver.org/); notable changes are
+recorded in [`CHANGELOG.md`](CHANGELOG.md). The current version lives in the
+latest `vX.Y.Z` git tag and `web/package.json`.
+
 ## License
 
 ISC
