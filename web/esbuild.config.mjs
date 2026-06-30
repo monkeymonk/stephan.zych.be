@@ -42,8 +42,24 @@ if (isDev) {
   await ctx.watch();
   console.log('esbuild watching...');
 } else {
-  await build(jsConfig);
+  const jsResult = await build({ ...jsConfig, metafile: true });
   await build(cssConfig);
+
+  // Map each lazily-defined widget (see src/app/lazy-components.ts) to its built
+  // chunk, so each page can load the widgets it actually contains as their own
+  // module scripts. The runtime presence-scan alone defers a page's own widgets
+  // until after components.js parses and runs — they upgrade *after* first paint
+  // and shove content down (CLS 0.65 on widget-heavy pages like /about/). Loading
+  // them as <script type=module> makes them define during initial module
+  // execution (like the old eager bundle → no shift), while pages that don't use
+  // a widget still never download it. The presence-scan still covers SPA nav.
+  const LAZY_TAGS = ['sz-gitlog', 'sz-stats', 'sz-wakapi', 'sz-neofetch', 'sz-contact-card', 'sz-copy', 'sz-toc'];
+  const outputNames = Object.keys(jsResult.metafile.outputs).map(o => o.split('/').pop());
+  const chunkFor = {};
+  for (const tag of LAZY_TAGS) {
+    const hit = outputNames.find(n => new RegExp(`^${tag}-[A-Za-z0-9_-]+\\.js$`).test(n));
+    if (hit) chunkFor[tag] = `/assets/${hit}`;
+  }
 
   // Inline the always-critical CSS into each page's <head> so first paint needs
   // no render-blocking stylesheet requests. Uses the just-minified files; the
@@ -66,6 +82,18 @@ if (isDev) {
     let changed = false;
     for (const [tag, repl] of inlineRules) {
       if (html.includes(tag)) { html = html.replace(tag, repl()); changed = true; }
+    }
+    // Load the lazy widget chunks this page uses as module scripts (after
+    // components.js, which owns this <head>, so registry/state are initialized
+    // first). Tag-boundary match so `<sz-copy` doesn't also catch the
+    // always-present `<sz-copyright-footer>`.
+    const scripts = LAZY_TAGS
+      .filter(tag => chunkFor[tag] && new RegExp(`<${tag}[\\s/>]`).test(html))
+      .map(tag => `<script type="module" src="${chunkFor[tag]}"></script>`)
+      .join('');
+    if (scripts && html.includes('</head>')) {
+      html = html.replace('</head>', `${scripts}</head>`);
+      changed = true;
     }
     if (changed) { writeFileSync(file, html); inlined++; }
   }
