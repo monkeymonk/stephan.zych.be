@@ -39,6 +39,9 @@ services:
     environment:
       # Caddy auto-HTTPS in prod; override SITE_ADDRESS=:8080 for local runs.
       - SITE_ADDRESS=${SITE_ADDRESS:-stephan.zych.be}
+      # Subdomain Caddy reverse-proxies to Umami. Unset locally -> the Caddyfile
+      # falls back to :8081 (no cert); prod exports ANALYTICS_ADDRESS=analytics.zych.be.
+      - ANALYTICS_ADDRESS
       # Basic-auth credentials for the private /_stats dashboard, read from the
       # shell that runs compose. In CI they're forwarded from GitHub secrets by
       # .github/workflows/deploy.yml; for a local run, export them inline:
@@ -96,8 +99,51 @@ services:
     mem_limit: 128m
     pids_limit: 64
 
+  # Self-hosted, cookieless analytics shared by all three sites (this one plus
+  # the two GitHub Pages sites, which can't use the Caddy-log path). Caddy
+  # reverse-proxies analytics.zych.be -> this container; it has no public port.
+  # Secrets come from the shell running compose (GitHub secrets in CI):
+  #   UMAMI_DB_PASSWORD  Postgres password (shared with umami-db below)
+  #   UMAMI_APP_SECRET   session/JWT signing secret
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest # pin to a digest to match the other images
+    restart: unless-stopped
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    environment:
+      - DATABASE_TYPE=postgresql
+      - DATABASE_URL=postgresql://umami:${UMAMI_DB_PASSWORD}@umami-db:5432/umami
+      - APP_SECRET=${UMAMI_APP_SECRET}
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 384m
+    pids_limit: 256
+
+  umami-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=umami
+      - POSTGRES_USER=umami
+      - POSTGRES_PASSWORD=${UMAMI_DB_PASSWORD}
+    volumes:
+      - umami-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    pids_limit: 256
+
 volumes:
   ssh-hostkey:
   caddy-data:
   caddy-config:
   analytics: # shared access log + generated GoAccess report
+  umami-db-data: # Umami's Postgres data
