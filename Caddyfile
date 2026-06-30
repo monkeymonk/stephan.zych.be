@@ -6,6 +6,15 @@
 	https_port 8443
 }
 
+# Umami — self-hosted, cookieless analytics shared by all three sites (this one
+# plus the two GitHub Pages sites, which can't use the Caddy-log path). Proxied
+# to the umami container; it has no public port of its own. Defaults to :8081 so
+# `docker compose up` needs no cert locally; prod sets ANALYTICS_ADDRESS.
+{$ANALYTICS_ADDRESS::8081} {
+	encode zstd gzip
+	reverse_proxy umami:3000
+}
+
 # SITE_ADDRESS=stephan.zych.be in prod -> Caddy provisions HTTPS automatically.
 # Defaults to :8080 so `docker compose up` works locally without certificates.
 {$SITE_ADDRESS::8080} {
@@ -69,7 +78,7 @@
 			# No inline/eval scripts are used (verified across the bundle); mermaid is
 			# self-hosted and injects styles (hence style 'unsafe-inline'). Only the
 			# YouTube-nocookie embeds are third-party.
-			Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; frame-src https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+			Content-Security-Policy "default-src 'self'; script-src 'self' https://analytics.zych.be; connect-src 'self' https://analytics.zych.be; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; frame-src https://www.youtube-nocookie.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
 			# Don't advertise the server software.
 			-Server
 		}
