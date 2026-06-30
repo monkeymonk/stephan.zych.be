@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   {%- set metaTitle = title | default(site.title) -%}
   {%- set metaDescription = description | default(site.description) -%}
-  {%- set metaImage = site.url + (ogImage or poster or '/assets/wallpapers/landscape-1.webp') -%}
+  {%- set metaImage = site.url + (ogImage or poster or '/assets/social-card.jpg') -%}
   {%- set isArticle = section.name == 'blog' and date -%}
   <title>{{ metaTitle }}</title>
   <meta name="description" content="{{ metaDescription }}">
@@ -34,7 +34,7 @@
   {%- if isArticle %}
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":{{ metaTitle | dump | safe }},"description":{{ metaDescription | dump | safe }},"image":{{ metaImage | dump | safe }},"datePublished":{{ (date | htmlDateString) | dump | safe }},"url":{{ (site.url + page.url) | dump | safe }},"mainEntityOfPage":{{ (site.url + page.url) | dump | safe }},"author":{"@type":"Person","name":{{ site.author | dump | safe }},"url":{{ site.url | dump | safe }}}}</script>
   {%- elif page.url == '/' or page.url == '/about/' %}
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":{{ site.author | dump | safe }},"url":{{ site.url | dump | safe }},"jobTitle":"Lead Developer & Frontend Architect","sameAs":[{{ site.socials.github | dump | safe }},{{ site.socials.linkedin | dump | safe }}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":{{ site.author | dump | safe }},"url":{{ site.url | dump | safe }},"jobTitle":"Lead Developer & Frontend Architect","worksFor":{"@type":"Organization","name":"STEPHANZYCH","legalName":"STEPHAN ZYCH SRL","url":"https://stephanzych.be","vatID":"BE 0804.229.671"},"sameAs":[{{ site.socials.github | dump | safe }},{{ site.socials.linkedin | dump | safe }}]}</script>
   {%- endif %}
   <meta name="theme-color" content="#1e1e2e">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
