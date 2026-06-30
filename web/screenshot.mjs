@@ -87,5 +87,26 @@ for (const { url, out } of SHOTS) {
   console.log(`✓ ${url} → ${out}`);
 }
 
+// Social/OG card: the homepage at the 1200×630 Open Graph ratio, exported as JPG
+// (broad platform support — unlike WebP). This is the default og:image/twitter:image
+// for pages without their own poster (home, about, …).
+{
+  const jpg = path.join(here, 'src/assets/social-card.jpg');
+  const png = jpg.replace(/\.jpg$/, '.png');
+  const ogPage = await browser.newPage({
+    viewport: { width: 1200, height: 630 },
+    deviceScaleFactor: 2,
+    reducedMotion: 'reduce',
+    colorScheme: 'dark',
+  });
+  await ogPage.goto(base + '/', { waitUntil: 'networkidle' });
+  await ogPage.waitForTimeout(1500);
+  await ogPage.screenshot({ path: png });
+  await execFileP('ffmpeg', ['-y', '-loglevel', 'error', '-i', png,
+    '-vf', 'scale=1200:630', '-q:v', '4', jpg]);
+  await unlink(png);
+  console.log('✓ / → src/assets/social-card.jpg (OG card)');
+}
+
 await browser.close();
 server.close();
