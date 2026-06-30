@@ -12,16 +12,17 @@ import '../features/start-screen/index.js';
 import '../features/window/index.js';
 import '../features/window-manager/index.js';
 import '../features/tmux/index.js';
-import '../features/neovim/index.js';
+// The neovim shell + statusbar render on every viewport; the command palette is
+// desktop-only and loaded in loadDesktopOnly() below.
+import '../features/neovim/sz-neovim.js';
+import '../features/neovim/sz-statusbar.js';
 import '../features/notifications/index.js';
-import '../features/effects/index.js';
 import '../features/screen-shader/index.js';
 
 // UI primitives
 import '../components/ui/sz-icon.js';
 import '../components/ui/sz-panel.js';
 import '../components/ui/sz-view-toggle.js';
-import '../components/ui/sz-toc.js';
 import '../components/ui/sz-links.js';
 import '../components/ui/sz-diagram.js';
 import '../components/ui/sz-copyright-footer.js';
@@ -30,13 +31,9 @@ import '../components/ui/sz-copyright-footer.js';
 import '../components/background/sz-background.js';
 import '../components/background/sz-slideshow.js';
 
-// Content widgets (used inside markdown pages)
-import '../components/widgets/sz-neofetch.js';
-import '../components/widgets/sz-gitlog.js';
-import '../components/widgets/sz-stats.js';
-import '../components/widgets/sz-wakapi.js';
-import '../components/widgets/sz-contact-card.js';
-import '../components/widgets/sz-copy.js';
+// Content widgets (sz-toc + sz-gitlog/stats/wakapi/neofetch/contact-card/copy)
+// are loaded on demand by ./lazy-components — only when a page actually contains
+// them (see loadPresentComponents below).
 
 // Layouts
 import '../layouts/sz-dashboard.js';
@@ -45,6 +42,8 @@ import '../layouts/sz-portfolio.js';
 
 // Wire features together (must run after feature imports)
 import './wiring/index.js';
+import { wireNeovimPalette } from './wiring/neovim-palette.js';
+import { loadPresentComponents } from './lazy-components.js';
 
 // Apply saved theme. Only the default theme's CSS is shipped render-blocking in
 // the page <head>; any other theme's stylesheet is fetched on demand the first
@@ -82,6 +81,22 @@ applyViewMode();
 appState.subscribe(applyViewMode);
 mobile.addEventListener('change', applyViewMode);
 
+// Desktop-only feature set: the command palette is hard-gated off on mobile
+// (sz-palette ignores keydowns while the mobile query matches) and the
+// matrix/confetti effects are only reachable through it — so neither is ever
+// usable on a phone. Skip shipping them to mobile entirely; load if we start
+// on, or later resize to, a desktop-width viewport.
+let desktopLoaded = false;
+function loadDesktopOnly() {
+  if (desktopLoaded) return;
+  desktopLoaded = true;
+  wireNeovimPalette(); // register the palette's command + search sources
+  void import('../features/neovim/sz-palette.js');
+  void import('../features/effects/index.js');
+}
+if (!mobile.matches) loadDesktopOnly();
+else mobile.addEventListener('change', (e) => { if (!e.matches) loadDesktopOnly(); });
+
 // Apply saved text-size scale (accessibility "aA" control) by setting the
 // --sz-font-scale multiplier inline on <html>, which wins over the :root
 // default and rescales the whole site. Kept in sync with appState.
@@ -97,6 +112,11 @@ router.init();
 import { initMermaid } from '../features/mermaid/mermaid.js';
 void initMermaid();
 actions.on(ROUTER_ACTION.ROUTE_CHANGED, () => void initMermaid());
+
+// Define page-specific widgets present on the current page, and re-scan after
+// each SPA navigation (the router swaps page content).
+loadPresentComponents();
+actions.on(ROUTER_ACTION.ROUTE_CHANGED, loadPresentComponents);
 
 // A little something for the curious who open DevTools.
 import { printConsoleGreeting, installConsoleApi } from '../core/console-greeting.js';
