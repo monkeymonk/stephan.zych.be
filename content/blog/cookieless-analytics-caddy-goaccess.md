@@ -3,7 +3,7 @@ layout: post.njk
 title: "The Cookie Banner Was Always Optional"
 description: "I wanted visitor stats without a consent banner. The trick wasn't a clever cookie — it was deleting the JavaScript: Caddy logs the requests, masks the IP at the edge, and GoAccess turns the log into a dashboard. No cookies, no third party, no banner."
 date: 2026-06-26
-tags: [privacy, caddy, goaccess, analytics]
+tags: [privacy, caddy, goaccess, umami, analytics]
 poster: /assets/content/goaccess-dashboard.webp
 ---
 
@@ -103,6 +103,43 @@ handle /_stats* {
 ```
 
 `handle` blocks make this clean: one path, one policy, no leakage into the pages real visitors actually see.
+
+## The two sites that can't read a log
+
+GoAccess works because Caddy sees every request to this site. But I run two siblings — my [company site](https://stephanzych.be) and a game-studio site — as static builds on **GitHub Pages**. No Caddy there, no access log to mask, nothing to point GoAccess at. So does the banner come back?
+
+No — because the rule was never "no JavaScript," it was **store nothing on the device**. "Delete the script" is just the cleanest way to honour that *when you own the server*. When you don't, you can ship a script that still stores nothing. That's **[Umami](https://umami.is/)**: cookieless by default — no cookies, no `localStorage`, no fingerprint — so the same ePrivacy exemption applies. No banner, for the same reason as before.
+
+The nice part is I don't hand my visitors to anyone. Umami is self-hosted: one more container next to this site, its own Postgres, reverse-proxied by the same Caddy at `analytics.zych.be`. Cookieless, single-domain, mine.
+
+```caddyfile
+{$ANALYTICS_ADDRESS} {
+	reverse_proxy umami:3000
+}
+```
+
+Each site adds one tag — no cookie code, no consent state to manage:
+
+```html
+<script defer src="https://analytics.zych.be/script.js"
+        data-website-id="…"></script>
+```
+
+That one script is allowed to exist *because of what it refuses to do*. It sets no cookie and writes nothing to `localStorage`; to tell two visitors apart it asks the **server** to hash the day's rotating salt together with the IP and user-agent, then throws that hash away and regenerates it every night. So Umami can separate two visits **today** and has no way to know they were the same person **yesterday** — the raw IP is never stored, the same constraint the masked log enforces from the other end.
+
+What you buy with that beacon is everything a server log structurally *can't* see — the entire "you don't" column from the table above. It runs in the browser, so it reports what the browser knows:
+
+| Umami adds (runs in-browser) | Still won't tell me |
+| --- | --- |
+| Screen size & device class | Who you are across days |
+| Real referrers & UTM tags | A cookie'd cross-site identity |
+| Bounce rate & visit duration | Anything after you close the tab |
+| Custom events you choose to fire | A name, email, or account |
+| Entry/exit pages & per-visit journeys | A fingerprint to re-find you with |
+
+![The self-hosted Umami dashboard for this site — visitors, visits, views, bounce rate and visit duration over 30 days, drawn from a cookieless beacon. No cookie set, no banner shown.](/assets/content/umami-dashboard.webp)
+
+I point *this* site at it too, so all three land in one dashboard. GoAccess stays — it reads server-side truth (crawlers, every request, zero JS) that a beacon can't, and it costs nothing to keep. So I run both: logs for the ground truth, Umami for the human-readable view across sites that don't share a server. Two methods, one rule — nothing stored on the device, so nothing to consent to.
 
 ## Worth it?
 
