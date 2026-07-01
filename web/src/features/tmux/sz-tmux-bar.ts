@@ -157,12 +157,16 @@ export class SzTmuxBar extends LitElement {
         padding: 0 8px;
         font-size: 12px;
       }
-      /* Keep the text-size (a11y) control reachable; drop the decorative clock. */
+      /* Drop the decorative clock and the text-size control (mobile browsers
+         provide their own text zoom); keep the search button reachable. */
       .right {
         display: flex;
         align-items: center;
       }
       .right slot[name="widget"] {
+        display: none;
+      }
+      .font-size {
         display: none;
       }
       .search-btn {

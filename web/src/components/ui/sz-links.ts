@@ -130,12 +130,12 @@ export class SzLinks extends LitElement {
   private onKey = (e: KeyboardEvent) => {
     if (this.open) {
       switch (e.key) {
-        case 'Escape': case 'l': e.preventDefault(); this.close(); return;
+        case 'Escape': case 'l': case 'q': e.preventDefault(); this.close(); return;
         case 'ArrowDown': case 'j': e.preventDefault(); this.move(1); return;
         case 'ArrowUp': case 'k': e.preventDefault(); this.move(-1); return;
         case 'g': e.preventDefault(); this.selected = 0; return;
         case 'G': e.preventDefault(); this.selected = this.items.length - 1; return;
-        case 'Enter': e.preventDefault(); this.follow(); return;
+        case 'Enter': case ' ': e.preventDefault(); this.follow(); return;
       }
       return;
     }
@@ -193,7 +193,7 @@ export class SzLinks extends LitElement {
               </div>
             `)}
           </div>
-          <div class="hint">↑↓ / j k move · ⏎ open · l / esc close</div>
+          <div class="hint">↑↓ / j k move · ⏎ / space open · l / q / esc close</div>
         </div>
       </div>
     `;

@@ -21,6 +21,7 @@ shots used in blog posts) with `make screenshots`.
 - Terminal-inspired UI with window management, tmux-style tabs and panes
 - Neovim-flavored markdown rendering with syntax highlighting
 - Command palette with fuzzy search
+- Full keyboard navigation — arrow/`hjkl` roaming on the listings, `space`/`enter` to activate, `q`/`esc` to close or leave focus
 - Catppuccin Mocha theme (+ additional themes)
 - Screen shader with time-of-day lighting
 - Animated background with grain/grid overlays

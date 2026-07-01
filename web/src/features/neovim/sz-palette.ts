@@ -189,6 +189,13 @@ export class SzPalette extends LitElement {
     this.unsubPaletteHelp?.();
   }
 
+  // Reflect open/help state to the host so global wiring (e.g. Space-activate,
+  // q/Escape "leave focus") can yield while the palette owns the keyboard.
+  protected updated() {
+    this.toggleAttribute('open', this.open);
+    this.toggleAttribute('help-open', this.helpOpen);
+  }
+
   private handleCaptureTab = (e: KeyboardEvent) => {
     if (this.open && e.key === 'Tab') {
       e.preventDefault();
@@ -225,7 +232,7 @@ export class SzPalette extends LitElement {
 
   private handleGlobalKey = (e: KeyboardEvent) => {
     if (this.helpOpen) {
-      if (e.key === 'Escape') { e.preventDefault(); this.helpOpen = false; return; }
+      if (e.key === 'Escape' || e.key === 'q') { e.preventDefault(); this.helpOpen = false; return; }
       if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); this.helpEl?.scrollBy({ top: 40, behavior: 'smooth' }); return; }
       if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); this.helpEl?.scrollBy({ top: -40, behavior: 'smooth' }); return; }
       if (e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); this.helpEl?.scrollBy({ top: 200, behavior: 'smooth' }); return; }
