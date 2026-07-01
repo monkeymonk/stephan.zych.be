@@ -799,8 +799,6 @@ html[data-view="reading"] .sz-md-footer { display: none; }
   .sz-article__title { font-size: calc(var(--sz-font-size) * 1.3); }
   /* Wide tables scroll instead of pushing the page width. */
   .sz-prose table { display: block; overflow-x: auto; max-width: 100%; }
-  /* Long slugs shouldn't force the breadcrumb past the viewport. */
-  .sz-article__breadcrumb { flex-wrap: wrap; }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -882,8 +880,16 @@ html[data-view="reading"] .sz-md-footer { display: none; }
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   font-size: calc(var(--sz-font-size) * 0.88);
   color: var(--sz-overlay1, #7f849c);
+}
+/* Short crumbs stay put; only the current slug truncates so a long title keeps
+   the breadcrumb on a single line instead of wrapping. */
+.sz-article__breadcrumb > a,
+.sz-article__crumb-sep {
+  flex: none;
+  white-space: nowrap;
 }
 /* Code view keeps the breadcrumb flush-left with the content; reading view
    centers it over the 680px reading column. */
@@ -898,7 +904,13 @@ html[data-view="reading"] .sz-article__breadcrumb {
 }
 .sz-article__breadcrumb a:hover { color: var(--sz-accent, #89b4fa); }
 .sz-article__crumb-sep { color: var(--sz-overlay0, #6c7086); }
-.sz-article__crumb-current { color: var(--sz-text, #cdd6f4); }
+.sz-article__crumb-current {
+  color: var(--sz-text, #cdd6f4);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .sz-article__footer {
   max-width: 680px;
