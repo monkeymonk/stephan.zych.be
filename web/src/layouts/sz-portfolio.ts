@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { scrollbarStyles } from "../core/styles.js";
+import { scrollbarStyles, mobileQuery } from "../core/styles.js";
+import { isInputFocused } from "../core/keyboard.js";
 
 @customElement("sz-portfolio")
 export class SzPortfolio extends LitElement {
@@ -32,6 +33,7 @@ export class SzPortfolio extends LitElement {
   @state() private matchedCount = 0;
 
   private observer?: IntersectionObserver;
+  private rovingActive: HTMLElement | null = null;
 
   static styles = [
     scrollbarStyles,
@@ -164,11 +166,22 @@ export class SzPortfolio extends LitElement {
     const slot = this.shadowRoot?.querySelector("slot");
     slot?.addEventListener("slotchange", () => this.applyView());
     this.setupObserver();
+
+    document.addEventListener("keydown", this.onRovingKey, true);
+
+    if (!mobileQuery.matches) {
+      this.applyRoving();
+      requestAnimationFrame(() => {
+        const first = this.focusables()[0];
+        first?.focus();
+      });
+    }
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this.observer?.disconnect();
+    document.removeEventListener("keydown", this.onRovingKey, true);
   }
 
   protected updated(changed: Map<PropertyKey, unknown>) {
@@ -208,6 +221,12 @@ export class SzPortfolio extends LitElement {
       el.style.display = shown.has(el) ? "" : "none";
     }
     this.applyGroups(shown);
+
+    // Keep the roving tabindex valid as items are filtered/lazy-loaded, without
+    // stealing focus — only firstUpdated()'s initial pass focuses an item.
+    if (!this.rovingActive || !this.focusables().includes(this.rovingActive)) {
+      this.applyRoving();
+    }
   }
 
   // Month groups (blog archive): hide a group whose posts are all filtered out
@@ -224,6 +243,143 @@ export class SzPortfolio extends LitElement {
       if (badge) badge.textContent = String(count);
     }
   }
+
+  // Roving-focus target for each currently visible matched item, in DOM order.
+  // A hidden item (display:none, or inside a closed <details>) has no
+  // offsetParent, so this naturally tracks the same set applyView() shows.
+  private focusables(): HTMLElement[] {
+    const targets: HTMLElement[] = [];
+    for (const el of this.items) {
+      if (el.offsetParent === null) continue;
+      const target = el.matches("a") ? el : el.querySelector<HTMLElement>("a");
+      if (target) targets.push(target);
+    }
+    return targets;
+  }
+
+  // Give the active item (default: the first) the sole Tab stop; everyone
+  // else drops out of sequential Tab order via tabindex="-1".
+  private applyRoving(active?: HTMLElement) {
+    const list = this.focusables();
+    const target = active ?? list[0];
+    for (const el of list) {
+      el.setAttribute("tabindex", el === target ? "0" : "-1");
+    }
+    this.rovingActive = target ?? null;
+  }
+
+  // Number of columns in the current row, for ArrowUp/ArrowDown grid movement.
+  private columns(): number {
+    if (this.layout === "list") return 1;
+    const list = this.focusables();
+    if (list.length === 0) return 1;
+    const firstTop = list[0].offsetTop;
+    const count = list.filter((el) => el.offsetTop === firstTop).length;
+    return Math.max(1, count);
+  }
+
+  private moveRoving(dx: number, dy: number) {
+    const list = this.focusables();
+    if (list.length === 0) return;
+    const current = this.rovingActive ? list.indexOf(this.rovingActive) : -1;
+    const from = current >= 0 ? current : 0;
+    const next = Math.min(
+      Math.max(from + dx + dy * this.columns(), 0),
+      list.length - 1,
+    );
+    if (next === from) return;
+    this.applyRoving(list[next]);
+    list[next].focus();
+    list[next].scrollIntoView({ block: "nearest" });
+  }
+
+  // Deepest focused element, walking into shadow roots.
+  private deepActive(): Element | null {
+    let el: Element | null = document.activeElement;
+    while (el?.shadowRoot?.activeElement) {
+      el = el.shadowRoot.activeElement;
+    }
+    return el;
+  }
+
+  // Capture-phase so this wins over the bubble-phase tmux-bar/neovim letter
+  // and scroll shortcuts while focus is inside the grid.
+  private onRovingKey = (e: KeyboardEvent) => {
+    if (mobileQuery.matches) return;
+    if (isInputFocused()) return;
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+
+    const active = this.deepActive();
+    if (!active) return;
+
+    // A focused filter button hands off to the grid: arrows/hjkl jump focus
+    // into the (already filter-restricted) roving item instead of no-op'ing.
+    const navKey = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "h", "j", "k", "l"].includes(e.key);
+    const onFilter =
+      !!this.shadowRoot?.contains(active) && !!(active as HTMLElement).closest?.(".filter-btn");
+    if (onFilter) {
+      if (!navKey) return;
+      const list = this.focusables();
+      if (list.length === 0) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const target = this.rovingActive && list.includes(this.rovingActive) ? this.rovingActive : list[0];
+      this.applyRoving(target);
+      target.focus();
+      target.scrollIntoView({ block: "nearest" });
+      return;
+    }
+
+    const gridItem = active.closest("[data-tags]");
+    const inGrid =
+      this.focusables().includes(active as HTMLElement) ||
+      (gridItem !== null && this.items.includes(gridItem as HTMLElement));
+    if (!inGrid) return;
+
+    switch (e.key) {
+      case "ArrowLeft":
+      case "h":
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.moveRoving(-1, 0);
+        return;
+      case "ArrowRight":
+      case "l":
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.moveRoving(1, 0);
+        return;
+      case "ArrowUp":
+      case "k":
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.moveRoving(0, -1);
+        return;
+      case "ArrowDown":
+      case "j":
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.moveRoving(0, 1);
+        return;
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.rovingActive?.click();
+        return;
+      case "Tab": {
+        if (e.shiftKey) return;
+        const btn = this.shadowRoot?.querySelector<HTMLElement>(".filter-btn");
+        if (!btn) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        btn.focus();
+        return;
+      }
+      default:
+        return;
+    }
+  };
 
   private setupObserver() {
     const sentinel = this.shadowRoot?.querySelector(".sentinel");

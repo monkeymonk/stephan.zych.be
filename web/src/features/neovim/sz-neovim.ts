@@ -43,11 +43,17 @@ export class SzNeovim extends LitElement {
   }
 
   private handleScrollKeys = (e: KeyboardEvent) => {
-    if (e.key !== 'j' && e.key !== 'k') return;
+    const delta =
+      e.key === 'j' || e.key === 'ArrowDown'
+        ? 40
+        : e.key === 'k' || e.key === 'ArrowUp'
+          ? -40
+          : null;
+    if (delta === null) return;
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     if (e.defaultPrevented || isInputFocused()) return;
     if (!this.mainContent) return;
     e.preventDefault();
-    this.mainContent.scrollBy({ top: e.key === 'j' ? 40 : -40 });
+    this.mainContent.scrollBy({ top: delta });
   };
 }
