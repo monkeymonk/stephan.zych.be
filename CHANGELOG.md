@@ -21,6 +21,11 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
   a decorative wallpaper. Posts and projects still use their own `poster`.
 
 ### Fixed
+- Article breadcrumb no longer wraps to a second line on narrow (mobile)
+  viewports: the `~`/section crumbs stay put and only the current slug truncates
+  with an ellipsis, keeping the breadcrumb on one line.
+- Statusbar path no longer wraps to a second line on narrow (mobile) viewports:
+  a long route now stays on one line and truncates with an ellipsis.
 - Homepage typewriter tagline now centers every line: when a tagline wraps to two
   lines on narrow (mobile) viewports, the shorter line no longer hugs the left edge.
 - Homepage `<title>` (and og/twitter titles) is now "Stéphan Zych — engineering
