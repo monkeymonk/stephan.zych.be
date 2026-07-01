@@ -50,8 +50,10 @@ export class SzStatusbar extends LitElement {
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
     }
     .mode {
+      flex: none;
       background: var(--sz-statusbar-accent, #89b4fa);
       color: var(--sz-crust, #11111b);
       padding: 1px 8px;
@@ -62,6 +64,10 @@ export class SzStatusbar extends LitElement {
     }
     .route {
       color: var(--sz-text, #cdd6f4);
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .branch {
       color: var(--sz-mauve, #cba6f7);
