@@ -21,6 +21,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
   a decorative wallpaper. Posts and projects still use their own `poster`.
 
 ### Fixed
+- Homepage typewriter tagline now centers every line: when a tagline wraps to two
+  lines on narrow (mobile) viewports, the shorter line no longer hugs the left edge.
 - Homepage `<title>` (and og/twitter titles) is now "Stéphan Zych — engineering
   notes & experiments" instead of the redundant, mis-accented "Home — Stephan Zych".
 

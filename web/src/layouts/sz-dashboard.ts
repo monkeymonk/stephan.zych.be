@@ -34,6 +34,7 @@ export class SzDashboard extends LitElement {
       color: var(--sz-subtext, #a6adc8);
       min-height: 24px;
       margin-bottom: 32px;
+      text-align: center;
     }
     .sr-only {
       position: absolute;
