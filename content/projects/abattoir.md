@@ -4,6 +4,8 @@ title: Abattoir — A mobile app for Brussels' historic market site
 description: A cross-platform Ionic React mobile app for Abattoir, the historic Anderlecht market and redevelopment site, backed by a Laravel API.
 tags: [mobile, ionic, react, laravel, api]
 poster: /assets/content/abattoir.webp
+client: Abattoir
+role: Full build — Ionic React app & Laravel API
 ---
 
 **Abattoir** runs the historic market site in Anderlecht, Brussels — home to the **Foodmet** food hall, the Brocantemet flea market, a working meat-and-fish wholesale market, and an ongoing urban redevelopment. We built it a mobile app.
@@ -20,6 +22,8 @@ Delivered at Cherry Pulp:
 - A **Laravel** API backend serving the app's content and data
 - A single source of truth shared between the site's data and the app
 
+<video src="/assets/content/abattoir.mp4" controls playsinline preload="metadata" poster="/assets/content/abattoir-still.webp"></video>
+
 ## My role
 
 I built it end to end — the **Ionic React** mobile app and the **Laravel** API behind it.
@@ -30,4 +34,4 @@ Cross-platform mobile development with **Ionic React** means writing once and sh
 
 ## Outcome
 
-Abattoir got one cross-platform app on a single codebase and API, rather than two native builds to keep in sync. Live at [abattoir.be](https://www.abattoir.be).
+Abattoir got one cross-platform app on a single codebase and API, rather than two native builds to keep in sync.
