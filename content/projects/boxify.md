@@ -4,6 +4,8 @@ title: Boxify — Self-storage with a client portal
 description: A storage service's SaaS-style platform and app — an intuitive customer portal to manage stored goods, a storage calculator, plus an admin interface and API — with the full frontend built for clean UI and UX.
 tags: [saas, frontend, api, ux]
 poster: /assets/content/boxify.webp
+client: Boxify
+role: SaaS frontend — UI & UX
 ---
 
 **Boxify** is a storage service with a simple promise: "you box it, we store it." We built it an intuitive website and app where customers manage the goods they've put into storage, backed by an admin interface and an **API**.
@@ -21,6 +23,8 @@ Delivered at Cherry Pulp:
 - An **admin interface** for running the service
 - An **API** tying the platform, app, and admin together
 
+![The Boxify customer portal — managing items in storage, on desktop and mobile](/assets/content/boxify-portal.webp)
+
 ## My role
 
 I built the **whole SaaS frontend** — the customer-facing UI and UX.
@@ -31,4 +35,4 @@ The **storage calculator** and the active storage-management interface were wher
 
 ## Outcome
 
-Boxify customers got a portal they can size, fill, and manage their storage from, and the team got the admin tooling and API to run the service behind it. Live at [boxify.be](https://www.boxify.be).
+Boxify customers got a portal they can size, fill, and manage their storage from, and the team got the admin tooling and API to run the service behind it.

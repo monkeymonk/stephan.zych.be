@@ -23,6 +23,10 @@ type Article struct {
 	Order       int    // 1-based position within the series
 	Body        string // markdown, HTML pre-stripped for terminal rendering
 	Section     string // "pages" | "projects" | "blog"
+	Client      string // project metadata-card facts (projects section only)
+	Role        string
+	Timeframe   string
+	LiveURL     string
 }
 
 // Content is the whole loaded corpus, grouped by section.
@@ -41,6 +45,7 @@ const (
 
 var (
 	reIframe     = regexp.MustCompile(`(?is)<iframe[^>]*\bsrc="([^"]+)"[^>]*>.*?</iframe>`)
+	reVideo      = regexp.MustCompile(`(?is)<video[^>]*\bsrc="([^"]+)"[^>]*>.*?</video>`)
 	reWidgetOpen = regexp.MustCompile(`(?is)<sz-(neofetch|gitlog|stats|wakapi|contact-card)\b[^>]*>`)
 	reSzTag      = regexp.MustCompile(`(?is)<sz-[a-z-]+[^>]*>.*?</sz-[a-z-]+>|<sz-[a-z-]+[^>]*/?>`)
 	reAnyTag     = regexp.MustCompile(`(?s)<[^>]+>`)
@@ -68,6 +73,7 @@ func stripHTML(body string) string {
 		}
 		s := ln
 		s = reIframe.ReplaceAllString(s, "\n> ▶ video: $1\n")
+		s = reVideo.ReplaceAllString(s, "\n> ▶ video: $1\n")
 		s = reWidgetOpen.ReplaceAllString(s, "\n"+widgetPrefix+"$1"+widgetSuffix+"\n")
 		s = reSzTag.ReplaceAllString(s, "")
 		s = reAnyTag.ReplaceAllString(s, "") // removes leftover </sz-…> closings and other tags
@@ -174,6 +180,10 @@ func readArticle(path, section string) (Article, error) {
 		Order:       metaInt(meta, "order"),
 		Body:        stripHTML(body),
 		Section:     section,
+		Client:      metaString(meta, "client"),
+		Role:        metaString(meta, "role"),
+		Timeframe:   metaString(meta, "timeframe"),
+		LiveURL:     metaString(meta, "liveUrl"),
 	}, nil
 }
 

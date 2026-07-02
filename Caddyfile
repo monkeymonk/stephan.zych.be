@@ -67,6 +67,10 @@
 
 	# Public site.
 	handle {
+		# The Orange Digital Center project page was removed; 301 any indexed link
+		# to the projects index rather than serving a soft-404.
+		redir /projects/orange-digital-center/ /projects/ permanent
+
 		file_server
 
 		header {
@@ -93,7 +97,7 @@
 			not path /assets/components.js
 		}
 		@fonts path *.woff2
-		@media path *.webp *.png *.jpg *.jpeg *.gif *.svg *.ico *.avif *.mp3 *.ogg *.wav
+		@media path *.webp *.png *.jpg *.jpeg *.gif *.svg *.ico *.avif *.mp4 *.webm *.mp3 *.ogg *.wav
 		@styles path *.css
 		@entry path /assets/components.js
 		header @hashedjs Cache-Control "public, max-age=31536000, immutable"

@@ -4,6 +4,9 @@ title: Cherry Pulp — Co-Founder, CTO & Head of Frontend
 description: Co-founded a Brussels digital agency, grew it 4 → 20 people, shipped 200+ platforms, and exited to CBTW in 2023.
 tags: [leadership, architecture, frontend, tooling]
 poster: /assets/content/cherry-pulp.webp
+client: Cherry Pulp
+role: Co-founder, CTO & Head of Frontend
+timeframe: 2013–2024
 ---
 
 The big one. I co-founded **Cherry Pulp**, a Brussels digital agency building custom websites, platforms, and web applications, and spent eleven years (2013–2024) watching it grow from a 4-person room into a 20-person studio that shipped **200+ platforms** before being acquired by **CBTW** in 2023.
