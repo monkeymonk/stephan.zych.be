@@ -4,6 +4,8 @@ title: Daoust — Four brand sites on one shared platform
 description: A multi-site WordPress platform sharing a single theme across daoust.be, daconnect.be, dahome.be, and dajobs.be, wired into a distributed API that ties them together.
 tags: [wordpress, api, frontend, integration]
 poster: /assets/content/daoust.webp
+client: Daoust
+role: Shared WordPress theme & API integration layer
 ---
 
 **Daoust** is a Belgian HR and employment group — staffing, titres-services household help, and career management. Its presence spans four sites — **daoust.be**, **daconnect.be**, **dahome.be**, and **dajobs.be** — that needed to look and feel like one family.
@@ -30,4 +32,4 @@ A single **WordPress** theme serving four distinct brand audiences is a specific
 
 ## Outcome
 
-Four Daoust brands now share one design and one platform — consistent to visitors, and far lighter to maintain than four separate sites. Live at [daoust.be](https://www.daoust.be).
+Four Daoust brands now share one design and one platform — consistent to visitors, and far lighter to maintain than four separate sites.

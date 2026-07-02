@@ -4,9 +4,13 @@ title: Climespace — Managing cooling for landmark buildings
 description: A platform for building owners on district-cooling systems to track budgets, consumption, and equipment — including a schematic/graph view of their installations.
 tags: [platform, frontend, backend, data-viz]
 poster: /assets/content/climespace.webp
+client: Climespace
+role: Full frontend & part of the backend
 ---
 
 **Climespace** runs district-cooling networks for major buildings — the kind of client list that includes the owners of the Louvre. We built **Mon Climespace**, a platform that lets those building owners manage their cooling budgets and consumption, and get a detailed read on their equipment.
+
+![District cooling serves landmark buildings across Paris — here, the Place de la Concorde](/assets/content/climespace-landmark.webp)
 
 ## The challenge
 

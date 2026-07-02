@@ -503,6 +503,9 @@ func (m *Model) openReader(a Article, from screen) {
 	if nav := m.seriesNavMarkdown(a); nav != "" {
 		a.Body = nav + "\n" + a.Body // sits after the title/description, before the body
 	}
+	if pm := m.projectMetaMarkdown(a); pm != "" {
+		a.Body = pm + "\n" + a.Body // project metadata card, before the body
+	}
 	m.readerArticle = a
 	m.readerList, m.readerIndex = m.sectionSequence(a)
 	m.readerTitle = a.Title
@@ -568,6 +571,40 @@ func (m Model) seriesNavMarkdown(a Article) string {
 		}
 	}
 	b.WriteString("\n---\n")
+	return b.String()
+}
+
+// projectMetaMarkdown builds the project fact line the web renders as the
+// metadata card — client · role · when, then a live link — injected before the
+// body like the series nav. Empty when the article isn't a project or carries
+// no facts.
+func (m Model) projectMetaMarkdown(a Article) string {
+	if a.Section != "projects" {
+		return ""
+	}
+	var facts []string
+	if a.Client != "" {
+		facts = append(facts, "**Client** "+a.Client)
+	}
+	if a.Role != "" {
+		facts = append(facts, "**Role** "+a.Role)
+	}
+	if a.Timeframe != "" {
+		facts = append(facts, "**When** "+a.Timeframe)
+	}
+	if len(facts) == 0 && a.LiveURL == "" {
+		return ""
+	}
+	var b strings.Builder
+	if len(facts) > 0 {
+		b.WriteString(strings.Join(facts, "  ·  "))
+		b.WriteString("\n\n")
+	}
+	if a.LiveURL != "" {
+		host := strings.TrimPrefix(strings.TrimPrefix(a.LiveURL, "https://"), "http://")
+		fmt.Fprintf(&b, "[Live → %s](%s)\n\n", host, a.LiveURL)
+	}
+	b.WriteString("---\n")
 	return b.String()
 }
 

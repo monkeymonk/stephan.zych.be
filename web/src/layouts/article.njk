@@ -39,6 +39,14 @@ layout: base.njk
     {% if description %}
     <p class="sz-article__description">{{ description }}</p>
     {% endif %}
+    {% if section.name == 'projects' and (client or role or timeframe or liveUrl) %}
+    <dl class="sz-article__facts">
+      {% if client %}<div class="sz-fact"><dt>Client</dt><dd>{{ client }}</dd></div>{% endif %}
+      {% if role %}<div class="sz-fact"><dt>Role</dt><dd>{{ role }}</dd></div>{% endif %}
+      {% if timeframe %}<div class="sz-fact"><dt>When</dt><dd>{{ timeframe }}</dd></div>{% endif %}
+      {% if liveUrl %}<div class="sz-fact"><dt>Live</dt><dd><a href="{{ liveUrl }}" rel="noopener">{{ liveUrl | replace('https://','') | replace('http://','') }}</a></dd></div>{% endif %}
+    </dl>
+    {% endif %}
   </header>
 
   {% include "series-nav.njk" %}
@@ -55,6 +63,7 @@ layout: base.njk
       </div>
       {% endif %}
       {% if description %}<blockquote class="md-desc">{{ description }}</blockquote>{% endif %}
+      {% if section.name == 'projects' and (client or role or timeframe or liveUrl) %}<div class="md-facts">{% if client %}<span class="md-fact"><span class="md-fact-key">client:</span> {{ client }}</span>{% endif %}{% if role %}<span class="md-fact"><span class="md-fact-key">role:</span> {{ role }}</span>{% endif %}{% if timeframe %}<span class="md-fact"><span class="md-fact-key">when:</span> {{ timeframe }}</span>{% endif %}{% if liveUrl %}<span class="md-fact"><span class="md-fact-key">live:</span> <a href="{{ liveUrl }}" rel="noopener">{{ liveUrl | replace('https://','') | replace('http://','') }}</a></span>{% endif %}</div>{% endif %}
       {% if poster %}<img class="md-img" src="{{ poster }}" alt="{{ heading or title }}" loading="lazy" decoding="async"{{ poster | imgDimAttrs | safe }}>{% endif %}
     </div>
 

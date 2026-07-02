@@ -3,6 +3,9 @@ layout: project.njk
 title: MyTribuNews — Scaling an automated magazine platform
 description: A responsive Vue.js magazine compositor backed by infrastructure built to survive exponential growth — massive uploads, load balancing, and a Redis task system.
 tags: [vue, frontend, architecture, scaling]
+poster: /assets/content/mytribunews.webp
+client: MyTribuNews
+role: Frontend — Vue.js compositor & backend integration
 ---
 
 **MyTribuNews** turns user-uploaded content into automatically generated magazines. The catch: when thousands of people generate magazines at once, naïve infrastructure falls over — and the product had just been named *Startup of the Year*, so the traffic was real.
@@ -16,6 +19,8 @@ Handle large-scale uploads, concurrent connections, and CPU-heavy magazine gener
 ## What we built
 
 The heart of the product is a **magazine compositor** I built in **Vue.js** — an in-browser editor where users assemble their own magazine from their photos and text. It had to feel immediate and stay **fully responsive**, working as well on a phone as on a desktop, while swallowing **massive uploads** — whole albums at a time — without freezing the interface or losing a layout in progress.
+
+![The magazine compositor — assembling a magazine from photos and text in the browser](/assets/content/mytribunews-compositor.webp)
 
 - A component-driven **Vue.js** editor for arranging pages, photos, and copy
 - **Mobile-first and responsive** — the same composition experience on phone, tablet, and desktop
@@ -31,7 +36,7 @@ Behind it, we moved the platform onto a horizontally scalable architecture:
 
 ## My role
 
-The frontend — the **Vue.js** compositor and its upload flow — plus architectural direction on the front-of-house side.
+The frontend — the **Vue.js** compositor and its upload flow — and the integration wiring it to the **Laravel** backend another engineer built.
 
 ## The interesting part
 
@@ -40,3 +45,5 @@ The **Vue.js** compositor had two competing requirements: it had to feel immedia
 ## Outcome
 
 Magazines kept generating within hours even as usage grew exponentially, and the platform held performance and availability through its peaks. The result: an editor people actually enjoyed using, and a system that scaled with the company instead of against it.
+
+![A printed Tribu magazine — the finished product the compositor produces](/assets/content/mytribunews-magazine.webp)

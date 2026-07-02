@@ -4,9 +4,13 @@ title: Art Blanc — Showcasing unique event venues
 description: A custom WordPress site for a reception, catering, and events group — presenting each venue with 2D and 3D floor plans and an animated timeline of the company's history.
 tags: [wordpress, frontend, backend, animation]
 poster: /assets/content/art-blanc.webp
+client: Art Blanc
+role: Full WordPress build — backend, frontend & scroll animation
 ---
 
 **Art Blanc** is a group specialising in the rental of reception, catering, and event spaces — "unique places for unique events." The site presents each venue in detail, with **2D and 3D plans**, and tells the group's story through an animated timeline that brings its emblem, the olive tree, to life — growing on screen as you scroll.
+
+<video src="/assets/content/artblanc.mp4" autoplay loop muted playsinline poster="/assets/content/artblanc-still.webp"></video>
 
 ## The challenge
 
@@ -30,4 +34,4 @@ The **growing-tree animation** was the technically demanding piece. Syncing a br
 
 ## Outcome
 
-Art Blanc got a site where prospective clients can read each venue in 2D and 3D before they ever visit, wrapped in the brand's own story — told by a tree that grows as you go. Live at [artblanc.be](https://www.artblanc.be).
+Art Blanc got a site where prospective clients can read each venue in 2D and 3D before they ever visit, wrapped in the brand's own story — told by a tree that grows as you go.

@@ -374,7 +374,8 @@ html[data-view="reading"] .code-gutter span { display: block; }
 .sz-prose sub { bottom: -0.25em; }
 
 /* ── Images ── */
-.sz-prose img {
+.sz-prose img,
+.sz-prose video {
   display: block;
   max-width: 100%;
   margin: 0;
@@ -382,6 +383,9 @@ html[data-view="reading"] .code-gutter span { display: block; }
      reads as a distinct frame instead of bleeding into the page. */
   border: 1px solid var(--sz-surface1, #45475a);
 }
+/* Videos (esp. portrait Reels) — cap height and centre so a 9:16 clip doesn't
+   tower over the reading column. */
+.sz-prose video { max-height: 75vh; margin-inline: auto; background: #000; }
 .sz-prose figure { margin: 0; text-align: center; }
 .sz-prose figure img { margin: 0; }
 .sz-prose figcaption {
@@ -691,6 +695,24 @@ html[data-view="reading"] .code-gutter span { display: block; }
   margin-right: auto;
 }
 
+/* Project facts card (reading view) */
+.sz-article__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  max-width: 520px;
+  margin: 0 auto 24px;
+  padding: 14px 18px;
+  border: 1px solid var(--sz-surface1, #45475a);
+  border-radius: 6px;
+  font-size: calc(var(--sz-font-size) * 0.9);
+  text-align: left;
+}
+.sz-article__facts .sz-fact { display: contents; }
+.sz-article__facts dt { color: var(--sz-overlay1, #7f849c); }
+.sz-article__facts dd { margin: 0; color: var(--sz-subtext0, #a6adc8); }
+.sz-article__facts a { color: var(--sz-accent, #89b4fa); }
+
 /* ── View modes: code (default, line-numbered) ⟷ reading ── */
 
 /* Toolbars carrying the nvim/glow toggle (articles + pages) */
@@ -774,6 +796,16 @@ html[data-view="reading"] .sz-md-footer { display: none; }
   margin: 16px 0 0;
   border-radius: 6px;
 }
+.sz-md-header .md-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 10px;
+  font-size: calc(var(--sz-font-size) * 0.9);
+  color: var(--sz-subtext0, #a6adc8);
+}
+.sz-md-header .md-fact-key { color: var(--sz-overlay1, #7f849c); }
+.sz-md-header .md-facts a { color: var(--sz-accent, #89b4fa); }
 
 .sz-md-footer { margin-top: 1.5em; color: var(--sz-subtext0, #a6adc8); }
 .sz-md-footer .md-hr { color: var(--sz-overlay0, #6c7086); letter-spacing: 2px; margin: 18px 0 12px; }

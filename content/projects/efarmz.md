@@ -4,9 +4,14 @@ title: eFarmz — Re-platforming a food box business under COVID load
 description: Migrated a growing food e-commerce off PrestaShop onto a custom platform with real-time ERP sync and a fully customizable-product purchase path — just in time for unprecedented order peaks.
 tags: [ecommerce, migration, architecture, php]
 poster: /assets/content/efarmz.webp
+client: eFarmz
+role: Frontend, UI/UX & custom e-shop
+timeframe: 2020
 ---
 
 **eFarmz** delivers organic food boxes and groceries. Their original **PrestaShop** store had stopped keeping up with the business — and then COVID hit, and order volumes went vertical.
+
+![An eFarmz box — organic produce, eggs, and recipe cards](/assets/content/efarmz-box.webp)
 
 ## The challenge
 
@@ -20,6 +25,8 @@ A complete re-platform at Cherry Pulp, delivered by a team of around ten enginee
 - A **custom e-shop** with a complete purchase path built around **customizable products** — boxes customers compose themselves
 - Real-time **ERP integration** so stock and orders synchronised continuously
 - Infrastructure tuned to absorb traffic spikes during peak periods
+
+![The eFarmz storefront across laptop, tablet, and phone](/assets/content/efarmz-devices.webp)
 
 ## My role
 
