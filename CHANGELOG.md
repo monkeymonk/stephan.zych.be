@@ -9,12 +9,16 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-06
+
 ### Added
 - `BlogPosting` JSON-LD now emits `publisher` (Organization + logo) and `dateModified`.
 - Share links carry `utm_source`/`utm_medium=social` so referred visits are attributable in Umami.
+- Reusable `<sz-glass>` UI primitive — an Apple-style "liquid glass" material (SVG-displacement refraction, tint, inset specular shine) that wraps any content and is themeable via CSS custom properties (`--glass-radius`, `--glass-tint`, `--glass-shine-*`, `--glass-backdrop`, `--glass-shadow`) and a `scale` attribute.
 
 ### Changed
 - Retitled the terminal-style-site post to "I Reimplemented tmux in CSS" (URL/slug unchanged).
+- The start-screen launcher now sits on the `<sz-glass>` material, and each launcher item adapts its ink to the wallpaper directly behind it — a button over a light patch flips to dark text/icons while its neighbours over dark areas stay light. Hover is a soft translucent lozenge that follows the same per-item tone.
 
 ### Fixed
 - Blog-post social preview images are now JPG (`og:image`/`twitter:image` via a new `ogImage` front-matter twin of each WebP poster) so LinkedIn renders link previews reliably.
@@ -101,6 +105,7 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/monkeymonk/stephan.zych.be/releases/tag/v1.0.0

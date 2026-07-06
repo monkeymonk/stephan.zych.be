@@ -150,6 +150,7 @@ export class SzSlideshow extends LitElement implements SlideshowApi {
     this.layerAImage = this.images[0];
     this.layerBImage = this.images[0];
     this.activeLayer = 'a';
+    actions.dispatch(SLIDESHOW_ACTION.CHANGE, { url: this.images[0] });
     this.preloadOffset(1);
     this.restartTimer();
   }
@@ -172,6 +173,7 @@ export class SzSlideshow extends LitElement implements SlideshowApi {
 
     this.imageIndex = (this.imageIndex + direction + this.images.length) % this.images.length;
     const nextImage = this.images[this.imageIndex];
+    actions.dispatch(SLIDESHOW_ACTION.CHANGE, { url: nextImage });
 
     if (this.activeLayer === 'a') {
       this.layerBImage = nextImage;

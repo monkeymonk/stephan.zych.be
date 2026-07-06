@@ -21,6 +21,7 @@ import '../features/screen-shader/index.js';
 
 // UI primitives
 import '../components/ui/sz-icon.js';
+import '../components/ui/sz-glass.js';
 import '../components/ui/sz-panel.js';
 import '../components/ui/sz-view-toggle.js';
 import '../components/ui/sz-links.js';

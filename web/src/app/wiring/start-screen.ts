@@ -1,6 +1,7 @@
 import { actions } from '../../core/actions.js';
 import { router } from '../../core/router.js';
 import { START_SCREEN_ACTION } from '../../features/start-screen/actions.js';
+import { SLIDESHOW_ACTION } from '../../components/background/slideshow-actions.js';
 import { WM_ACTION } from '../../features/window-manager/actions.js';
 import type { StartScreenItem } from '../../core/registry.js';
 
@@ -47,6 +48,17 @@ export function wireStartScreen() {
       item?.focus();
     });
   };
+
+  // Tell the launcher which wallpaper is behind it, so each item can adapt its
+  // ink to the patch of background it sits over.
+  actions.on(SLIDESHOW_ACTION.CHANGE, (a) => {
+    const url = (a.payload as { url?: string })?.url;
+    if (typeof url !== 'string') return;
+    const startScreen = document.querySelector('sz-start-screen') as
+      | (HTMLElement & { wallpaper?: string })
+      | null;
+    if (startScreen) startScreen.wallpaper = url;
+  });
 
   actions.on(WM_ACTION.SHOW, (a) => { if (isTerminal(a.payload)) setStartScreenActive(true); });
   actions.on(WM_ACTION.HIDE, (a) => {
