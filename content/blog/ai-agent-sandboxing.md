@@ -5,6 +5,7 @@ description: "Claude, Codex, Gemini, OpenCode — every coding agent runs with y
 date: 2026-05-20
 tags: [security, ai, sandboxing, docker]
 poster: /assets/content/sandbox-boxes.webp
+ogImage: /assets/content/sandbox-boxes.jpg
 ---
 
 > **TL;DR** — A coding agent runs as *you*: every SSH key, every client's `.env`, your whole home directory. So I sandbox them. After a stint on `sbx` microVMs and a doomed attempt to build my own `bwrap`+Go wrapper, I landed on **Greywall** — a deny-by-default kernel jail over my *real* files, secrets masked in place — for the agents I run all day, and keep **`sbx`** for one-shot untrusted commands. The one rule that matters: a boundary the agent can reconfigure isn't one.

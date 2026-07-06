@@ -5,6 +5,7 @@ description: "Your backend already describes itself in OpenAPI. Orval turns that
 date: 2026-04-28
 tags: [typescript, openapi, tooling, api]
 poster: /assets/content/data-stream.webp
+ogImage: /assets/content/data-stream.jpg
 ---
 
 > **TL;DR** — The hand-written API client is the code most likely to lie: it rots the moment the backend changes. Your backend already emits an **OpenAPI** spec — point [**Orval**](https://orval.dev/) at it and get a fully-typed client, framework-native query hooks, Zod validators, and mock servers, regenerated on every spec change. Stop maintaining the frontend's copy of the backend by hand.

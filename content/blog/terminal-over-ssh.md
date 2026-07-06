@@ -5,6 +5,7 @@ description: "I already built my site as a fake terminal. So I built the real on
 date: 2026-03-18
 tags: [experiment, go, terminal, ssh]
 poster: /assets/content/ssh-tunnel.webp
+ogImage: /assets/content/ssh-tunnel.jpg
 ---
 
 > **TL;DR** — My site was already a browser terminal, so I built the real one too: `ssh stephan.zych.be` serves the same About, Projects, and Blog over SSH — no browser, no JavaScript. It's a short Go stack on [Charm](https://charm.sh/)'s toolkit — Wish (SSH server), Bubble Tea (TUI), Glamour (Markdown) — reading the exact same `content/` the website does.
