@@ -1,10 +1,11 @@
 ---
 layout: post.njk
-title: "Building a Terminal-Style Site with Lit & Eleventy"
+title: "I Reimplemented tmux in CSS"
 description: "How I rebuilt my entire neovim setup in the browser — web components, a static site generator, and a fight to the death with line-height."
 date: 2026-02-16
 tags: [meta, web-components, design]
 poster: /assets/content/dev-den.webp
+ogImage: /assets/content/dev-den.jpg
 ---
 
 > **TL;DR** — I spend my day in Ghostty + tmux + neovim, so my site *is* the terminal — a draggable window, tmux tabs, a `:` command palette, line numbers in the gutter — not a screenshot of one. Built from four boring parts: [Eleventy](https://www.11ty.dev/), [Lit](https://lit.dev/), esbuild, and Caddy. Here's how to make a pile of static files behave like an OS without lying to a search engine.

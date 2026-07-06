@@ -5,6 +5,7 @@ description: "Managing a machine isn't one job — it's four, with conflicting r
 date: 2026-06-15
 tags: [setup, dotfiles, sops, age, shell]
 poster: /assets/content/four-repos.webp
+ogImage: /assets/content/four-repos.jpg
 ---
 
 > **TL;DR** — One `dotfiles` repo is secretly doing four incompatible jobs. So I split them along two axes — *mutating vs non-mutating* and *public vs private* — into four repos with three documented contracts: **runtime** (shell session, never mutates state), **machines** (idempotent provisioner, mutates once), **dotfiles** (public configs + docs, bare overlay on `$HOME`), and **secretfiles** (the private overlay for everything that can't be generic — personal configs and private `runtime` plugins, *plus* credentials encrypted with **SOPS + age**, the master key never tracked). Keeping the first three public is the forcing function — it's what makes them agnostic, decoupled, and forkable. The public three work end-to-end with no private overlay present — missing secrets is a normal state, not a degraded one.

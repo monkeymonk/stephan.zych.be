@@ -9,6 +9,16 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+### Added
+- `BlogPosting` JSON-LD now emits `publisher` (Organization + logo) and `dateModified`.
+- Share links carry `utm_source`/`utm_medium=social` so referred visits are attributable in Umami.
+
+### Changed
+- Retitled the terminal-style-site post to "I Reimplemented tmux in CSS" (URL/slug unchanged).
+
+### Fixed
+- Blog-post social preview images are now JPG (`og:image`/`twitter:image` via a new `ogImage` front-matter twin of each WebP poster) so LinkedIn renders link previews reliably.
+
 ## [1.1.0] - 2026-07-02
 
 ### Added

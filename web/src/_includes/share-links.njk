@@ -6,5 +6,6 @@
 {%- set xx = "X" if caps else "x" -%}
 {%- set bs = "Bluesky" if caps else "bluesky" -%}
 {%- set em = "Email" if caps else "email" -%}
-<a href="https://www.linkedin.com/sharing/share-offsite/?url={{ shareUrl }}" target="_blank" rel="noopener noreferrer">{{ li }}</a>{{ sep | safe }}<a href="https://twitter.com/intent/tweet?url={{ shareUrl }}&text={{ shareText }}" target="_blank" rel="noopener noreferrer">{{ xx }}</a>{{ sep | safe }}<a href="https://bsky.app/intent/compose?text={{ shareText }}%20{{ shareUrl }}" target="_blank" rel="noopener noreferrer">{{ bs }}</a>{{ sep | safe }}<a href="mailto:?subject={{ shareText }}&body={{ shareUrl }}">{{ em }}</a>
+{# %3Futm_source%3D<network>%26utm_medium%3Dsocial is a urlencoded ?utm_source=<network>&utm_medium=social appended to the destination url, so referred visits are attributable. #}
+<a href="https://www.linkedin.com/sharing/share-offsite/?url={{ shareUrl }}%3Futm_source%3Dlinkedin%26utm_medium%3Dsocial" target="_blank" rel="noopener noreferrer">{{ li }}</a>{{ sep | safe }}<a href="https://twitter.com/intent/tweet?url={{ shareUrl }}%3Futm_source%3Dx%26utm_medium%3Dsocial&text={{ shareText }}" target="_blank" rel="noopener noreferrer">{{ xx }}</a>{{ sep | safe }}<a href="https://bsky.app/intent/compose?text={{ shareText }}%20{{ shareUrl }}%3Futm_source%3Dbluesky%26utm_medium%3Dsocial" target="_blank" rel="noopener noreferrer">{{ bs }}</a>{{ sep | safe }}<a href="mailto:?subject={{ shareText }}&body={{ shareUrl }}%3Futm_source%3Demail%26utm_medium%3Dsocial">{{ em }}</a>
 {%- endmacro %}

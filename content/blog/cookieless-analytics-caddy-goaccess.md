@@ -5,6 +5,7 @@ description: "I wanted visitor stats without a consent banner. The trick wasn't 
 date: 2026-06-26
 tags: [privacy, caddy, goaccess, umami, analytics]
 poster: /assets/content/goaccess-dashboard.webp
+ogImage: /assets/content/goaccess-dashboard.jpg
 ---
 
 > **TL;DR** — You don't need a cookie banner to know which pages people read. Banners exist because trackers *store something on the device*; if you store nothing, there's nothing to consent to. So my analytics stores nothing in your browser: **Caddy** writes an access log with the visitor IP already masked (`ip_mask`, last octet zeroed), **GoAccess** turns that log into a dashboard served behind basic-auth at `/_stats`, and the browser runs zero analytics JavaScript. Two gotchas the demos skip: Caddy logs the IP in *two* fields, and GoAccess's report needs `'unsafe-eval'` — both fixable in the `Caddyfile`.

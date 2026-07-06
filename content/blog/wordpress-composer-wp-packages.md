@@ -5,6 +5,7 @@ description: "WPackagist got acquired, so Roots shipped WP Packages in four days
 date: 2026-04-14
 tags: [wordpress, composer, php, tooling]
 poster: /assets/content/packages-blocks.webp
+ogImage: /assets/content/packages-blocks.jpg
 ---
 
 > **TL;DR** — Running WordPress through **Composer** treats plugins as the dependencies they are — declared, pinned, locked, kept out of your repo. The registry that made it work, WPackagist, got acquired by a private-equity hosting company; [Roots](https://roots.io/) shipped **WP Packages** as a replacement in four days. Why you'd drag Composer into WordPress at all, and why owning the registry under your build matters.
