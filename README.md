@@ -19,7 +19,7 @@ shots used in blog posts) with `make screenshots`.
 ## Features
 
 - Terminal-inspired UI with window management, tmux-style tabs and panes
-- Neovim-flavored markdown rendering with syntax highlighting
+- Neovim-flavored markdown rendering with syntax highlighting — every page and article reads in a rendered **html** view by default, with a **markdown** toggle that swaps in the line-numbered source
 - Command palette with fuzzy search
 - Full keyboard navigation — arrow/`hjkl` roaming on the listings, `space`/`enter` to activate, `q`/`esc` to close or leave focus
 - Catppuccin Mocha theme (+ additional themes)
@@ -57,6 +57,16 @@ The web `dev` task starts Eleventy's dev server and esbuild in watch mode concur
 | `npm run dev` | Start development server with hot reload |
 | `npm run build` | Production build |
 | `npm run clean` | Remove build output |
+| `npm run check:cv` | Verify the CV's headline facts haven't drifted across files |
+
+The CV lives once, as structured data in `content/data/cv.json`, and is rendered
+four ways from that single source: the web page at `/cv/`, the TUI `cv` screen, a
+plain-text/Markdown copy at `/cv.md` (`curl stephan.zych.be/cv.md`), and a
+print-optimised `/cv/print/` page the reader saves as PDF straight from the
+browser (the "Print / Save as PDF" button) — no committed binary, no typesetting
+toolchain, always in sync with the data. `npm run check:cv` (also run as part of
+`build`) fails if the shared headline numbers drift between `cv.json`,
+`profile.json`, and the about/whoami pages.
 
 ## Repository Structure
 

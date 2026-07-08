@@ -713,7 +713,7 @@ html[data-view="reading"] .code-gutter span { display: block; }
 .sz-article__facts dd { margin: 0; color: var(--sz-subtext0, #a6adc8); }
 .sz-article__facts a { color: var(--sz-accent, #89b4fa); }
 
-/* ── View modes: code (default, line-numbered) ⟷ reading ── */
+/* ── View modes: reading (default, "html") ⟷ code (line-numbered, "markdown") ── */
 
 /* Toolbars carrying the nvim/glow toggle (articles + pages) */
 .sz-article__toolbar,

@@ -1,0 +1,47 @@
+---
+layout: base.njk
+title: "CV — Stéphan Zych"
+description: "Full résumé of Stéphan Zych — lead developer and frontend architect with 15+ years across agency, founder, and consulting roles, delivering architecture, tooling, and technical leadership for web platforms."
+permalink: /cv/
+---
+{% set alumniOf = [] %}
+{% for edu in cv.education %}
+{% set alumniOf = (alumniOf.push({ "@type": "Organization", "name": edu.school }), alumniOf) %}
+{% endfor %}
+
+{% set knowsAbout = [] %}
+{% for group in cv.skills %}
+{% for item in group.items %}
+{% set knowsAbout = (knowsAbout.push(item), knowsAbout) %}
+{% endfor %}
+{% endfor %}
+
+{% set sameAs = [] %}
+{% if cv.basics.linkedin %}{% set sameAs = (sameAs.push("https://" + cv.basics.linkedin), sameAs) %}{% endif %}
+{% if cv.basics.github %}{% set sameAs = (sameAs.push("https://" + cv.basics.github), sameAs) %}{% endif %}
+
+{% set jobTitle = "Lead Developer" %}
+
+{% set cvPerson = {
+  "@type": "Person",
+  "name": cv.basics.name,
+  "jobTitle": jobTitle,
+  "worksFor": { "@type": "Organization", "name": "CBTW" },
+  "alumniOf": alumniOf,
+  "knowsAbout": knowsAbout,
+  "email": cv.basics.email,
+  "address": { "@type": "PostalAddress", "addressLocality": "Brussels", "addressCountry": "BE" },
+  "image": site.url + cv.basics.photo,
+  "url": site.url + "/cv/",
+  "sameAs": sameAs
+} %}
+
+{% set cvProfilePage = {
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  "mainEntity": cvPerson
+} %}
+
+<script type="application/ld+json">{{ cvProfilePage | dump | safe }}</script>
+
+{% include "cv-body.njk" %}

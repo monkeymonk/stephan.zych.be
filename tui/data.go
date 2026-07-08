@@ -89,6 +89,84 @@ type SeriesMeta struct {
 	Description string `json:"description"`
 }
 
+// CVGroup is a labelled sub-list of bullet items within a CV experience entry
+// (e.g. "Key achievements", "Responsibilities & impact").
+type CVGroup struct {
+	Label string   `json:"label"`
+	Items []string `json:"items"`
+}
+
+// CVExperience is one role in the CV's experience timeline.
+type CVExperience struct {
+	Role       string    `json:"role"`
+	Company    string    `json:"company"`
+	Via        string    `json:"via"`
+	Location   string    `json:"location"`
+	Period     string    `json:"period"`
+	Summary    string    `json:"summary"`
+	Highlights []string  `json:"highlights"`
+	Groups     []CVGroup `json:"groups"`
+	Clients    []string  `json:"clients"`
+	Note       string    `json:"note"`
+}
+
+// CVEarlier is one earlier (pre-experience) role, listed without a summary.
+type CVEarlier struct {
+	Role    string `json:"role"`
+	Company string `json:"company"`
+	Period  string `json:"period"`
+}
+
+// CVSkillGroup is a labelled skill category (e.g. "Frontend") with its items.
+type CVSkillGroup struct {
+	Label string   `json:"label"`
+	Items []string `json:"items"`
+}
+
+// CVCommunity is a talk/membership entry.
+type CVCommunity struct {
+	Label  string `json:"label"`
+	Detail string `json:"detail"`
+}
+
+// CVEducation is one school/training entry.
+type CVEducation struct {
+	School string `json:"school"`
+	Detail string `json:"detail"`
+}
+
+// CVLanguage is a spoken language and its proficiency level.
+type CVLanguage struct {
+	Name  string `json:"name"`
+	Level string `json:"level"`
+	Note  string `json:"note"`
+}
+
+// CVData mirrors cv.json — the CV reader page's structured source, shared
+// with the web build.
+type CVData struct {
+	Basics struct {
+		Name     string `json:"name"`
+		Tagline  string `json:"tagline"`
+		Location string `json:"location"`
+		Email    string `json:"email"`
+		Website  string `json:"website"`
+		Linkedin string `json:"linkedin"`
+		Github   string `json:"github"`
+		Photo    string `json:"photo"`
+		Pdf      string `json:"pdf"`
+	} `json:"basics"`
+	Summary    []string       `json:"summary"`
+	Expertise  []string       `json:"expertise"`
+	Experience []CVExperience `json:"experience"`
+	Earlier    []CVEarlier    `json:"earlier"`
+	Skills     []CVSkillGroup `json:"skills"`
+	Interests  []string       `json:"interests"`
+	Community  []CVCommunity  `json:"community"`
+	Education  []CVEducation  `json:"education"`
+	Languages  []CVLanguage   `json:"languages"`
+}
+
 // SiteData is the centralized config shared with the web build (content/data/*.json).
 type SiteData struct {
 	Nav         NavData
@@ -97,6 +175,7 @@ type SiteData struct {
 	Shortcuts   []Shortcut
 	Site        SiteMeta
 	Series      map[string]SeriesMeta
+	CV          CVData
 	Wakapi      *WakapiStats
 }
 
@@ -110,6 +189,7 @@ func LoadData(dataDir string) *SiteData {
 	readJSON(filepath.Join(dataDir, "shortcuts.json"), &d.Shortcuts)
 	readJSON(filepath.Join(dataDir, "site.json"), &d.Site)
 	readJSON(filepath.Join(dataDir, "seriesData.json"), &d.Series)
+	readJSON(filepath.Join(dataDir, "cv.json"), &d.CV)
 	return d
 }
 

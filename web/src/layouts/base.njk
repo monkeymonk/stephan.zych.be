@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="catppuccin-mocha">
+{# data-theme / data-view carry the defaults so first paint (and a no-JS visit)
+   already renders in the default theme and the rendered "html" view; app/index.ts
+   corrects both from the saved preference once the bundle runs. #}
+<html lang="en" data-theme="catppuccin-mocha" data-view="reading">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -33,7 +36,7 @@
   {%- endif %}
   {%- if isArticle %}
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":{{ metaTitle | dump | safe }},"description":{{ metaDescription | dump | safe }},"image":{{ metaImage | dump | safe }},"datePublished":{{ (date | htmlDateString) | dump | safe }},"dateModified":{{ (date | htmlDateString) | dump | safe }},"url":{{ (site.url + page.url) | dump | safe }},"mainEntityOfPage":{{ (site.url + page.url) | dump | safe }},"author":{"@type":"Person","name":{{ site.author | dump | safe }},"url":{{ site.url | dump | safe }}},"publisher":{"@type":"Organization","name":{{ site.title | dump | safe }},"logo":{"@type":"ImageObject","url":{{ (site.url + "/assets/social-card.jpg") | dump | safe }}}}}</script>
-  {%- elif page.url == '/' or page.url == '/about/' %}
+  {%- elif (page.url == '/' or page.url == '/about/') and page.url != '/cv/' %}
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":{{ site.author | dump | safe }},"url":{{ site.url | dump | safe }},"jobTitle":"Lead Developer & Frontend Architect","worksFor":{"@type":"Organization","name":"STEPHANZYCH","legalName":"STEPHAN ZYCH SRL","url":"https://stephanzych.be","vatID":"BE 0804.229.671"},"sameAs":[{{ site.socials.github | dump | safe }},{{ site.socials.linkedin | dump | safe }}]}</script>
   {%- endif %}
   <meta name="theme-color" content="#1e1e2e">
@@ -44,6 +47,9 @@
   <link rel="stylesheet" href="/styles/base.css">
   {% if section.name == 'blog' or section.name == 'projects' or page.fileSlug == 'styleguide' %}
   <link rel="stylesheet" href="/styles/prism-catppuccin.css">
+  {% endif %}
+  {% if page.fileSlug == 'cv' %}
+  <link rel="stylesheet" href="/styles/cv.css">
   {% endif %}
   {# Only the default theme ships render-blocking; others load on demand (app/index.ts). #}
   <link rel="stylesheet" id="theme-css-catppuccin-mocha" href="/assets/themes/catppuccin-mocha.css">

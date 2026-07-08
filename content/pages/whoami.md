@@ -41,6 +41,7 @@ Brussels, Belgium. `LANG=fr_BE` (native), `LC_MESSAGES=en` (professional). Runs 
 
 - `~/.config/clients/` — Unicef, Oxfam, Engie, Delhaize, Telenet, KBC Brussels, RTL, RTBF, Monizze, …
 - `~/projects/` — 200+ entries, most still standing.
+- `~/cv` — the formal write-up, if you need the paper trail: [/cv/](/cv/) (or [print it to PDF](/cv/print/)).
 
 ## BUGS
 
@@ -50,7 +51,7 @@ Brussels, Belgium. `LANG=fr_BE` (native), `LC_MESSAGES=en` (professional). Runs 
 
 ## SEE ALSO
 
-**about**(1) · [github(monkeymonk)]({{ site.socials.github }}) · [linkedin]({{ site.socials.linkedin }}) · [email](mailto:{{ site.email }})
+**about**(1) · [**cv**(1)](/cv/) · [github(monkeymonk)]({{ site.socials.github }}) · [linkedin]({{ site.socials.linkedin }}) · [email](mailto:{{ site.email }})
 
 ```text
 STEPHAN(1)                                                       2026

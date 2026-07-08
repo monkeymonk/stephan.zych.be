@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="/styles/cv-print.css">
+</head>
+<body>
+{{ content | safe }}
+<script>
+  // This page exists only to be printed. Open the print dialog on load, and
+  // turn the shared "Print / Save as PDF" link into a direct window.print()
+  // (on the on-site /cv/ page the same link just navigates here instead).
+  window.addEventListener('load', () => window.print());
+  document.querySelector('.sz-cv__download')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.print();
+  });
+</script>
+</body>
+</html>

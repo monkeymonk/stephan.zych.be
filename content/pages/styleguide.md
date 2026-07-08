@@ -1,13 +1,13 @@
 ---
 layout: page.njk
-title: Styleguide — code view
-heading: Styleguide · code view
-description: Internal reference — markdown elements in the code-like (line-numbered) template.
+title: Styleguide
+heading: Styleguide
+description: Internal reference — every markdown element and content widget, in both the html and markdown views.
 permalink: /styleguide/
 eleventyExcludeFromCollections: true
 noindex: true
 ---
 
-The **code-like** template by default — line numbers, neovim styling. Click **html** in the toolbar (or run `:set view reading`) to see the readable version of this same content.
+The **html** template by default — rendered headers, centered column, no gutter. Click **markdown** in the toolbar (or run `:set view code`) to see the same content as line-numbered neovim-style source.
 
 {% include "styleguide-body.njk" %}

@@ -102,6 +102,8 @@ That's most of what I do: raising the floor for a whole team through tooling, co
 
 I'm in Brussels 🇧🇪, I speak French natively and English professionally, and I'm always up for a good conversation about architecture, terminals, or why your build is slow. The fastest way is the [contact page](/contact/) — or type `:whoami` in the command palette to see who you're really talking to.
 
+Prefer the formal version? There's a proper [CV](/cv/) — read it in the browser, `curl stephan.zych.be/cv.md` for the plain-text cut, or [print it to PDF](/cv/print/).
+
 ---
 
 *The business behind the bytes: **[STEPHANZYCH](https://stephanzych.be)** (STEPHAN ZYCH SRL) — VAT **BE 0804.229.671**, Brussels. It's the company I work through, including my role at CBTW.*

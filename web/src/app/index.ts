@@ -68,10 +68,11 @@ actions.on(THEME_ACTION.SET, (a) => {
   document.documentElement.setAttribute('data-theme', theme);
 });
 
-// Apply saved view mode (code ⟷ reading) on <html> and keep it in sync.
-// On mobile the code view's line-number gutter doesn't fit, so we force the
-// reading view there (the toggle is hidden via CSS) and restore the saved
-// preference when back on a wide viewport.
+// Apply saved view mode (reading ⟷ code) on <html> and keep it in sync. The
+// markup already ships data-view="reading" (the default), so this only matters
+// for a visitor who picked the markdown/code view. On mobile that view's
+// line-number gutter doesn't fit, so we force reading there (the toggle is
+// hidden via CSS) and restore the saved preference back on a wide viewport.
 const mobile = window.matchMedia('(max-width: 768px)');
 const applyViewMode = () =>
   document.documentElement.setAttribute(

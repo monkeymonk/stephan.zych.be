@@ -1,0 +1,151 @@
+<div class="sz-cv">
+
+  <header class="sz-cv__header">
+    <p class="sz-cv__prompt" aria-hidden="true"><span class="sz-cv__sigil">❯</span>whoami --full</p>
+    {% if cv.basics.photo %}
+    <img class="sz-cv__photo" src="{{ cv.basics.photo }}" alt="{{ cv.basics.name }}" loading="lazy" decoding="async">
+    {% endif %}
+    <div class="sz-cv__identity">
+      <h1 class="sz-cv__name">{{ cv.basics.name }}</h1>
+      {% if cv.basics.tagline %}<p class="sz-cv__tagline">{{ cv.basics.tagline }}</p>{% endif %}
+      {% if cv.basics.location %}<p class="sz-cv__location">{{ cv.basics.location }}</p>{% endif %}
+      <ul class="sz-cv__contact">
+        {% if cv.basics.email %}<li><a href="mailto:{{ cv.basics.email }}">{{ cv.basics.email }}</a></li>{% endif %}
+        {% if cv.basics.website %}<li><a href="https://{{ cv.basics.website }}">{{ cv.basics.website }}</a></li>{% endif %}
+        {% if cv.basics.linkedin %}<li><a href="https://{{ cv.basics.linkedin }}">LinkedIn</a></li>{% endif %}
+        {% if cv.basics.github %}<li><a href="https://{{ cv.basics.github }}">GitHub</a></li>{% endif %}
+      </ul>
+      {% if cv.basics.pdf %}
+      <a class="sz-cv__download no-print" href="{{ cv.basics.pdf }}" target="_blank" rel="noopener">⎙ Print / Save as PDF</a>
+      {% endif %}
+    </div>
+  </header>
+
+  {% if cv.summary %}
+  <section class="sz-cv__section">
+    <h2>About me</h2>
+    {% for paragraph in cv.summary %}<p>{{ paragraph }}</p>{% endfor %}
+  </section>
+  {% endif %}
+
+  {% if cv.expertise %}
+  <section class="sz-cv__section">
+    <h2>Core expertise</h2>
+    <ul class="sz-cv__taglist">
+      {% for item in cv.expertise %}<li>{{ item }}</li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if cv.experience %}
+  <section class="sz-cv__section">
+    <h2>Work experience</h2>
+    {% for job in cv.experience %}
+    <article class="sz-cv__job">
+      <h3 class="sz-cv__job-title">
+        {{ job.role }}{% if job.company %} — {{ job.company }}{% if job.via %} · via {{ job.via }}{% endif %}{% endif %}
+      </h3>
+      {% if job.location or job.period %}
+      <p class="sz-cv__job-meta">
+        {%- if job.location %}{{ job.location }}{% endif -%}
+        {%- if job.location and job.period %} · {% endif -%}
+        {%- if job.period %}{{ job.period }}{% endif -%}
+      </p>
+      {% endif %}
+      {% if job.summary %}<p class="sz-cv__job-summary">{{ job.summary }}</p>{% endif %}
+      {% if job.highlights %}
+      <ul class="sz-cv__job-list">
+        {% for item in job.highlights %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+      {% if job.groups %}
+      {% for group in job.groups %}
+      <div class="sz-cv__job-group">
+        {% if group.label %}<h4>{{ group.label }}</h4>{% endif %}
+        {% if group.items %}
+        <ul class="sz-cv__job-list">
+          {% for item in group.items %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% endif %}
+      {% if job.clients %}
+      <p class="sz-cv__job-clients">Representative clients: {{ job.clients | join(' · ') }}</p>
+      {% endif %}
+      {% if job.note %}
+      <p class="sz-cv__job-note">{{ job.note }}</p>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if cv.earlier %}
+  <section class="sz-cv__section">
+    <h2>Earlier roles</h2>
+    <ul class="sz-cv__earlier">
+      {% for job in cv.earlier %}
+      <li>{{ job.role }}{% if job.company %} — {{ job.company }}{% endif %}{% if job.period %} · {{ job.period }}{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if cv.education %}
+  <section class="sz-cv__section">
+    <h2>Education &amp; training</h2>
+    <ul class="sz-cv__list-plain">
+      {% for item in cv.education %}
+      <li>{% if item.school %}<strong>{{ item.school }}</strong>{% endif %}{% if item.detail %} — {{ item.detail }}{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if cv.skills %}
+  <section class="sz-cv__section">
+    <h2>Digital skills</h2>
+    {% for group in cv.skills %}
+    <div class="sz-cv__skill-group">
+      {% if group.label %}<h3>{{ group.label }}</h3>{% endif %}
+      {% if group.items %}
+      <ul class="sz-cv__taglist">
+        {% for item in group.items %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if cv.languages %}
+  <section class="sz-cv__section">
+    <h2>Language skills</h2>
+    <ul class="sz-cv__taglist">
+      {% for item in cv.languages %}<li>{{ item.name }}{% if item.level %} — {{ item.level }}{% endif %}{% if item.note %} · {{ item.note }}{% endif %}</li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if cv.community %}
+  <section class="sz-cv__section">
+    <h2>Leadership &amp; community</h2>
+    <ul class="sz-cv__list-plain">
+      {% for item in cv.community %}
+      <li>{% if item.label %}<strong>{{ item.label }}</strong>{% endif %}{% if item.detail %} — {{ item.detail }}{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if cv.interests %}
+  <section class="sz-cv__section">
+    <h2>Interests</h2>
+    <ul class="sz-cv__taglist">
+      {% for item in cv.interests %}<li>{{ item }}</li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+</div>

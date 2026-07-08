@@ -1,0 +1,321 @@
+/* ═══════════════════════════════════════════════════
+   CV / résumé page — /cv/
+   ═══════════════════════════════════════════════════
+
+   The CV is its own document layout (it deliberately skips the article
+   markdown/html chrome — it has no source view to toggle to), so it restates
+   the site's devices instead of inheriting them from .sz-prose:
+
+   - identity header  → the "❯ cmd" panel used by the content widgets
+   - section headings → prose's `##` indicator + tinted band (h2 level)
+   - bullets          → prose's ● / ○ markers
+   - skill chips      → the article tag chip
+   - vertical rhythm  → multiples of --sz-line-px, one grid line
+
+   Heading rule: only the section h2 carries the indicator + band. Everything
+   deeper (job title, skill group, job group) is distinguished by colour alone,
+   so the band stays the section marker.
+
+   cv-print.css is the light, print-only twin over the SAME markup
+   (web/src/_includes/cv-body.njk) — a markup change lands in both.
+   ═══════════════════════════════════════════════════ */
+
+.sz-cv {
+  display: block;
+  padding: 24px 32px 48px;
+  max-width: 800px;
+  margin: 0 auto;
+  color: var(--sz-text, #cdd6f4);
+  font-size: var(--sz-font-size);
+  line-height: var(--sz-line-height);
+  overflow-wrap: break-word;
+}
+
+/* ── Identity header — the "❯ whoami --full" panel ── */
+
+.sz-cv__header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0 22px;
+  margin-bottom: calc(var(--sz-line-px) * 2);
+  padding: 18px;
+  border: 1px solid var(--sz-surface1, #45475a);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--sz-mantle, #181825) 45%, transparent);
+}
+
+/* Full-bleed command row: negative margins cancel the panel's own padding. */
+.sz-cv__prompt {
+  grid-column: 1 / -1;
+  margin: -18px -18px 18px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--sz-surface0, #313244);
+  color: var(--sz-subtext0, #a6adc8);
+  font-size: calc(var(--sz-font-size) * 0.85);
+}
+.sz-cv__sigil {
+  margin-right: 8px;
+  color: var(--sz-green, #a6e3a1);
+  font-weight: 700;
+}
+
+/* Square + hairline border, like every other image on the site. */
+.sz-cv__photo {
+  grid-column: 1;
+  flex-shrink: 0;
+  width: 104px;
+  height: 104px;
+  object-fit: cover;
+  border: 1px solid var(--sz-surface1, #45475a);
+  border-radius: 4px;
+}
+.sz-cv__identity {
+  grid-column: 2;
+  min-width: 0;
+}
+.sz-cv__name {
+  margin: 0;
+  font-size: calc(var(--sz-font-size) * 1.6);
+  font-weight: 700;
+  /* Two grid lines tall, so the panel stays on the site's line rhythm. */
+  line-height: calc(var(--sz-line-px) * 2);
+  color: var(--sz-accent, #89b4fa);
+}
+.sz-cv__tagline {
+  margin: 0;
+  color: var(--sz-lavender, #b4befe);
+}
+.sz-cv__location {
+  margin: 0;
+  color: var(--sz-subtext0, #a6adc8);
+}
+
+.sz-cv__contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sz-cv__contact li {
+  display: flex;
+  gap: 8px;
+}
+.sz-cv__contact li:not(:last-child)::after {
+  content: '·';
+  color: var(--sz-overlay0, #6c7086);
+}
+.sz-cv__contact a {
+  color: var(--sz-subtext1, #bac2de);
+  text-decoration: none;
+}
+.sz-cv__contact a:hover {
+  color: var(--sz-accent, #89b4fa);
+  text-decoration: none;
+}
+
+.sz-cv__download {
+  display: inline-block;
+  margin-top: var(--sz-line-px);
+  padding: 0 12px;
+  line-height: calc(var(--sz-line-px) + 8px);
+  color: var(--sz-accent, #89b4fa);
+  background: color-mix(in srgb, var(--sz-accent, #89b4fa) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sz-accent, #89b4fa) 45%, transparent);
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.sz-cv__download:hover {
+  background: color-mix(in srgb, var(--sz-accent, #89b4fa) 22%, transparent);
+  border-color: var(--sz-accent, #89b4fa);
+  text-decoration: none;
+}
+
+/* ── Sections ── */
+
+.sz-cv__section {
+  margin-bottom: calc(var(--sz-line-px) * 2);
+}
+.sz-cv__section:last-child {
+  margin-bottom: 0;
+}
+.sz-cv__section h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 var(--sz-line-px);
+  font-size: var(--sz-font-size);
+  font-weight: 700;
+  color: var(--sz-lavender, #b4befe);
+  background: color-mix(in srgb, var(--sz-lavender, #b4befe) 10%, transparent);
+}
+.sz-cv__section h2::before {
+  content: '##';
+  opacity: 0.6;
+}
+/* Direct children only — the job entries below run their own rhythm, and a
+   descendant selector here would out-specify it. */
+.sz-cv__section > p {
+  margin: 0 0 var(--sz-line-px);
+}
+.sz-cv__section > p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Chip lists (core expertise, digital skills, languages, interests) ── */
+
+.sz-cv__taglist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sz-cv__taglist li {
+  padding: 0 8px;
+  line-height: var(--sz-line-px);
+  font-size: calc(var(--sz-font-size) * 0.88);
+  color: var(--sz-lavender, #b4befe);
+  background: var(--sz-surface0, #313244);
+  border-radius: 2px;
+}
+
+/* ── Marker lists (education & training, leadership & community) ── */
+
+.sz-cv__list-plain {
+  margin: 0;
+  padding-left: 1.6em;
+  list-style: none;
+}
+.sz-cv__list-plain li {
+  position: relative;
+}
+.sz-cv__list-plain li::before {
+  content: '\25CF';
+  position: absolute;
+  left: -1.2em;
+  color: var(--sz-accent, #89b4fa);
+}
+.sz-cv__list-plain strong {
+  color: var(--sz-peach, #fab387);
+}
+
+/* ── Work experience — a timeline rail, one marker per role ── */
+
+.sz-cv__job {
+  position: relative;
+  padding: 0 0 calc(var(--sz-line-px) * 1.5) 22px;
+  border-left: 1px solid color-mix(in srgb, var(--sz-accent, #89b4fa) 28%, transparent);
+}
+.sz-cv__job:last-child {
+  padding-bottom: 0;
+}
+/* Timeline node, drawn rather than typeset. A `●` glyph can't align here: its
+   ink isn't centred in the advance box, so translateX(-50%) lands ~1px off the
+   rail. With an explicit 7px box the maths is exact — absolute offsets resolve
+   against the padding box, so the 1px border spans x -1..0 and its centre is
+   -0.5px; -0.5 - 7/2 = -4px puts the node dead on the line. */
+.sz-cv__job::before {
+  content: '';
+  position: absolute;
+  top: calc((var(--sz-line-px) - 7px) / 2);
+  left: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sz-accent, #89b4fa);
+}
+.sz-cv__job-title {
+  margin: 0;
+  font-size: var(--sz-font-size);
+  font-weight: 700;
+  color: var(--sz-accent, #89b4fa);
+}
+.sz-cv__job-meta {
+  margin: 0 0 var(--sz-line-px);
+  color: var(--sz-overlay1, #7f849c);
+}
+.sz-cv__job-summary {
+  margin: 0;
+  color: var(--sz-subtext0, #a6adc8);
+}
+.sz-cv__job-list {
+  margin: var(--sz-line-px) 0 0;
+  padding-left: 1.5em;
+  list-style: none;
+}
+.sz-cv__job-list li {
+  position: relative;
+}
+.sz-cv__job-list li::before {
+  content: '\25CF';
+  position: absolute;
+  left: -1.2em;
+  color: var(--sz-accent, #89b4fa);
+}
+.sz-cv__job-group {
+  margin-top: var(--sz-line-px);
+}
+.sz-cv__job-group h4 {
+  margin: 0;
+  font-size: var(--sz-font-size);
+  font-weight: 700;
+  color: var(--sz-green, #a6e3a1);
+}
+.sz-cv__job-group .sz-cv__job-list {
+  margin-top: 0;
+}
+.sz-cv__job-clients,
+.sz-cv__job-note {
+  margin: var(--sz-line-px) 0 0;
+  color: var(--sz-subtext0, #a6adc8);
+}
+.sz-cv__job-note {
+  font-style: italic;
+}
+
+/* ── Earlier roles ── */
+
+.sz-cv__earlier {
+  margin: 0;
+  padding-left: 1.6em;
+  list-style: none;
+}
+.sz-cv__earlier li {
+  position: relative;
+  color: var(--sz-subtext0, #a6adc8);
+}
+.sz-cv__earlier li::before {
+  content: '\25CB';
+  position: absolute;
+  left: -1.2em;
+  color: var(--sz-lavender, #b4befe);
+}
+
+/* ── Digital skills ── */
+
+.sz-cv__skill-group + .sz-cv__skill-group {
+  margin-top: var(--sz-line-px);
+}
+.sz-cv__skill-group h3 {
+  margin: 0;
+  font-size: var(--sz-font-size);
+  font-weight: 700;
+  color: var(--sz-mauve, #cba6f7);
+}
+
+@media (max-width: 768px) {
+  .sz-cv { padding: 16px 16px 32px; }
+  .sz-cv__header {
+    grid-template-columns: 1fr;
+    gap: 14px 0;
+    padding: 14px;
+  }
+  .sz-cv__prompt { margin: -14px -14px 0; }
+  .sz-cv__photo { grid-column: 1; width: 88px; height: 88px; }
+  .sz-cv__identity { grid-column: 1; }
+}

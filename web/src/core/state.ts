@@ -18,7 +18,7 @@ const defaults: AppStateSchema = {
   activePane: null,
   transparency: 95,
   shaderMode: 'css',
-  viewMode: 'code',
+  viewMode: 'reading',
   fontScale: 1,
 };
 

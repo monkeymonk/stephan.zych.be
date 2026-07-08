@@ -1,0 +1,126 @@
+---
+permalink: /cv.md
+eleventyExcludeFromCollections: true
+---
+{%- set blocks = [] -%}
+
+{%- set headerLines = [] -%}
+{%- set headerLines = (headerLines.push("# " + cv.basics.name), headerLines) -%}
+{%- if cv.basics.tagline -%}{%- set headerLines = (headerLines.push(cv.basics.tagline), headerLines) -%}{%- endif -%}
+{%- if cv.basics.location -%}{%- set headerLines = (headerLines.push(cv.basics.location), headerLines) -%}{%- endif -%}
+
+{%- set contact = [] -%}
+{%- if cv.basics.email -%}{%- set contact = (contact.push("[" + cv.basics.email + "](mailto:" + cv.basics.email + ")"), contact) -%}{%- endif -%}
+{%- if cv.basics.website -%}{%- set contact = (contact.push("[" + cv.basics.website + "](https://" + cv.basics.website + ")"), contact) -%}{%- endif -%}
+{%- if cv.basics.linkedin -%}{%- set contact = (contact.push("[LinkedIn](https://" + cv.basics.linkedin + ")"), contact) -%}{%- endif -%}
+{%- if cv.basics.github -%}{%- set contact = (contact.push("[GitHub](https://" + cv.basics.github + ")"), contact) -%}{%- endif -%}
+{%- if contact.length -%}{%- set headerLines = (headerLines.push(contact | join(" · ")), headerLines) -%}{%- endif -%}
+{%- if cv.basics.pdf -%}{%- set headerLines = (headerLines.push("**Print / PDF:** " + site.url + cv.basics.pdf), headerLines) -%}{%- endif -%}
+
+{%- set blocks = (blocks.push(headerLines | join("\n\n")), blocks) -%}
+
+{%- if cv.summary -%}
+{%- set blocks = (blocks.push("## About me\n\n" + (cv.summary | join("\n\n"))), blocks) -%}
+{%- endif -%}
+
+{%- if cv.expertise -%}
+{%- set blocks = (blocks.push("## Core expertise\n\n" + (cv.expertise | join(" · "))), blocks) -%}
+{%- endif -%}
+
+{%- if cv.experience -%}
+{%- set jobBlocks = [] -%}
+{%- for job in cv.experience -%}
+{%- set jobParts = [] -%}
+{%- set jobTitle = "### " + job.role -%}
+{%- if job.company -%}{%- set jobTitle = jobTitle + " — " + job.company -%}{%- endif -%}
+{%- if job.via -%}{%- set jobTitle = jobTitle + " · via " + job.via -%}{%- endif -%}
+{%- set jobParts = (jobParts.push(jobTitle), jobParts) -%}
+{%- if job.location or job.period -%}
+{%- set meta = "" -%}
+{%- if job.location -%}{%- set meta = meta + job.location -%}{%- endif -%}
+{%- if job.location and job.period -%}{%- set meta = meta + " · " -%}{%- endif -%}
+{%- if job.period -%}{%- set meta = meta + job.period -%}{%- endif -%}
+{%- set jobParts = (jobParts.push("*" + meta + "*"), jobParts) -%}
+{%- endif -%}
+{%- if job.summary -%}{%- set jobParts = (jobParts.push(job.summary), jobParts) -%}{%- endif -%}
+{%- if job.highlights -%}
+{%- set highlightLines = [] -%}
+{%- for item in job.highlights -%}{%- set highlightLines = (highlightLines.push("- " + item), highlightLines) -%}{%- endfor -%}
+{%- set jobParts = (jobParts.push(highlightLines | join("\n")), jobParts) -%}
+{%- endif -%}
+{%- if job.groups -%}
+{%- for group in job.groups -%}
+{%- set groupLines = [] -%}
+{%- if group.label -%}{%- set groupLines = (groupLines.push("**" + group.label + "**"), groupLines) -%}{%- endif -%}
+{%- if group.items -%}
+{%- for item in group.items -%}{%- set groupLines = (groupLines.push("- " + item), groupLines) -%}{%- endfor -%}
+{%- endif -%}
+{%- set jobParts = (jobParts.push(groupLines | join("\n")), jobParts) -%}
+{%- endfor -%}
+{%- endif -%}
+{%- if job.clients -%}{%- set jobParts = (jobParts.push("**Representative clients:** " + (job.clients | join(" · "))), jobParts) -%}{%- endif -%}
+{%- if job.note -%}{%- set jobParts = (jobParts.push(job.note), jobParts) -%}{%- endif -%}
+{%- set jobBlocks = (jobBlocks.push(jobParts | join("\n\n")), jobBlocks) -%}
+{%- endfor -%}
+{%- set blocks = (blocks.push("## Work experience\n\n" + (jobBlocks | join("\n\n"))), blocks) -%}
+{%- endif -%}
+
+{%- if cv.earlier -%}
+{%- set earlierLines = [] -%}
+{%- for job in cv.earlier -%}
+{%- set line = "- **" + job.role + "**" -%}
+{%- if job.company -%}{%- set line = line + " — " + job.company -%}{%- endif -%}
+{%- if job.period -%}{%- set line = line + " · " + job.period -%}{%- endif -%}
+{%- set earlierLines = (earlierLines.push(line), earlierLines) -%}
+{%- endfor -%}
+{%- set blocks = (blocks.push("## Earlier roles\n\n" + (earlierLines | join("\n"))), blocks) -%}
+{%- endif -%}
+
+{%- if cv.education -%}
+{%- set eduLines = [] -%}
+{%- for item in cv.education -%}
+{%- set line = "- **" + item.school + "**" -%}
+{%- if item.detail -%}{%- set line = line + " — " + item.detail -%}{%- endif -%}
+{%- set eduLines = (eduLines.push(line), eduLines) -%}
+{%- endfor -%}
+{%- set blocks = (blocks.push("## Education & training\n\n" + (eduLines | join("\n"))), blocks) -%}
+{%- endif -%}
+
+{%- if cv.skills -%}
+{%- set skillLines = [] -%}
+{%- for group in cv.skills -%}
+{%- set line = "**" + group.label + "**" -%}
+{%- if group.items -%}{%- set line = line + " — " + (group.items | join(" · ")) -%}{%- endif -%}
+{%- set skillLines = (skillLines.push(line), skillLines) -%}
+{%- endfor -%}
+{%- set blocks = (blocks.push("## Digital skills\n\n" + (skillLines | join("\n"))), blocks) -%}
+{%- endif -%}
+
+{%- if cv.languages -%}
+{%- set langLines = [] -%}
+{%- for item in cv.languages -%}
+{%- set line = "- **" + item.name + "**" -%}
+{%- if item.level -%}{%- set line = line + " — " + item.level -%}{%- endif -%}
+{%- if item.note -%}{%- set line = line + " · " + item.note -%}{%- endif -%}
+{%- set langLines = (langLines.push(line), langLines) -%}
+{%- endfor -%}
+{%- set blocks = (blocks.push("## Language skills\n\n" + (langLines | join("\n"))), blocks) -%}
+{%- endif -%}
+
+{%- if cv.community -%}
+{%- set commLines = [] -%}
+{%- for item in cv.community -%}
+{%- set line = "- **" + item.label + "**" -%}
+{%- if item.detail -%}{%- set line = line + " — " + item.detail -%}{%- endif -%}
+{%- set commLines = (commLines.push(line), commLines) -%}
+{%- endfor -%}
+{%- set blocks = (blocks.push("## Leadership & community\n\n" + (commLines | join("\n"))), blocks) -%}
+{%- endif -%}
+
+{%- if cv.interests -%}
+{%- set interestLines = [] -%}
+{%- for item in cv.interests -%}{%- set interestLines = (interestLines.push("- " + item), interestLines) -%}{%- endfor -%}
+{%- set blocks = (blocks.push("## Interests\n\n" + (interestLines | join("\n"))), blocks) -%}
+{%- endif -%}
+
+{{ ((blocks | join("\n\n")) + "\n") | safe }}

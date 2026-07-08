@@ -1,0 +1,244 @@
+/* ═══════════════════════════════════════════════════
+   CV print / PDF stylesheet — /cv/print/
+   Bare, chrome-free page the reader prints (or saves as
+   PDF) straight from the browser. Light, single-column,
+   A4, optimised for a clean 1–2 page résumé printout.
+   ═══════════════════════════════════════════════════ */
+
+@page {
+  size: A4;
+  margin: 14mm 15mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  color: #1a1a1a;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.45;
+}
+
+.sz-cv {
+  max-width: none;
+  padding: 0;
+  color: #1a1a1a;
+}
+
+/* ── Header ── */
+.sz-cv__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+  border-bottom: 1.5pt solid #1a1a1a;
+}
+/* Terminal-flavoured prompt line — on-site chrome, never printed. */
+.sz-cv__prompt { display: none; }
+.sz-cv__photo {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1pt solid #ccc;
+}
+.sz-cv__identity {
+  flex: 1;
+  min-width: 0;
+}
+.sz-cv__name {
+  margin: 0 0 2px;
+  font-size: 18pt;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.25;
+}
+.sz-cv__tagline {
+  margin: 0 0 3px;
+  color: #333;
+  font-size: 10.5pt;
+}
+.sz-cv__location {
+  margin: 0 0 6px;
+  color: #555;
+  font-size: 9.5pt;
+}
+.sz-cv__contact {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  font-size: 9pt;
+}
+.sz-cv__contact li { margin: 0; padding: 0; }
+.sz-cv__contact a {
+  color: #333;
+  text-decoration: none;
+}
+
+/* On-screen this is the print trigger (JS upgrades the click to
+   window.print()); it has no purpose in the printed output itself. */
+.sz-cv__download {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 5px 12px;
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 9pt;
+  text-decoration: none;
+}
+@media print {
+  .no-print { display: none !important; }
+}
+
+/* ── Sections ── */
+.sz-cv__section {
+  margin-bottom: 10pt;
+  padding-bottom: 8pt;
+  border-bottom: 0.5pt solid #ddd;
+}
+.sz-cv__section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.sz-cv__section h2 {
+  margin: 0 0 6pt;
+  font-size: 11.5pt;
+  font-weight: 700;
+  color: #1a1a1a;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding-bottom: 2pt;
+  border-bottom: 0.75pt solid #999;
+  break-after: avoid;
+}
+.sz-cv__section p { margin: 0 0 6pt; }
+.sz-cv__section p:last-child { margin-bottom: 0; }
+
+/* ── Tag/inline lists ── */
+.sz-cv__taglist {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4pt 6pt;
+  margin: 0;
+  padding: 0;
+}
+.sz-cv__taglist li {
+  margin: 0;
+  padding: 1pt 6pt;
+  background: #f2f2f2;
+  color: #333;
+  border: 0.5pt solid #ccc;
+  border-radius: 3pt;
+  font-size: 9pt;
+}
+
+/* ── Plain lists (education & training, leadership & community) ── */
+.sz-cv__list-plain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sz-cv__list-plain li {
+  margin: 0 0 5pt;
+  padding: 0;
+  break-inside: avoid;
+}
+.sz-cv__list-plain li:last-child { margin-bottom: 0; }
+.sz-cv__list-plain strong { color: #1a1a1a; }
+
+/* ── Experience ── */
+.sz-cv__job {
+  margin-bottom: 10pt;
+  padding-bottom: 10pt;
+  border-bottom: 0.5pt solid #eee;
+  break-inside: avoid;
+}
+.sz-cv__job:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.sz-cv__job-title {
+  margin: 0 0 1pt;
+  font-size: 10.5pt;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.sz-cv__job-meta {
+  margin: 0 0 5pt;
+  color: #666;
+  font-size: 9pt;
+  font-style: italic;
+}
+.sz-cv__job-summary { color: #333; }
+.sz-cv__job-list {
+  margin: 5pt 0;
+  padding-left: 1.2em;
+}
+.sz-cv__job-list li {
+  margin: 0 0 2pt;
+  break-inside: avoid;
+}
+.sz-cv__job-group {
+  margin: 6pt 0;
+  break-inside: avoid;
+}
+.sz-cv__job-group h4 {
+  margin: 0 0 3pt;
+  font-size: 9.5pt;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.sz-cv__job-clients {
+  margin: 5pt 0 0;
+  color: #555;
+  font-size: 9pt;
+}
+.sz-cv__job-note {
+  margin: 5pt 0 0;
+  color: #555;
+  font-style: italic;
+  font-size: 9pt;
+}
+
+/* ── Earlier roles ── */
+.sz-cv__earlier {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sz-cv__earlier li {
+  margin: 0 0 3pt;
+  color: #333;
+  font-size: 9.5pt;
+}
+.sz-cv__earlier li:last-child { margin-bottom: 0; }
+
+/* ── Digital skills ── */
+.sz-cv__skill-group {
+  margin-bottom: 6pt;
+  break-inside: avoid;
+}
+.sz-cv__skill-group:last-child { margin-bottom: 0; }
+.sz-cv__skill-group h3 {
+  margin: 0 0 4pt;
+  font-size: 9.5pt;
+  font-weight: 700;
+  color: #1a1a1a;
+}

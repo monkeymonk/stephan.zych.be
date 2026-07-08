@@ -9,6 +9,20 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-08-27
+
+### Added
+- CV / résumé page at `/cv/` (web) and a matching `cv` screen in the TUI, both rendered from a single structured source, `content/data/cv.json`. Europass-informed structure (Work experience, Education & training, Digital/Language skills) with CEFR language levels, covering version control & CI/CD alongside the frontend/backend/infrastructure stack. Reached from the `about` and `whoami` pages — deliberately not a top-nav tab.
+- The page is styled in the site's own vocabulary rather than as a foreign document: the identity block is framed as a `❯ whoami --full` panel (the same chrome the content widgets use), section headings carry prose's `##` indicator and tinted band, work experience runs down a timeline rail with one marker per role, lists use the site's `●`/`○` markers, skills render as the article tag chip, and all vertical spacing sits on the `--sz-line-px` line grid.
+- Plain-text/Markdown résumé at `/cv.md` — `curl stephan.zych.be/cv.md` returns the CV, generated from the same source.
+- Print-optimised `/cv/print/` page: a chrome-free A4 layout with a "Print / Save as PDF" button, so the reader exports a clean PDF straight from the browser — no committed binary, no typesetting toolchain, always in sync with the data.
+- Rich `Person`/`ProfilePage` JSON-LD on `/cv/` (occupation, employer, education, skills).
+- `npm run check:cv` drift guard (wired into `build`) — fails if the shared headline facts, or the CV section headings across the web/TUI/Markdown renderers, drift apart.
+
+### Changed
+- The rendered **html** view is now the site-wide default (it was the line-numbered **markdown**/code view). Pages ship `data-view="reading"` in the markup, so first paint — and a no-JS visit, where the code view's line-number gutter is never generated — already lands on the rendered view. A visitor who picks **markdown** still gets it back on the next page.
+- Retitled the internal styleguide page to just "Styleguide" — it no longer opens in the code view.
+
 ### Security
 - Bumped `golang.org/x/text` 0.37.0 → 0.39.0 in the TUI to clear GO-2026-5970, reachable via `tui.main` → `log.Warn` → `norm.Form.Properties`, which was failing the deploy's `govulncheck` gate.
 
@@ -133,7 +147,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.2...v1.3.0
 [1.2.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.1...v1.2.2

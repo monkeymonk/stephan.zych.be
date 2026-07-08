@@ -107,6 +107,13 @@ func NewModel(content *Content, data *SiteData, loadErr error, width, height int
 	m.theme = themes[m.themeName]
 	s := buildStyles(m.theme)
 	m.st = &s
+	// The CV is data-driven (content/data/cv.json), not a markdown file, so
+	// LoadContent doesn't pick it up. Register it as a page so it's reachable
+	// exactly like about/whoami — via internal /cv/ links, `:cv`, and search —
+	// without needing a nav tab.
+	if content != nil && content.Pages != nil && data != nil {
+		content.Pages["cv"] = m.cvArticle()
+	}
 	if width > 0 && height > 0 {
 		m.resize(width, height)
 	}
@@ -834,7 +841,7 @@ func (m Model) gotoTab(name string) (tea.Model, tea.Cmd) {
 		m.enterList("projects", "projects", m.content.Projects)
 	case "blog":
 		m.enterList("blog", "blog", m.content.Blog)
-	default: // about, contact, whoami, … → page
+	default: // about, contact, whoami, cv, … → page
 		if a, ok := m.content.Pages[name]; ok {
 			m.openReader(a, screenHome)
 		}
