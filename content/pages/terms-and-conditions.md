@@ -16,7 +16,7 @@ Terms and Conditions of Sale — **STEPHAN ZYCH** · Governing law: Belgium (B2B
 - **Seller:** [STEPHAN ZYCH (SRL)](https://stephanzych.be)
 - **Registered office:** avenue de l'université, 101 — 1050 Ixelles, Belgium
 - **VAT:** BE 0804.229.671
-- **Email:** stephan@zych.be — **Phone:** +32 499 41 07 86
+- **Email:** stephan@zych.be
 
 ## Article 1 — General provisions
 

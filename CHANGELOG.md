@@ -9,6 +9,11 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-07-08
+
+### Removed
+- Phone number on the Terms & Conditions page — email remains the contact channel.
+
 ## [1.2.0] - 2026-07-06
 
 ### Added
@@ -105,7 +110,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/monkeymonk/stephan.zych.be/releases/tag/v1.0.0
