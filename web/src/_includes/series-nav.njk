@@ -3,16 +3,29 @@
 {%- set parts = collections.blog | seriesPosts(series) %}
 {%- if parts | length %}
 <nav class="sz-series" aria-label="Article series">
-  <p class="sz-series__label">Part {{ order or 1 }} of <strong>{{ meta.name if meta else series }}</strong></p>
+  <p class="sz-series__label"><span class="sz-series__kicker">Series</span> Part {{ order or 1 }} of <strong>{{ meta.name if meta else series }}</strong></p>
   {%- if meta and meta.description %}
   <p class="sz-series__desc">{{ meta.description }}</p>
   {%- endif %}
   <ol class="sz-series__list">
     {%- for post in parts %}
+    {%- set n = post.data.order or loop.index %}
     {%- if post.url == page.url %}
-    <li class="sz-series__item is-current"><span aria-current="page">{{ post.data.title }}</span></li>
+    <li class="sz-series__item is-current">
+      <span class="sz-series__row" aria-current="page">
+        <span class="sz-series__num">{% if n < 10 %}0{% endif %}{{ n }}</span>
+        <span class="sz-series__title">{{ post.data.title }}</span>
+        <span class="sz-series__here">Reading</span>
+      </span>
+    </li>
     {%- else %}
-    <li class="sz-series__item"><a href="{{ post.url }}">{{ post.data.title }}</a></li>
+    <li class="sz-series__item">
+      <a class="sz-series__row" href="{{ post.url }}">
+        <span class="sz-series__num">{% if n < 10 %}0{% endif %}{{ n }}</span>
+        <span class="sz-series__title">{{ post.data.title }}</span>
+        <span class="sz-series__arrow">→</span>
+      </a>
+    </li>
     {%- endif %}
     {%- endfor %}
   </ol>

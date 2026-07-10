@@ -67,6 +67,8 @@ layout: base.njk
       {% if poster %}<img class="md-img" src="{{ poster }}" alt="{{ heading or title }}" loading="lazy" decoding="async"{{ poster | imgDimAttrs | safe }}>{% endif %}
     </div>
 
+    {% include "series-source.njk" %}
+
     {{ content | safe }}
 
     {% if section.name == 'blog' %}

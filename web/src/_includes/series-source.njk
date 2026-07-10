@@ -1,0 +1,22 @@
+{%- if series %}
+{%- set meta = seriesData[series] %}
+{%- set parts = collections.blog | seriesPosts(series) %}
+{%- if parts | length %}
+<div class="sz-md-series">
+  <div class="md-series-lead"><span class="md-series-key">series:</span> part {{ order or 1 }} of <strong>{{ meta.name if meta else series }}</strong></div>
+  <ol class="md-series-list">
+    {%- for post in parts %}
+    {%- set n = post.data.order or loop.index %}
+    <li class="md-series-item{% if post.url == page.url %} is-current{% endif %}">
+      <span class="md-series-num">{% if n < 10 %}0{% endif %}{{ n }}.</span>
+      {%- if post.url == page.url %}
+      <strong>{{ post.data.title }}</strong> <span class="md-series-here">← you're reading it</span>
+      {%- else %}
+      <a href="{{ post.url }}">{{ post.data.title }}</a>
+      {%- endif %}
+    </li>
+    {%- endfor %}
+  </ol>
+</div>
+{%- endif %}
+{%- endif %}

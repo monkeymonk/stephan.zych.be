@@ -19,7 +19,7 @@ permalink: /blog/
             </span>
             <span class="post-row__main">
               <span class="post-row__title">{{ post.data.title }}</span>
-              {% if post.data.series %}<span class="post-row__series">{{ seriesData[post.data.series].name if seriesData[post.data.series] else post.data.series }}{% if post.data.order %} · part {{ post.data.order }}{% endif %}</span>{% endif %}
+              {% if post.data.series %}<span class="post-row__series"><span class="post-row__series-name">{{ seriesData[post.data.series].name if seriesData[post.data.series] else post.data.series }}</span>{% if post.data.order %}<span class="post-row__series-part">part {{ post.data.order }}</span>{% endif %}</span>{% endif %}
               <span class="post-row__desc">{{ post.data.description }}</span>
               {% if post.data.tags %}
               <span class="post-row__tags">

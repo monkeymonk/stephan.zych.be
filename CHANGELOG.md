@@ -9,6 +9,10 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+### Changed
+- Redesigned the in-article series nav to fit the terminal aesthetic and align with the reading column. Reading view shows a constrained card with numbered part rows (`01`, `02`, …), the current part highlighted and tagged `Reading`; code view now renders a markdown-source twin (`.sz-md-series`) inside the numbered body so line numbers run through it — mirroring the TUI's "part N of …" block. Replaces the full-width, plain bulleted list that read as broken with a single published part.
+- Reworked the blog-archive series badge (`.post-row__series`) — a `≡` glyph, the series name in lavender, and the part number as an accent chip, in place of the flat single pill.
+
 ## [1.2.2] - 2026-07-08
 
 ### Security
