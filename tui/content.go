@@ -50,6 +50,7 @@ var (
 	reSzTag      = regexp.MustCompile(`(?is)<sz-[a-z-]+[^>]*>.*?</sz-[a-z-]+>|<sz-[a-z-]+[^>]*/?>`)
 	reAnyTag     = regexp.MustCompile(`(?s)<[^>]+>`)
 	reBlankRun   = regexp.MustCompile(`\n{3,}`)
+	reDatePrefix = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-`)
 )
 
 // stripHTML turns embedded HTML (which Glamour can't render meaningfully) into
@@ -165,7 +166,10 @@ func readArticle(path, section string) (Article, error) {
 		return Article{}, err
 	}
 	meta, body := parseFrontmatter(raw)
-	slug := strings.TrimSuffix(filepath.Base(path), ".md")
+	// Blog posts are filed as `YYYY-MM-DD-<slug>.md` so the corpus reads in
+	// publication order; the date prefix is not part of the URL. Eleventy drops
+	// it from `page.fileSlug` — strip it here so both renderers agree.
+	slug := reDatePrefix.ReplaceAllString(strings.TrimSuffix(filepath.Base(path), ".md"), "")
 	title := metaString(meta, "title")
 	if title == "" {
 		title = slug

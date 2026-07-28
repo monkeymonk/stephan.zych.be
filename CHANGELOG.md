@@ -9,12 +9,15 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
-### Security
-- Bumped the TUI's Go toolchain 1.26.2 → 1.26.5 (CI `setup-go` + `golang` Docker base image) to clear five reachable standard-library vulnerabilities via `tui.FetchWakapi` — GO-2026-5856 (crypto/tls ECH), GO-2026-5039 (net/textproto), GO-2026-5037 (crypto/x509), GO-2026-4971 (net), GO-2026-4918 (net/http HTTP/2) — which were failing the deploy's `govulncheck` gate.
+## [1.3.0] - 2026-07-28
 
 ### Changed
+- Blog posts are now filed as `content/blog/YYYY-MM-DD-<slug>.md`, so the markdown corpus reads in publication order on disk instead of alphabetically. **URLs are unchanged** — Eleventy already drops a date prefix from `page.fileSlug`, and the TUI now strips it too (`tui/content.go`), so both renderers keep resolving `/blog/<slug>/`.
 - Redesigned the in-article series nav to fit the terminal aesthetic and align with the reading column. Reading view shows a constrained card with numbered part rows (`01`, `02`, …), the current part highlighted and tagged `Reading`; code view now renders a markdown-source twin (`.sz-md-series`) inside the numbered body so line numbers run through it — mirroring the TUI's "part N of …" block. Replaces the full-width, plain bulleted list that read as broken with a single published part.
 - Reworked the blog-archive series badge (`.post-row__series`) — a `≡` glyph, the series name in lavender, and the part number as an accent chip, in place of the flat single pill.
+
+### Security
+- Bumped the TUI's Go toolchain 1.26.2 → 1.26.5 (CI `setup-go` + `golang` Docker base image) to clear five reachable standard-library vulnerabilities via `tui.FetchWakapi` — GO-2026-5856 (crypto/tls ECH), GO-2026-5039 (net/textproto), GO-2026-5037 (crypto/x509), GO-2026-4971 (net), GO-2026-4918 (net/http HTTP/2) — which were failing the deploy's `govulncheck` gate.
 
 ## [1.2.2] - 2026-07-08
 
@@ -122,7 +125,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.2...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.2...v1.3.0
 [1.2.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.1.0...v1.2.0
