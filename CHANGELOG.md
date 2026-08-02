@@ -9,6 +9,9 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+### Security
+- Bumped `golang.org/x/text` 0.37.0 → 0.39.0 in the TUI to clear GO-2026-5970, reachable via `tui.main` → `log.Warn` → `norm.Form.Properties`, which was failing the deploy's `govulncheck` gate.
+
 ## [1.3.1] - 2026-08-02
 
 ### Added
