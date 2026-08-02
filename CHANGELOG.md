@@ -9,6 +9,11 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-08-02
+
+### Added
+- New post: "Typing Got Cheap. Judgement Didn't." (`/blog/terminal-agent-workbench/`) — review as the scarce resource once agents do the typing, and the terminal workflow built around it: a worktree per agent (workmux + tmux), prompts written in Neovim (prompt.nvim), rules enforced by machines, and line-anchored review in tuicr that exports straight back as the next prompt. Illustrated with `tuicr` and `workmux` screenshots captured in a sample repo.
+
 ## [1.3.0] - 2026-07-28
 
 ### Changed
@@ -125,7 +130,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.2...v1.3.0
 [1.2.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.0...v1.2.1
