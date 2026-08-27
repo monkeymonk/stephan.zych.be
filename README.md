@@ -64,9 +64,11 @@ four ways from that single source: the web page at `/cv/`, the TUI `cv` screen, 
 plain-text/Markdown copy at `/cv.md` (`curl stephan.zych.be/cv.md`), and a
 print-optimised `/cv/print/` page the reader saves as PDF straight from the
 browser (the "Print / Save as PDF" button) — no committed binary, no typesetting
-toolchain, always in sync with the data. `npm run check:cv` (also run as part of
-`build`) fails if the shared headline numbers drift between `cv.json`,
-`profile.json`, and the about/whoami pages.
+toolchain, always in sync with the data. `npm run check:cv` fails if the shared
+headline numbers drift between `cv.json`, `profile.json`, and the about/whoami
+pages, or if the CV section headings drift between the three renderers. It runs
+as its own CI job over the full checkout rather than inside `npm run build` —
+the guard reads `tui/cv.go`, which the web image's build context excludes.
 
 ## Repository Structure
 

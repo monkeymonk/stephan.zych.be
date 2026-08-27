@@ -9,6 +9,27 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-08-27
+
+### Fixed
+- The `szych-web` image build failed on v1.4.0: `npm run build` ran the CV drift
+  guard, which reads `tui/cv.go`, but the web image's build context deliberately
+  contains only `content/` and `web/` — so the check hit
+  `ENOENT: /repo/tui/cv.go` and took the build (and therefore the deploy) down.
+  The guard is a repo-level, cross-renderer check, so it moved out of
+  `npm run build` into its own `check-cv` CI job over the full checkout, and
+  `deploy` now waits on it — the same "cannot be skipped" guarantee, in the one
+  place that can actually see all three renderers.
+
+### Security
+- Bumped the TUI's Go toolchain 1.26.5 → 1.26.6 (CI `setup-go` + `golang` base
+  image) and `golang.org/x/net` 0.54.0 → 0.55.0, clearing five reachable
+  standard-library vulnerabilities reported by `govulncheck` — GO-2026-6218
+  (`net/url` quadratic `resolvePath`), GO-2026-6090 (`crypto/tls`
+  post-handshake messages), GO-2026-6088 (`encoding/xml`), GO-2026-5972
+  (`encoding/asn1`), and GO-2026-5026 (`net/http` + `x/net`). Reachable via
+  `tui.FetchWakapi` and Glamour's markdown rendering.
+
 ## [1.4.0] - 2026-08-27
 
 ### Added
@@ -147,7 +168,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.2.2...v1.3.0
