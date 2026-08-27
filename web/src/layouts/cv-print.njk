@@ -9,15 +9,9 @@
 </head>
 <body>
 {{ content | safe }}
-<script>
-  // This page exists only to be printed. Open the print dialog on load, and
-  // turn the shared "Print / Save as PDF" link into a direct window.print()
-  // (on the on-site /cv/ page the same link just navigates here instead).
-  window.addEventListener('load', () => window.print());
-  document.querySelector('.sz-cv__download')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.print();
-  });
-</script>
+{# Behaviour lives in a file, not inline: the site's CSP is
+   `script-src 'self' …` with no 'unsafe-inline', so an inline script here is
+   blocked and the page silently never opens the print dialog. #}
+<script src="/assets/cv-print.js"></script>
 </body>
 </html>

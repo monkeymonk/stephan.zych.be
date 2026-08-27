@@ -69,7 +69,10 @@ if (isDev) {
   const inlineRules = [
     ['<link rel="stylesheet" href="/styles/reset.css">', () => `<style>${cssText('styles/reset.css')}</style>`],
     ['<link rel="stylesheet" href="/styles/base.css">', () => `<style>${cssText('styles/base.css')}</style>`],
-    ['<link rel="stylesheet" href="/styles/prism-catppuccin.css">', () => `<style>${cssText('styles/prism-catppuccin.css')}</style>`],
+    // Keeps the page-css-* id, which the SPA router uses to detect whether the
+    // destination page's stylesheet is already in the document (core/router.ts).
+    ['<link rel="stylesheet" id="page-css-prism" href="/styles/prism-catppuccin.css">',
+      () => `<style id="page-css-prism">${cssText('styles/prism-catppuccin.css')}</style>`],
     ['<link rel="stylesheet" id="theme-css-catppuccin-mocha" href="/assets/themes/catppuccin-mocha.css">',
       () => `<style id="theme-css-catppuccin-mocha">${cssText('assets/themes/catppuccin-mocha.css')}</style>`],
   ];

@@ -62,6 +62,16 @@ class SpaRouter {
       const newTitle = doc.querySelector('title')?.textContent || document.title;
       const attributes = this.collectAttributes(newContent);
 
+      // Page-scoped stylesheets live in <head> (base.njk emits cv.css for /cv/,
+      // prism for articles), and the swap below only moves #main-content — so
+      // without this the CV arrives unstyled whenever it is reached by in-page
+      // navigation instead of a fresh load. Adopt whichever page-css-* node this
+      // document is missing, and wait for a linked sheet so the new content is
+      // never painted unstyled. Adopted sheets are kept when leaving the page:
+      // there are only a couple, and keeping them avoids a refetch on the way
+      // back.
+      await this.adoptPageStyles(doc);
+
       // Remove old children (triggers disconnectedCallback on web components)
       while (currentContent.firstChild) {
         currentContent.removeChild(currentContent.firstChild);
@@ -94,6 +104,32 @@ class SpaRouter {
     } catch {
       this.fallbackNavigate(path);
     }
+  }
+
+  // Copy the destination page's page-css-* <head> nodes into this document if
+  // they aren't already here. Handles both shapes the build can produce: an
+  // external <link> (cv.css) and a <style> that esbuild inlined (prism).
+  private async adoptPageStyles(doc: Document): Promise<void> {
+    const pending: Promise<void>[] = [];
+
+    for (const node of Array.from(doc.head.querySelectorAll('[id^="page-css-"]'))) {
+      if (!node.id || document.getElementById(node.id)) continue;
+      const adopted = document.importNode(node, true) as HTMLElement;
+
+      if (adopted instanceof HTMLLinkElement) {
+        pending.push(new Promise<void>(resolve => {
+          const done = () => resolve();
+          adopted.addEventListener('load', done, { once: true });
+          adopted.addEventListener('error', done, { once: true });
+          // A stalled stylesheet must never hold navigation hostage.
+          window.setTimeout(done, 2000);
+        }));
+      }
+
+      document.head.appendChild(adopted);
+    }
+
+    await Promise.all(pending);
   }
 
   private collectAttributes(content: HTMLElement): RouteChangedAttributes {

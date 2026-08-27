@@ -9,6 +9,24 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-08-27
+
+### Fixed
+- `/cv/` rendered unstyled when reached by in-page navigation (the `/cv/` links on
+  `about` and `whoami`) instead of a fresh load. The SPA router replaces only
+  `#main-content` and never touched `<head>`, so `cv.css` — which `base.njk`
+  emits per page — was never loaded, leaving the CV with base styles only.
+  Page-scoped stylesheets now carry a `page-css-*` id, and the router adopts
+  whichever one the destination page needs but the current document lacks,
+  waiting for a linked sheet so the new content is never painted unstyled. This
+  also restores syntax highlighting when an article is reached from a page that
+  carries no Prism styles — the same latent bug, one page-scoped stylesheet over.
+- `/cv/print/` never opened the print dialog, and its "Print / Save as PDF"
+  button did nothing. The behaviour was an inline `<script>`, and the site's CSP
+  (`script-src 'self' https://analytics.zych.be`, with no `'unsafe-inline'`)
+  blocks inline execution. Moved to `/assets/cv-print.js`, served from `'self'`;
+  the CSP is unchanged.
+
 ## [1.4.1] - 2026-08-27
 
 ### Fixed
@@ -168,7 +186,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.2...HEAD
+[1.4.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.3.0...v1.3.1
