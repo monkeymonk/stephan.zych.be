@@ -9,6 +9,11 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+### Security
+- Bumped `golang.org/x/crypto` 0.52.0 → 0.55.0 in the TUI, clearing GO-2026-6303
+  — reachable through `tui.runSSH` → `ssh.Server.ListenAndServe` → the SSH
+  server handshake — which was failing the `govulncheck` deploy gate.
+
 ## [1.5.0] - 2026-08-31
 
 ### Changed
