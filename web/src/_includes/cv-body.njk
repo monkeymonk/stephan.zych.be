@@ -3,7 +3,9 @@
   <header class="sz-cv__header">
     <p class="sz-cv__prompt" aria-hidden="true"><span class="sz-cv__sigil">❯</span>whoami --full</p>
     {% if cv.basics.photo %}
-    <img class="sz-cv__photo" src="{{ cv.basics.photo }}" alt="{{ cv.basics.name }}" loading="lazy" decoding="async">
+    {# Above the fold in both views, and `loading="lazy"` made it absent from a
+       print/PDF render that never scrolls the print page. #}
+    <img class="sz-cv__photo" src="{{ cv.basics.photo }}" alt="{{ cv.basics.name }}" decoding="async">
     {% endif %}
     <div class="sz-cv__identity">
       <h1 class="sz-cv__name">{{ cv.basics.name }}</h1>
@@ -31,9 +33,16 @@
   {% if cv.expertise %}
   <section class="sz-cv__section">
     <h2>Core expertise</h2>
-    <ul class="sz-cv__taglist">
-      {% for item in cv.expertise %}<li>{{ item }}</li>{% endfor %}
-    </ul>
+    {% for group in cv.expertise %}
+    <div class="sz-cv__skill-group">
+      {% if group.label %}<h3>{{ group.label }}</h3>{% endif %}
+      {% if group.items %}
+      <ul class="sz-cv__taglist">
+        {% for item in group.items %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endfor %}
   </section>
   {% endif %}
 
@@ -81,6 +90,21 @@
   </section>
   {% endif %}
 
+  {% if cv.evidence %}
+  <section class="sz-cv__section">
+    <h2>Selected engineering work</h2>
+    <ul class="sz-cv__list-plain sz-cv__evidence">
+      {% for item in cv.evidence %}
+      <li>
+        {%- if item.label %}<strong>{{ item.label }}.</strong>{% endif -%}
+        {%- if item.detail %} {{ item.detail }}{% endif -%}
+        {% if item.link %}<a class="sz-cv__evidence-link" href="https://{{ item.link }}" rel="noopener">{{ item.link }}</a>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
   {% if cv.earlier %}
   <section class="sz-cv__section">
     <h2>Earlier roles</h2>
@@ -92,20 +116,9 @@
   </section>
   {% endif %}
 
-  {% if cv.education %}
-  <section class="sz-cv__section">
-    <h2>Education &amp; training</h2>
-    <ul class="sz-cv__list-plain">
-      {% for item in cv.education %}
-      <li>{% if item.school %}<strong>{{ item.school }}</strong>{% endif %}{% if item.detail %} — {{ item.detail }}{% endif %}</li>
-      {% endfor %}
-    </ul>
-  </section>
-  {% endif %}
-
   {% if cv.skills %}
   <section class="sz-cv__section">
-    <h2>Digital skills</h2>
+    <h2>Technical stack</h2>
     {% for group in cv.skills %}
     <div class="sz-cv__skill-group">
       {% if group.label %}<h3>{{ group.label }}</h3>{% endif %}
@@ -116,6 +129,17 @@
       {% endif %}
     </div>
     {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if cv.education %}
+  <section class="sz-cv__section">
+    <h2>Education &amp; training</h2>
+    <ul class="sz-cv__list-plain">
+      {% for item in cv.education %}
+      <li>{% if item.school %}<strong>{{ item.school }}</strong>{% endif %}{% if item.detail %} — {{ item.detail }}{% endif %}</li>
+      {% endfor %}
+    </ul>
   </section>
   {% endif %}
 

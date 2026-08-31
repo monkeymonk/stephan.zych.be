@@ -9,6 +9,38 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-08-31
+
+### Changed
+- The CV now separates capabilities from technologies. In the shared source
+  (`content/data/cv.json`), `expertise` moved from a flat list to labelled
+  groups — the shape `skills` already used — and the technology stack is grouped
+  into five curated categories instead of seven exhaustive ones. All three
+  renderers follow: the web include, the `/cv.md` export, and the Go/TUI
+  generator.
+- Reworked the CV's section set and order: a new **Selected engineering work**
+  section (backed by a new `evidence` key, with optional source links) sits
+  after Work experience, "Digital skills" became **Technical stack** and moved
+  above Education, and the Interests section is gone. Nine sections, still in
+  lockstep across the three renderers per the `check:cv` drift guard.
+- Editorial pass over the CV copy: a shorter summary, deduplicated capability
+  lists, tightened role bullets and a curated stack. The printed CV is back to
+  **3 A4 pages** from 5, with no change to font size, line-height or margins.
+- Updated the `/cv/` meta description to match the page's wording.
+
+### Fixed
+- The printed CV wasted up to a full page of blank space: `.sz-cv__job` and
+  `.sz-cv__job-group` were `break-inside: avoid`, so a role — or a single bullet
+  group — that no longer fit in a page remainder jumped whole to the next page.
+  Nothing inside a role is atomic now; what is pinned instead is every
+  heading-to-body join (`break-after: avoid` on the job title, its meta line and
+  each group label), and individual bullets, which never split mid-item.
+- The CV photo carried `loading="lazy"` despite sitting above the fold, so a
+  print/PDF render that never scrolls the print page dropped it silently.
+- Copy and typography nits in the CV source: a hyphenated compound that broke
+  across a line as "long-" / "term", ASCII quotes where the printed page wants
+  typographic ones, and a non-parallel bullet construction.
+
 ## [1.4.2] - 2026-08-27
 
 ### Fixed
@@ -186,7 +218,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.2...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.3.1...v1.4.0

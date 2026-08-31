@@ -165,7 +165,7 @@
   margin-bottom: 0;
 }
 
-/* ── Chip lists (core expertise, digital skills, languages, interests) ── */
+/* ── Chip lists (core expertise, technical stack, languages, interests) ── */
 
 .sz-cv__taglist {
   display: flex;
@@ -202,6 +202,22 @@
 }
 .sz-cv__list-plain strong {
   color: var(--sz-peach, #fab387);
+}
+
+/* ── Evidence entries — marker list items that trail a source URL ── */
+
+.sz-cv__evidence li + li {
+  margin-top: var(--sz-line-px);
+}
+.sz-cv__evidence-link {
+  display: block;
+  font-size: calc(var(--sz-font-size) * 0.88);
+  color: var(--sz-accent, #89b4fa);
+  text-decoration: none;
+}
+.sz-cv__evidence-link:hover,
+.sz-cv__evidence-link:focus-visible {
+  text-decoration: underline;
 }
 
 /* ── Work experience — a timeline rail, one marker per role ── */
@@ -296,7 +312,7 @@
   color: var(--sz-lavender, #b4befe);
 }
 
-/* ── Digital skills ── */
+/* ── Technical stack ── */
 
 .sz-cv__skill-group + .sz-cv__skill-group {
   margin-top: var(--sz-line-px);

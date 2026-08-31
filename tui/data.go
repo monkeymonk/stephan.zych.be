@@ -123,6 +123,14 @@ type CVSkillGroup struct {
 	Items []string `json:"items"`
 }
 
+// CVEvidence is one architecture/engineering evidence entry; Link is a bare
+// host+path with no scheme.
+type CVEvidence struct {
+	Label  string `json:"label"`
+	Detail string `json:"detail"`
+	Link   string `json:"link"`
+}
+
 // CVCommunity is a talk/membership entry.
 type CVCommunity struct {
 	Label  string `json:"label"`
@@ -157,8 +165,9 @@ type CVData struct {
 		Pdf      string `json:"pdf"`
 	} `json:"basics"`
 	Summary    []string       `json:"summary"`
-	Expertise  []string       `json:"expertise"`
+	Expertise  []CVSkillGroup `json:"expertise"`
 	Experience []CVExperience `json:"experience"`
+	Evidence   []CVEvidence   `json:"evidence"`
 	Earlier    []CVEarlier    `json:"earlier"`
 	Skills     []CVSkillGroup `json:"skills"`
 	Interests  []string       `json:"interests"`

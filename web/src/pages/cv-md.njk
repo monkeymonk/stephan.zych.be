@@ -24,7 +24,13 @@ eleventyExcludeFromCollections: true
 {%- endif -%}
 
 {%- if cv.expertise -%}
-{%- set blocks = (blocks.push("## Core expertise\n\n" + (cv.expertise | join(" · "))), blocks) -%}
+{%- set expertiseLines = [] -%}
+{%- for group in cv.expertise -%}
+{%- set line = "**" + group.label + "**" -%}
+{%- if group.items -%}{%- set line = line + " — " + (group.items | join(" · ")) -%}{%- endif -%}
+{%- set expertiseLines = (expertiseLines.push(line), expertiseLines) -%}
+{%- endfor -%}
+{%- set blocks = (blocks.push("## Core expertise\n\n" + (expertiseLines | join("\n"))), blocks) -%}
 {%- endif -%}
 
 {%- if cv.experience -%}
@@ -65,6 +71,17 @@ eleventyExcludeFromCollections: true
 {%- set blocks = (blocks.push("## Work experience\n\n" + (jobBlocks | join("\n\n"))), blocks) -%}
 {%- endif -%}
 
+{%- if cv.evidence -%}
+{%- set evidenceLines = [] -%}
+{%- for item in cv.evidence -%}
+{%- set line = "- **" + item.label + ".**" -%}
+{%- if item.detail -%}{%- set line = line + " " + item.detail -%}{%- endif -%}
+{%- if item.link -%}{%- set line = line + " [" + item.link + "](https://" + item.link + ")" -%}{%- endif -%}
+{%- set evidenceLines = (evidenceLines.push(line), evidenceLines) -%}
+{%- endfor -%}
+{%- set blocks = (blocks.push("## Selected engineering work\n\n" + (evidenceLines | join("\n"))), blocks) -%}
+{%- endif -%}
+
 {%- if cv.earlier -%}
 {%- set earlierLines = [] -%}
 {%- for job in cv.earlier -%}
@@ -76,6 +93,16 @@ eleventyExcludeFromCollections: true
 {%- set blocks = (blocks.push("## Earlier roles\n\n" + (earlierLines | join("\n"))), blocks) -%}
 {%- endif -%}
 
+{%- if cv.skills -%}
+{%- set skillLines = [] -%}
+{%- for group in cv.skills -%}
+{%- set line = "**" + group.label + "**" -%}
+{%- if group.items -%}{%- set line = line + " — " + (group.items | join(" · ")) -%}{%- endif -%}
+{%- set skillLines = (skillLines.push(line), skillLines) -%}
+{%- endfor -%}
+{%- set blocks = (blocks.push("## Technical stack\n\n" + (skillLines | join("\n"))), blocks) -%}
+{%- endif -%}
+
 {%- if cv.education -%}
 {%- set eduLines = [] -%}
 {%- for item in cv.education -%}
@@ -84,16 +111,6 @@ eleventyExcludeFromCollections: true
 {%- set eduLines = (eduLines.push(line), eduLines) -%}
 {%- endfor -%}
 {%- set blocks = (blocks.push("## Education & training\n\n" + (eduLines | join("\n"))), blocks) -%}
-{%- endif -%}
-
-{%- if cv.skills -%}
-{%- set skillLines = [] -%}
-{%- for group in cv.skills -%}
-{%- set line = "**" + group.label + "**" -%}
-{%- if group.items -%}{%- set line = line + " — " + (group.items | join(" · ")) -%}{%- endif -%}
-{%- set skillLines = (skillLines.push(line), skillLines) -%}
-{%- endfor -%}
-{%- set blocks = (blocks.push("## Digital skills\n\n" + (skillLines | join("\n"))), blocks) -%}
 {%- endif -%}
 
 {%- if cv.languages -%}

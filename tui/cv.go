@@ -50,7 +50,9 @@ func (m Model) cvArticle() Article {
 
 	if len(cv.Expertise) > 0 {
 		b.WriteString("## Core expertise\n\n")
-		b.WriteString(strings.Join(cv.Expertise, " · ") + "\n\n")
+		for _, g := range cv.Expertise {
+			fmt.Fprintf(&b, "**%s** %s\n\n", g.Label, strings.Join(g.Items, " · "))
+		}
 	}
 
 	if len(cv.Experience) > 0 {
@@ -104,6 +106,17 @@ func (m Model) cvArticle() Article {
 		}
 	}
 
+	if len(cv.Evidence) > 0 {
+		b.WriteString("## Selected engineering work\n\n")
+		for _, e := range cv.Evidence {
+			fmt.Fprintf(&b, "**%s.** %s", e.Label, e.Detail)
+			if e.Link != "" {
+				fmt.Fprintf(&b, " [%s](https://%s)", e.Link, e.Link)
+			}
+			b.WriteString("\n\n")
+		}
+	}
+
 	if len(cv.Earlier) > 0 {
 		b.WriteString("## Earlier roles\n\n")
 		for _, e := range cv.Earlier {
@@ -112,17 +125,17 @@ func (m Model) cvArticle() Article {
 		b.WriteString("\n")
 	}
 
+	if len(cv.Skills) > 0 {
+		b.WriteString("## Technical stack\n\n")
+		for _, s := range cv.Skills {
+			fmt.Fprintf(&b, "**%s** %s\n\n", s.Label, strings.Join(s.Items, " · "))
+		}
+	}
+
 	if len(cv.Education) > 0 {
 		b.WriteString("## Education & training\n\n")
 		for _, e := range cv.Education {
 			fmt.Fprintf(&b, "**%s** — %s\n\n", e.School, e.Detail)
-		}
-	}
-
-	if len(cv.Skills) > 0 {
-		b.WriteString("## Digital skills\n\n")
-		for _, s := range cv.Skills {
-			fmt.Fprintf(&b, "**%s** %s\n\n", s.Label, strings.Join(s.Items, " · "))
 		}
 	}
 

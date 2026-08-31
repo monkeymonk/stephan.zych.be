@@ -1,7 +1,7 @@
 {
   "basics": {
     "name": "Stéphan Zych",
-    "tagline": "Lead Developer · Frontend Architect · Technical Co-Founder / CTO",
+    "tagline": "Lead Developer · Application & Web Architect · Technical Lead",
     "location": "Brussels, Belgium",
     "email": "stephan@zych.be",
     "website": "stephan.zych.be",
@@ -11,18 +11,51 @@
     "pdf": "/cv/print/"
   },
   "summary": [
-    "Technical leader with 15+ years delivering web platforms, evolving from frontend development into lead developer, CTO, and architecture-driven roles. My background combines deep frontend expertise with strong full-stack implementation across modern JavaScript and PHP ecosystems — WordPress, Laravel, React, Vue, and component-based templating systems.",
-    "I specialise in building the technical foundations that help teams deliver better: architecture, tooling, conventions, developer experience, and pragmatic standardisation. Across agency, founder, and international consulting environments, I have led teams, shaped delivery processes, advised on technical scope, and stayed hands-on in the implementation of scalable, maintainable, high-performance web platforms."
+    "Hands-on lead developer and application architect, 15+ years across agency, founder and international consulting work. I design web and application architecture in the PHP and JavaScript/TypeScript ecosystems, own the technical decisions around it (stack choices, project structure, standards, code review), and keep implementing alongside the team.",
+    "I also focus on how software gets built and shipped: reusable project foundations, containerised environments, CI/CD, automated deployments and disciplined AI-assisted engineering."
   ],
   "expertise": [
-    "Technical leadership & architecture",
-    "Frontend & full-stack web platforms",
-    "Developer experience, tooling & standardisation",
-    "CI/CD, delivery automation & release workflows",
-    "Technical scoping, estimation & advisory",
-    "Design systems & component-based development",
-    "Accessibility, performance & maintainability",
-    "Team mentoring, onboarding & engineering best practices"
+    {
+      "label": "Architecture & technical leadership",
+      "items": [
+        "Application & web architecture",
+        "Technical direction",
+        "Stack & tooling decisions",
+        "API / backend / frontend boundaries",
+        "Technical standards & code review",
+        "Legacy modernisation"
+      ]
+    },
+    {
+      "label": "Platform, delivery & developer experience",
+      "items": [
+        "Docker environments",
+        "CI/CD & automated deployments",
+        "Reusable project foundations",
+        "Engineering standards",
+        "Tooling & automation"
+      ]
+    },
+    {
+      "label": "Application engineering",
+      "items": [
+        "PHP platforms (Laravel, WordPress)",
+        "JavaScript / TypeScript applications",
+        "Headless & API integration",
+        "Accessibility & semantic markup",
+        "Web performance"
+      ]
+    },
+    {
+      "label": "AI-assisted engineering",
+      "items": [
+        "Coding agents in daily development",
+        "Shared agent configuration (skills, MCP, rules)",
+        "AI-assisted refactoring & legacy analysis",
+        "Sandboxed agent workflows",
+        "Local LLM tooling"
+      ]
+    }
   ],
   "experience": [
     {
@@ -31,40 +64,53 @@
       "via": "STEPHANZYCH",
       "location": "Brussels, Belgium",
       "period": "2023 – Present",
-      "summary": "Lead developer within a larger international structure following the integration of Cherry Pulp into CBTW. My role combines hands-on technical delivery with cross-team alignment — normalising processes, improving consistency between development teams, and evolving shared tooling and project foundations.",
-      "highlights": [
-        "Contribute to the standardisation of technologies, workflows, and development conventions across teams",
-        "Maintain and evolve internal tooling and boilerplates originally developed at Cherry Pulp and still used within CBTW",
-        "Improve team workflows through automation, practical processes, and developer-experience enhancements",
-        "Work across distributed teams and international project contexts",
-        "Expand technical scope through enterprise environments using Microsoft internal tooling and AWS",
-        "Contribute to architecture, debugging, delivery support, and project structuring across multiple concurrent projects"
+      "summary": "Hands-on lead developer in the technical team that came out of the Cherry Pulp integration, currently four to five engineers. I develop day to day while leading technical direction and the modernisation of how the team builds and ships.",
+      "groups": [
+        {
+          "label": "Architecture & technical direction",
+          "items": [
+            "Own architecture and technical decisions across concurrent projects: stack choices, project structure, and the boundaries between backend, API and frontend",
+            "Define technical standards, development conventions and code review practice, and drive their adoption across teams",
+            "Maintain and evolve the internal tooling and project boilerplates originally built at Cherry Pulp and still in use within CBTW",
+            "Support developers through review and technical guidance while remaining in the codebase",
+            "Work across distributed international teams, including enterprise environments using Microsoft internal tooling and AWS"
+          ]
+        },
+        {
+          "label": "Platform & delivery modernisation (in progress)",
+          "items": [
+            "Introduced a shared Docker local development environment (Traefik, PHP, MariaDB, phpMyAdmin) as the common baseline for projects",
+            "Building GitLab CI pipelines and secured containerised deployment on AWS Lightsail, replacing manual and FTP-based deployment and moving off Laravel Forge",
+            "Adding observability with Grafana, Prometheus and Loki",
+            "Rolled out project by project alongside ongoing client delivery: legacy workflows and the new pipeline currently run side by side"
+          ]
+        }
       ]
     },
     {
       "role": "Co-Founder / CTO / Head of Frontend",
       "company": "Cherry Pulp",
       "location": "Brussels, Belgium",
-      "period": "2013 – 2024",
-      "summary": "Co-founded and helped grow Cherry Pulp, a digital agency focused on custom websites, digital platforms, and web applications. My role evolved from frontend leadership into broader technical ownership — architecture, tooling, delivery foundations, scoping, team support, and technical decision-making across the company.",
+      "period": "2013 – 2024 · acquired by CBTW in 2023, transition completed in 2024",
+      "summary": "Co-founded Cherry Pulp and helped grow it into a digital agency of around 20 people building custom websites, digital platforms and web applications. My role ran from frontend leadership into technical ownership across the company, hands-on throughout.",
       "groups": [
         {
-          "label": "Key achievements",
+          "label": "Scale & impact",
           "items": [
             "Delivered 200+ web platforms and digital products",
             "Helped grow the company from 4 to 20 people",
-            "Supported and mentored development teams, up to 10–12 developers at peak",
-            "Contributed to the company's evolution until its acquisition by CBTW in 2023"
+            "Supported and mentored development teams, up to 10–12 developers at peak"
           ]
         },
         {
-          "label": "Responsibilities & impact",
+          "label": "Technical ownership & delivery",
           "items": [
-            "Defined technical direction, project architecture, and stack choices across client projects",
-            "Built and maintained reusable boilerplates, conventions, and CLI/tooling to streamline setup and long-term maintenance",
-            "Improved developer experience and delivery consistency through standardised workflows and shared foundations",
-            "Played a key role in technical scoping, estimation, and client advisory during discovery and delivery",
-            "Contributed to technical hiring, onboarding, and knowledge sharing across the team"
+            "Designed a modular web delivery approach around Docker, WordPress with Bedrock, structured conventions and custom Forge/Lightsail deployment workflows, making setup faster and delivery more consistent across teams",
+            "Defined technical direction and project architecture across client work: stack selection, project structure, and the boundaries between WordPress or Laravel backends, APIs and JavaScript frontends",
+            "Owned frontend technical direction and the delivery of short-cycle web projects: WordPress from small to medium complexity, Laravel applications where the problem justified it",
+            "Established reusable boilerplates, conventions and CLI tooling that made project setup faster and maintenance predictable over time",
+            "Led technical scoping, estimation and client-facing technical advisory through discovery and delivery",
+            "Took part in technical hiring and onboarding, and set the standards new developers worked to"
           ]
         }
       ],
@@ -72,18 +118,23 @@
         "Unicef", "Oxfam", "Engie", "Delhaize", "Telenet", "KBC Brussels",
         "Latour & Petit", "Cefic", "Business Europe", "Clear Channel",
         "Monizze", "Solidaris", "eFarmz", "RTL", "RTBF"
-      ],
-      "note": "Designed a modular web delivery approach around Docker, WordPress with Bedrock, structured conventions, and custom deployment workflows using Forge and Lightsail — making setup faster, maintenance easier, and delivery more consistent for development teams."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "label": "stephan.zych.be, two runtimes from one content source",
+      "detail": "One Markdown/JSON content source feeds two independent runtimes: an Eleventy/Lit/TypeScript web application and a Go SSH/TUI application. GitHub Actions validates the repository, builds both container images separately, publishes them to GHCR and deploys automatically to DigitalOcean.",
+      "link": "github.com/monkeymonk/stephan.zych.be"
     },
     {
-      "role": "Freelance Web Developer",
-      "company": "Independent",
-      "location": "Brussels, Belgium",
-      "period": "2011 – 2016",
-      "summary": "Full-stack development of websites and digital platforms with a strong focus on semantic markup, performance, and maintainable architectures."
+      "label": "Developer tooling around coding agents",
+      "detail": "A Go tool renders one canonical source (agents, skills, MCP servers, rules and reusable instructions) into the configuration of several coding-agent CLIs, so the same engineering rules apply whichever tool is driving; prompt.nvim carries those workflows into the editor. Agent work runs on deterministic checks, reviewed diffs and Git worktrees, with sandboxing (Bubblewrap, Landlock, seccomp) kept outside the agent's control.",
+      "link": "stephan.zych.be/blog/ai-agent-sandboxing/"
     }
   ],
   "earlier": [
+    { "role": "Freelance Web Developer", "company": "Independent", "period": "2011 – 2016" },
     { "role": "Rich Media Developer", "company": "TBWA Group", "period": "2012 – 2013" },
     { "role": "Frontend Developer", "company": "Agency.com", "period": "2011 – 2013" },
     { "role": "Co-Founder / Rich Media Developer", "company": "La Cerise Numérique", "period": "2010 – 2013" },
@@ -91,53 +142,47 @@
   ],
   "skills": [
     {
-      "label": "Frontend",
+      "label": "Application & frontend",
       "items": [
-        "JavaScript", "TypeScript", "React", "Next.js", "Vue", "Astro",
-        "Lit & Web Components", "Tailwind CSS", "PostCSS", "SCSS", "Storybook"
+        "PHP", "Laravel", "WordPress", "Bedrock / Sage",
+        "JavaScript", "TypeScript", "Node.js", "Go",
+        "React", "Next.js", "Vue", "Nuxt", "Angular",
+        "Lit & Web Components", "Tailwind CSS"
       ]
     },
     {
-      "label": "Backend",
+      "label": "Platform & delivery",
       "items": [
-        "PHP", "Laravel", "WordPress architecture (Bedrock, Sage)", "Node.js"
+        "Docker", "Docker Compose", "Linux (Ubuntu)", "Traefik", "Caddy", "Nginx",
+        "GitHub Actions", "GitLab CI", "GHCR", "Automated deployments"
       ]
     },
     {
-      "label": "Infrastructure & Tooling",
+      "label": "Data & infrastructure",
       "items": [
-        "Docker", "Docker Compose", "Linux (Ubuntu)", "Nginx", "AWS Lightsail",
-        "Cloudflare", "Laravel Forge", "Caddy", "Vite", "Webpack"
+        "MariaDB / MySQL (primary)", "Redis", "PostgreSQL", "SQLite",
+        "AWS Lightsail", "DigitalOcean", "Cloudflare"
       ]
     },
     {
-      "label": "Version control & CI/CD",
+      "label": "Engineering practices & observability",
       "items": [
-        "Git", "GitHub Actions", "CI/CD pipelines", "Automated deployments",
-        "Container registries (GHCR)", "Code review & branching workflows",
-        "Conventional Commits & SemVer"
+        "Git", "Conventional Commits & SemVer",
+        "Grafana", "Prometheus", "Loki", "GoAccess"
       ]
     },
     {
-      "label": "Engineering Practices",
+      "label": "AI-assisted engineering",
       "items": [
-        "Frontend architecture", "Platform design", "Web performance optimisation",
-        "Maintainable systems", "Accessibility", "Developer experience",
-        "Dependency & vulnerability scanning", "Secrets management"
+        "Claude Code", "Codex CLI", "OMP", "MCP / agent configuration",
+        "Ollama", "llama.cpp", "Agent sandboxing (Bubblewrap, Landlock, seccomp)"
       ]
     }
-  ],
-  "interests": [
-    "AI-assisted development workflows & local LLM tooling",
-    "CLI utilities & developer tooling",
-    "Docker-based homelab",
-    "Prototyping in Python",
-    "Game development with Godot"
   ],
   "community": [
     {
       "label": "Internal tech talks — CBTW",
-      "detail": "\"Terminal utilities & advanced use cases\", \"Conventions & patterns in production\""
+      "detail": "“Terminal utilities & advanced use cases”, “Conventions & patterns in production”"
     },
     {
       "label": "Member — Réseau Entreprendre Bruxelles",
@@ -152,6 +197,6 @@
   ],
   "languages": [
     { "name": "French", "level": "C2", "note": "Mother tongue" },
-    { "name": "English", "level": "B2", "note": "Upper-intermediate" }
+    { "name": "English", "level": "B2" }
   ]
 }
