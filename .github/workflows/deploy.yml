@@ -70,6 +70,18 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - run: node web/scripts/check-cv-drift.mjs
 
+  # Every post needs a `.webp` poster and a `.jpg` `ogImage` twin (LinkedIn's
+  # crawler renders WebP link previews unreliably); every project needs the
+  # poster. Gates deploy so a post can never ship with a broken or absent
+  # social preview. Deliberately not inside `npm run build`: a writer drafting
+  # locally must still be able to build before the art exists.
+  # Pure node, no dependencies, so no npm install is needed.
+  check-content-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - run: node web/scripts/check-content-assets.mjs
+
   # Scan the Go module for known vulnerabilities. Reports independently — does
   # not gate deploy (add it to `deploy.needs` if you want it to block).
   govulncheck:
@@ -85,7 +97,7 @@ jobs:
         working-directory: tui
 
   deploy:
-    needs: [images, check-cv]
+    needs: [images, check-cv, check-content-assets]
     runs-on: ubuntu-latest
     steps:
       - name: Pull images and restart the stack

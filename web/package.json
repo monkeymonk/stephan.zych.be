@@ -6,6 +6,7 @@
     "dev": "concurrently \"npx @11ty/eleventy --serve\" \"node esbuild.config.mjs --watch\"",
     "build": "npx @11ty/eleventy && node esbuild.config.mjs",
     "check:cv": "node scripts/check-cv-drift.mjs",
+    "check:assets": "node scripts/check-content-assets.mjs",
     "screenshot": "node screenshot.mjs",
     "audit": "node audit.mjs",
     "clean": "rm -rf _site dist"

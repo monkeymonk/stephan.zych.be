@@ -9,6 +9,16 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+### Added
+- A build-time gate on content social-preview art: a post whose `poster` or
+  `ogImage` is missing, malformed, or points at a file that isn't in the repo
+  (or a project missing its `poster`) now fails the deploy gate instead of
+  silently shipping with no social-preview image — LinkedIn's crawler renders
+  WebP link previews unreliably, so the `.jpg` `ogImage` twin is mandatory
+  alongside the `.webp` poster. Run it locally with `npm run check:assets`;
+  it is deliberately not part of `npm run build`, so drafting a post before
+  its art exists still builds.
+
 ### Security
 - Bumped `golang.org/x/crypto` 0.55.0 → 0.56.0 in the TUI, clearing GO-2026-6354
   and GO-2026-6355 — two SSH channel-deadlock DoS advisories reachable through

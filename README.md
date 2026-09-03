@@ -58,6 +58,7 @@ The web `dev` task starts Eleventy's dev server and esbuild in watch mode concur
 | `npm run build` | Production build |
 | `npm run clean` | Remove build output |
 | `npm run check:cv` | Verify the CV's headline facts haven't drifted across files |
+| `npm run check:assets` | Verify every post/project declares social-preview images that exist |
 
 The CV lives once, as structured data in `content/data/cv.json`, and is rendered
 four ways from that single source: the web page at `/cv/`, the TUI `cv` screen, a
@@ -69,6 +70,15 @@ headline numbers drift between `cv.json`, `profile.json`, and the about/whoami
 pages, or if the CV section headings drift between the three renderers. It runs
 as its own CI job over the full checkout rather than inside `npm run build` —
 the guard reads `tui/cv.go`, which the web image's build context excludes.
+
+`npm run check:assets` enforces the content rule that every post ships with a
+`.webp` poster **and** a `.jpg` `ogImage` twin — LinkedIn's crawler renders
+WebP link previews unreliably, so a post without the `.jpg` goes out with no
+preview image at all — and that every project has its `.webp` poster. It fails
+if a value is missing, malformed, or points at a file that isn't in
+`content/assets/`. Like `check:cv` it is its own CI job gating deploy rather
+than part of `npm run build`, so drafting a post before its art exists still
+builds locally.
 
 ## Repository Structure
 
