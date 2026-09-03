@@ -5,7 +5,7 @@ terminal environment, in two flavours that share one content source:
 
 - **`web/`** — a static site (Eleventy + Lit + TypeScript), served by Caddy (or GitHub Pages).
 - **`tui/`** — a real terminal version served over SSH (Go + Charm: Wish · Bubble Tea · Glamour).
-- **`content/`** — the markdown corpus (blog, projects, pages) both front-ends read.
+- **`content/`** — the markdown corpus and shared JSON (blog, projects, pages, data) both front-ends read.
 
 ## Preview
 
@@ -73,24 +73,44 @@ the guard reads `tui/cv.go`, which the web image's build context excludes.
 ## Repository Structure
 
 ```
-content/         Markdown corpus — single source of truth (blog, projects, pages)
-web/             Static site (Eleventy + Lit + TypeScript → GitHub Pages)
+content/         Shared source of truth — read by BOTH front-ends
+  blog/          Articles (YYYY-MM-DD-<slug>.md)
+  projects/      Project case studies
+  pages/         Standalone pages
+  data/          Site data as JSON (nav, profile, site, themes, cv, ...)
+  assets/        Images referenced by content
+web/             Static site (Eleventy + Lit + TypeScript → Caddy / GitHub Pages)
+  lib/           Build-time Node modules (external data fetched at build)
   src/
     app/         Entry point and feature wiring
     core/        Shared systems (state, actions, router, types)
     features/    Isolated feature modules (window, tmux, neovim, effects, ...)
-    layouts/     Nunjucks templates and layout components
+    layouts/     Nunjucks layouts
+    _includes/   Nunjucks partials and macros
+    pages/       Page and artifact templates (home, 404, listings, cv, sitemap, robots)
     components/  Shared building blocks and content widgets
-    data/        JSON data (site config, navigation, commands, themes)
     styles/      Global CSS
     assets/      Fonts, images, themes
-    content/     → symlink to ../../content (the shared corpus)
+    content/     → symlink to ../../content
+    data/        → symlink to ../../content/data (Eleventy's data dir)
 tui/             SSH terminal version (Go + Charm: Wish · Bubble Tea · Glamour)
 docs/            Design notes and audits
 ```
 
-Content lives once, at the repo root. The web build reads it through a symlink
-(`web/src/content`); the TUI reads it directly (`CONTENT_DIR`, default `../content`).
+Content lives once, at the repo root. The web build reads it through two symlinks
+(`web/src/content` and `web/src/data`); the TUI reads it directly (`CONTENT_DIR`,
+default `../content`).
+
+**`content/` holds only what both renderers consume** — Markdown prose, the shared
+JSON, and content images. Templates, CSS and JavaScript belong to a renderer, so
+every page-emitting Nunjucks template lives in `web/src/pages/` and build-time
+Node code in `web/lib/`. The TUI reads only `*.md` and the named JSON files, so
+anything else placed under `content/` would be invisible to half the site.
+
+The two exceptions are Eleventy directory-data files, `content/blog/blog.json` and
+`content/projects/projects.json`: Eleventy requires them to sit in the directory
+they configure, and they carry each section's `section` taxonomy alongside the
+`layout`/`permalink` defaults.
 
 ## SSH TUI
 
