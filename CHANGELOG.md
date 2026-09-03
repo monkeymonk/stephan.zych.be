@@ -9,6 +9,15 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+### Security
+- Bumped `golang.org/x/crypto` 0.55.0 → 0.56.0 in the TUI, clearing GO-2026-6354
+  and GO-2026-6355 — two SSH channel-deadlock DoS advisories reachable through
+  `tui.runSSH` → `ssh.Server.ListenAndServe` → `ssh.NewServerConn`, published
+  after the 0.55.0 bump and failing the `govulncheck` gate. `x/crypto` 0.56.0
+  requires a `go 1.26.0` directive (Go orders `1.26` before `1.26.0`), so
+  `tui/go.mod` states the patch version; CI and the Docker builder already pin
+  Go 1.26.6.
+
 ## [1.5.1] - 2026-09-03
 
 ### Security
