@@ -141,8 +141,14 @@ export class SzToc extends LitElement {
     );
 
     this.items = headings.map((h) => {
+      // Headings carry injected chrome by the time sz-markdown has run: the
+      // "##" level indicator and the "§" permalink. Which of those exist when
+      // we collect depends on load order (hard load enhances first, SPA nav
+      // collects first), so strip both rather than trusting the current DOM.
       const clone = h.cloneNode(true) as HTMLElement;
-      clone.querySelector('.sz-heading-indicator')?.remove();
+      for (const chrome of clone.querySelectorAll('.sz-heading-indicator, .sz-heading-anchor')) {
+        chrome.remove();
+      }
       return {
         id: h.id,
         text: (clone.textContent || '').trim(),

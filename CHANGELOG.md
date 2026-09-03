@@ -9,10 +9,19 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-09-03
+
 ### Security
 - Bumped `golang.org/x/crypto` 0.52.0 → 0.55.0 in the TUI, clearing GO-2026-6303
   — reachable through `tui.runSSH` → `ssh.Server.ListenAndServe` → the SSH
   server handshake — which was failing the `govulncheck` deploy gate.
+
+### Fixed
+- The article outline rail (`sz-toc`) appended a stray `§` to every entry on a
+  hard page load: it stripped the heading's `##` level indicator but not the
+  `§` permalink `sz-markdown` injects alongside it. Whether the leak showed
+  depended on load order — on SPA navigation the outline was collected before
+  the permalinks existed — so both chrome nodes are now stripped unconditionally.
 
 ## [1.5.0] - 2026-08-31
 
@@ -223,7 +232,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.0...v1.4.1
