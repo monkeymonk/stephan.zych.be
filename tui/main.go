@@ -77,7 +77,7 @@ func main() {
 
 // runLocal is the dev path: render straight to the current terminal.
 func runLocal(content *Content, data *SiteData, loadErr error) {
-	m := NewModel(content, data, loadErr, 0, 0)
+	m := NewModel(content, data, loadErr, 0, 0).withOutput(os.Stdout)
 	if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
 		log.Fatal("program error", "err", err)
 	}
@@ -109,7 +109,7 @@ func runSSH(content *Content, data *SiteData, wakapi *WakapiStats, loadErr error
 		}
 		d := LoadData(dataDir)
 		d.Wakapi = wakapi
-		return NewModel(c, d, err, w, h), []tea.ProgramOption{tea.WithAltScreen()}
+		return NewModel(c, d, err, w, h).withOutput(s), []tea.ProgramOption{tea.WithAltScreen()}
 	}
 
 	s, err := wish.NewServer(

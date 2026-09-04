@@ -72,19 +72,19 @@ layout: base.njk
     {{ content | safe }}
 
     {% if section.name == 'blog' %}
-    {% set shareUrl = (site.url + page.url) | urlencode %}
+    {% set shareBase = site.url + page.url %}
     {% set shareText = title | urlencode %}
     <div class="sz-md-footer">
       <div class="md-hr">---</div>
       <div class="md-foot">written by <strong>{{ site.author }}</strong> · <a href="/about/">~/about</a></div>
-      <div class="md-foot">share: {{ share.shareLinks(shareUrl, shareText) }}</div>
+      <div class="md-foot">share: {{ share.shareLinks(shareBase, shareText) }}</div>
     </div>
     {% endif %}
   </sz-markdown>
 
   {# Styled footer — shown only in reading (glow) view #}
   {% if section.name == 'blog' %}
-  {% set shareUrl = (site.url + page.url) | urlencode %}
+  {% set shareBase = site.url + page.url %}
   {% set shareText = title | urlencode %}
   <footer class="sz-article__footer">
     <div class="sz-article__author">
@@ -93,7 +93,7 @@ layout: base.njk
     </div>
     <div class="sz-article__share">
       <span class="sz-article__share-label">Share</span>
-      {{ share.shareLinks(shareUrl, shareText, true, "\n      ") }}
+      {{ share.shareLinks(shareBase, shareText, true, "\n      ") }}
     </div>
   </footer>
   {% endif %}

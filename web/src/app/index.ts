@@ -3,9 +3,13 @@ import { registry } from '../core/registry.js';
 import { router } from '../core/router.js';
 import { actions, THEME_ACTION, ROUTER_ACTION } from '../core/actions.js';
 import { appState } from '../core/state.js';
+// Position of this import is load-bearing: core/campaign.ts must evaluate
+// before the umami tag hooks history.replaceState (see that module).
+import { initCampaign } from '../core/campaign.js';
 
 // Initialize registry before feature imports so connectedCallbacks have data available
 registry.init();
+initCampaign();
 
 // Features (side-effect imports trigger custom element registration)
 import '../features/start-screen/index.js';

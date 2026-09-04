@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"regexp"
 	"sort"
 	"strings"
@@ -43,6 +44,7 @@ type Model struct {
 	content *Content
 	data    *SiteData
 	loadErr error
+	out     io.Writer // client terminal (SSH session / dev stdout), see copyURL
 
 	width, height int
 	screen        screen
@@ -77,7 +79,6 @@ type Model struct {
 	readerLinks []pageLink
 	linksOpen   bool
 	linkCursor  int
-	clip        string // OSC52 payload to emit on the next frame
 
 	themeName     string
 	theme         Theme
@@ -117,6 +118,14 @@ func NewModel(content *Content, data *SiteData, loadErr error, width, height int
 	if width > 0 && height > 0 {
 		m.resize(width, height)
 	}
+	return m
+}
+
+// withOutput attaches the client's terminal — the SSH session, or stdout in
+// dev. It's the same writer bubbletea renders to, and copyURL writes clipboard
+// escapes to it directly; without it a copy only echoes on the status line.
+func (m Model) withOutput(w io.Writer) Model {
+	m.out = w
 	return m
 }
 
@@ -635,6 +644,16 @@ func (m Model) sectionSequence(a Article) ([]Article, int) {
 	return nil, -1
 }
 
+// articlePath is the article's path on the web site. It must match the Eleventy
+// permalinks in content/blog/blog.json / content/projects/projects.json, or a
+// copied URL won't resolve there.
+func articlePath(a Article) string {
+	if a.Section == "pages" {
+		return "/" + a.Slug + "/"
+	}
+	return "/" + a.Section + "/" + a.Slug + "/"
+}
+
 // readerNeighbors returns the previous/next articles around the open reader,
 // matching the web pager: blog is newest-first, so prev = older (later in the
 // slice) and next = newer (earlier). Projects follow plain list order.
@@ -720,10 +739,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, animTick()
 		}
 		m.animating = false
-		return m, nil
-
-	case clipDoneMsg:
-		m.clip = ""
 		return m, nil
 
 	case tea.KeyMsg:
@@ -920,6 +935,8 @@ func (m Model) updateReader(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.openReader(*prev, m.prev)
 		}
 		return m, nil
+	case "y":
+		return m.copyURL(m.data.Site.URL + articlePath(m.readerArticle))
 	}
 	var cmd tea.Cmd
 	m.reader, cmd = m.reader.Update(msg)
@@ -955,9 +972,6 @@ func (m Model) View() string {
 		default:
 			out = m.viewHome()
 		}
-	}
-	if m.clip != "" {
-		out = osc52Seq(m.clip) + out
 	}
 	return out
 }

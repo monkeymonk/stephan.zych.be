@@ -1,11 +1,19 @@
 {# Social share links, shared by the article code-view and reading-view footers.
-   shareUrl / shareText must already be urlencoded. caps switches label casing;
-   sep is the literal separator placed between links. #}
-{% macro shareLinks(shareUrl, shareText, caps=false, sep=" · ") -%}
+   base is the plain (unencoded) canonical url — this macro encodes each
+   destination itself; shareText must already be urlencoded. caps switches label
+   casing; sep is the literal separator placed between links.
+   The copy control is an <a> carrying the bare canonical url, not a button, so
+   the native "copy link address" still works and it degrades without JS. #}
+{% macro shareLinks(base, shareText, caps=false, sep=" · ") -%}
 {%- set li = "LinkedIn" if caps else "linkedin" -%}
 {%- set xx = "X" if caps else "x" -%}
 {%- set bs = "Bluesky" if caps else "bluesky" -%}
 {%- set em = "Email" if caps else "email" -%}
-{# %3Futm_source%3D<network>%26utm_medium%3Dsocial is a urlencoded ?utm_source=<network>&utm_medium=social appended to the destination url, so referred visits are attributable. #}
-<a href="https://www.linkedin.com/sharing/share-offsite/?url={{ shareUrl }}%3Futm_source%3Dlinkedin%26utm_medium%3Dsocial" target="_blank" rel="noopener noreferrer">{{ li }}</a>{{ sep | safe }}<a href="https://twitter.com/intent/tweet?url={{ shareUrl }}%3Futm_source%3Dx%26utm_medium%3Dsocial&text={{ shareText }}" target="_blank" rel="noopener noreferrer">{{ xx }}</a>{{ sep | safe }}<a href="https://bsky.app/intent/compose?text={{ shareText }}%20{{ shareUrl }}%3Futm_source%3Dbluesky%26utm_medium%3Dsocial" target="_blank" rel="noopener noreferrer">{{ bs }}</a>{{ sep | safe }}<a href="mailto:?subject={{ shareText }}&body={{ shareUrl }}%3Futm_source%3Demail%26utm_medium%3Dsocial">{{ em }}</a>
+{%- set cp = "Copy link" if caps else "copy link" -%}
+{# Each destination carries ?utm_source=<network>&utm_medium=<social|email>, so referred visits are attributable. The copy link deliberately carries none — a hand-pasted url should stay clean. #}
+{%- set linkedinUrl = (base + "?utm_source=linkedin&utm_medium=social") | urlencode -%}
+{%- set xUrl = (base + "?utm_source=x&utm_medium=social") | urlencode -%}
+{%- set blueskyUrl = (base + "?utm_source=bluesky&utm_medium=social") | urlencode -%}
+{%- set emailUrl = (base + "?utm_source=email&utm_medium=email") | urlencode -%}
+<a href="https://www.linkedin.com/sharing/share-offsite/?url={{ linkedinUrl }}" target="_blank" rel="noopener noreferrer" data-umami-event="share" data-umami-event-network="linkedin">{{ li }}</a>{{ sep | safe }}<a href="https://twitter.com/intent/tweet?url={{ xUrl }}&text={{ shareText }}" target="_blank" rel="noopener noreferrer" data-umami-event="share" data-umami-event-network="x">{{ xx }}</a>{{ sep | safe }}<a href="https://bsky.app/intent/compose?text={{ shareText }}%20{{ blueskyUrl }}" target="_blank" rel="noopener noreferrer" data-umami-event="share" data-umami-event-network="bluesky">{{ bs }}</a>{{ sep | safe }}<a href="mailto:?subject={{ shareText }}&body={{ emailUrl }}" data-umami-event="share" data-umami-event-network="email">{{ em }}</a>{{ sep | safe }}<a class="js-share-copy" href="{{ base }}" aria-label="Copy link to this page" title="Copy link to this page">⧉ {{ cp }}</a>
 {%- endmacro %}

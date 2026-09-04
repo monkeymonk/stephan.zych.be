@@ -58,6 +58,9 @@
   {% endif %}
   {# Only the default theme ships render-blocking; others load on demand (app/index.ts). #}
   <link rel="stylesheet" id="theme-css-catppuccin-mocha" href="/assets/themes/catppuccin-mocha.css">
+  {# Script order is load-bearing: this module bundle must stay ahead of the
+     umami tag below. core/campaign.ts captures history.replaceState while it is
+     still unhooked, so stripping utm params can't trigger a second pageview. #}
   <script type="module" src="/assets/components.js"></script>
   {%- if site.analyticsId %}
   {# Self-hosted, cookieless Umami — no cookies/localStorage, so no consent banner. #}

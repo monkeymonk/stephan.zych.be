@@ -9,6 +9,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-09-04
+
 ### Added
 - A build-time gate on content social-preview art: a post whose `poster` or
   `ogImage` is missing, malformed, or points at a file that isn't in the repo
@@ -18,6 +20,31 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
   alongside the `.webp` poster. Run it locally with `npm run check:assets`;
   it is deliberately not part of `npm run build`, so drafting a post before
   its art exists still builds.
+- A copy-link control in the blog article share row, rendered as a real link so
+  the browser's own "copy link address" works and it still functions with
+  JavaScript disabled. It copies the clean canonical URL — never the campaign
+  parameters the visitor may have arrived with.
+- <kbd>y</kbd> copies the current article's URL in both renderers — the web
+  reader and the SSH TUI, which puts it on the client's clipboard over OSC 52
+  and echoes it in the status line for terminals that ignore the sequence.
+- Share-intent tracking: clicking a share target (LinkedIn, X, Bluesky, email,
+  or copy) records a `share` event with the network, so outgoing shares are
+  measurable and not just inbound landings.
+
+### Fixed
+- The email share link tagged itself `utm_medium=social`; it now says `email`.
+  The utm parameters were assembled as a pre-urlencoded literal, which is what
+  hid the wrong value — they are now built readably from the canonical URL.
+- Campaign parameters (`utm_*`, `fbclid`, `gclid`) are now cleared from the
+  address bar once the landing page view has been recorded, so they no longer
+  travel along when a visitor copies the URL and shares it themselves.
+- The SSH TUI never actually copied anything to the client's clipboard. The
+  OSC 52 escape was prefixed onto the rendered frame, but bubbletea's renderer
+  resets its frame buffer on every message and only flushes on the framerate
+  ticker, so the frame carrying the sequence was overwritten before it could
+  reach the wire — the status line said `copied:` while the clipboard stayed
+  untouched. The escape is now written straight to the session. This also
+  repairs copying an external link out of an article's link list.
 
 ### Security
 - Bumped `golang.org/x/crypto` 0.55.0 → 0.56.0 in the TUI, clearing GO-2026-6354
@@ -251,7 +278,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.1...v1.4.2

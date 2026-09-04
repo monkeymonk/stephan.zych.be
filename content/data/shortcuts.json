@@ -3,6 +3,7 @@
   { "keys": "/", "description": "Search pages and content" },
   { "keys": "?", "description": "Show help" },
   { "keys": "l", "description": "List links in the current article" },
+  { "keys": "y", "description": "Copy this article's URL" },
   { "keys": "[ / ]", "description": "Previous / next article" },
   { "keys": "Esc", "description": "Close palette / search" },
   { "keys": "Tab", "description": "Autocomplete command / cycle args" },

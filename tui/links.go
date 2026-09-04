@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"regexp"
 	"strings"
 
@@ -18,8 +19,6 @@ type pageLink struct {
 	target   string // page slug / list kind / article slug
 	section  string // for "article": "projects" | "blog"
 }
-
-type clipDoneMsg struct{}
 
 var (
 	reMdLink  = regexp.MustCompile(`\[([^\]]+)\]\(([^)\s]+)[^)]*\)`)
@@ -129,13 +128,35 @@ func (m Model) followLink(l pageLink) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	}
-	m.clip = l.url
-	m.message = "🔗 copied: " + l.url
-	return m, func() tea.Msg { return clipDoneMsg{} }
+	return m.copyURL(l.url)
 }
 
-// osc52Seq is the clipboard-copy escape sequence for the client terminal.
-func osc52Seq(s string) string { return osc52.New(s).String() }
+// copyURL puts a URL on the client's clipboard and echoes it on the status
+// line. Both halves are load-bearing.
+//
+// The escape is written straight to the session writer because bubbletea
+// v1.3.10 has no clipboard Cmd and an in-band sequence cannot survive the
+// renderer: standardRenderer.write resets the frame buffer on every message
+// while flush only runs on the framerate ticker, so the frame carrying the
+// sequence was always overwritten by the next Update microseconds later and
+// never reached the wire. Don't move this back into View(). The Cmd goroutine
+// shares the writer with the renderer, so a frame can tear — OSC 52 paints no
+// cells and the next repaint restores it.
+//
+// The status-line echo isn't redundant: OSC 52 is a capability of the *client*
+// terminal (tmux needs `set -g set-clipboard on`, Terminal.app never supports
+// it), so the echoed URL is what keeps it selectable by hand when the sequence
+// is swallowed — which is also the graceful degradation when there's no writer.
+func (m Model) copyURL(url string) (tea.Model, tea.Cmd) {
+	m.message = "🔗 copied: " + url
+	out := m.out
+	return m, func() tea.Msg {
+		if out != nil {
+			_, _ = io.WriteString(out, osc52.New(url).String())
+		}
+		return nil
+	}
+}
 
 // linkifyOSC8 wraps absolute URLs in rendered text with OSC 8 hyperlinks.
 func linkifyOSC8(s string) string {
