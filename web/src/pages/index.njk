@@ -3,4 +3,10 @@ layout: base.njk
 title: Stéphan Zych — engineering notes & experiments
 permalink: /
 ---
+{# sz-dashboard's ASCII wordmark is the visual h1 and is aria-hidden decoration,
+   so the page's real heading is this text equivalent. It sits in light DOM
+   rather than inside the component so it is in the served HTML on first paint
+   and on a no-JS visit — and .sr-only is absolutely positioned, so it takes
+   nothing out of the hero's full-height centring. #}
+<h1 class="sr-only">{{ title }}</h1>
 <sz-dashboard nav='{{ nav.tabs | dump }}' wordmark='{{ startScreen.wordmark | dump }}' taglines='{{ startScreen.taglines | dump }}'></sz-dashboard>

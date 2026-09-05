@@ -49,6 +49,7 @@ import '../layouts/sz-portfolio.js';
 import './wiring/index.js';
 import { wireNeovimPalette } from './wiring/neovim-palette.js';
 import { loadPresentComponents } from './lazy-components.js';
+import { NEOVIM_ACTION } from '../features/neovim/actions.js';
 
 // Apply saved theme. Only the default theme's CSS is shipped render-blocking in
 // the page <head>; any other theme's stylesheet is fetched on demand the first
@@ -87,21 +88,40 @@ applyViewMode();
 appState.subscribe(applyViewMode);
 mobile.addEventListener('change', applyViewMode);
 
-// Desktop-only feature set: the command palette is hard-gated off on mobile
-// (sz-palette ignores keydowns while the mobile query matches) and the
-// matrix/confetti effects are only reachable through it — so neither is ever
-// usable on a phone. Skip shipping them to mobile entirely; load if we start
-// on, or later resize to, a desktop-width viewport.
-let desktopLoaded = false;
+// The matrix/confetti effects are only reachable through the command palette,
+// so they stay desktop-only and are never shipped to a phone.
+let effectsLoaded = false;
 function loadDesktopOnly() {
-  if (desktopLoaded) return;
-  desktopLoaded = true;
-  wireNeovimPalette(); // register the palette's command + search sources
-  void import('../features/neovim/sz-palette.js');
+  if (effectsLoaded) return;
+  effectsLoaded = true;
   void import('../features/effects/index.js');
 }
 if (!mobile.matches) loadDesktopOnly();
 else mobile.addEventListener('change', (e) => { if (!e.matches) loadDesktopOnly(); });
+
+// The palette itself is NOT desktop-only: the tmux bar's search button is
+// mobile-only and opens it. It used to be bundled with the effects above, which
+// meant that on a cold phone load the palette module never arrived and that
+// button was a visible, labelled control that did nothing at all — it only ever
+// appeared to work in a session that had started at desktop width.
+//
+// So: load eagerly on desktop, and on demand everywhere else. The palette
+// registers its own PALETTE_OPEN listener in connectedCallback, so a request
+// that arrives before the module does is replayed once it is ready.
+let paletteLoaded = false;
+async function ensurePalette(): Promise<void> {
+  if (paletteLoaded) return;
+  paletteLoaded = true;
+  wireNeovimPalette(); // register the palette's command + search sources
+  await import('../features/neovim/sz-palette.js');
+  await customElements.whenDefined('sz-palette');
+}
+if (!mobile.matches) void ensurePalette();
+actions.on(NEOVIM_ACTION.PALETTE_OPEN, (a) => {
+  if (paletteLoaded) return;
+  const payload = a.payload;
+  void ensurePalette().then(() => actions.dispatch(NEOVIM_ACTION.PALETTE_OPEN, payload));
+});
 
 // Apply saved text-size scale (accessibility "aA" control) by setting the
 // --sz-font-scale multiplier inline on <html>, which wins over the :root

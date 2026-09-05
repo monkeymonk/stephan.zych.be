@@ -16,8 +16,11 @@
    deeper (job title, skill group, job group) is distinguished by colour alone,
    so the band stays the section marker.
 
-   cv-print.css is the light, print-only twin over the SAME markup
-   (web/src/_includes/cv-body.njk) — a markup change lands in both.
+   cv-print.css is the light twin over the SAME markup
+   (web/src/_includes/cv-body.njk) — a markup change lands
+   in both. base.njk links this sheet at media="screen" and
+   that one at media="print", so printing /cv/ is printing
+   the résumé: nothing below reaches paper.
    ═══════════════════════════════════════════════════ */
 
 .sz-cv {
@@ -94,7 +97,9 @@
 .sz-cv__contact {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 8px;
+  /* Row gap keeps wrapped rows 24px apart on narrow viewports; without it the
+     links sit one --sz-line-px (~21px) apart and fail WCAG 2.5.8 spacing. */
+  gap: 4px 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -110,6 +115,11 @@
 .sz-cv__contact a {
   color: var(--sz-subtext1, #bac2de);
   text-decoration: none;
+  /* WCAG 2.5.8: a bare line of text is ~21px tall, under the 24px minimum
+     target. Padding would shift the baseline grid, so grow the box instead. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
 }
 .sz-cv__contact a:hover {
   color: var(--sz-accent, #89b4fa);
@@ -179,7 +189,11 @@
   padding: 0 8px;
   line-height: var(--sz-line-px);
   font-size: calc(var(--sz-font-size) * 0.88);
-  color: var(--sz-lavender, #b4befe);
+  /* Same lift as .sz-article__tag in base.css: gruvbox aliases --sz-lavender to
+     its blue-green (#83a598), which is 4.30:1 on --sz-surface0 at 0.88x. Raising
+     the lightness 15% toward --sz-text clears AA and leaves the other two themes
+     visually unchanged. */
+  color: color-mix(in srgb, var(--sz-lavender, #b4befe) 85%, var(--sz-text, #cdd6f4));
   background: var(--sz-surface0, #313244);
   border-radius: 2px;
 }
@@ -253,7 +267,8 @@
 }
 .sz-cv__job-meta {
   margin: 0 0 var(--sz-line-px);
-  color: var(--sz-overlay1, #7f849c);
+  /* Employer and dates are content, not decoration. */
+  color: var(--sz-muted, #989caf);
 }
 .sz-cv__job-summary {
   margin: 0;

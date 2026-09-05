@@ -1,14 +1,15 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { actions, ROUTER_ACTION } from "../../core/actions.js";
 import type { RouteChangedDetail } from "../../core/router.js";
-import { isInputFocused } from "../../core/keyboard.js";
+import { isInputFocused, singleKeyAllowed } from "../../core/keyboard.js";
 import type { NavTab } from "../../core/registry.js";
 import { jsonArrayAttribute } from "../../core/data.js";
 import { focusRing, clockStyles } from "../../core/styles.js";
 import { clock, type ClockTime } from "../../core/clock.js";
 import { StateController } from "../../core/state-controller.js";
 import { TMUX_ACTION } from "./actions.js";
+import { NEOVIM_ACTION, type PaletteStateDetail } from "../neovim/actions.js";
 
 // Text-size steps for the accessibility "aA" control. Multipliers feed
 // --sz-font-scale, which rescales the whole site (see base.css :root).
@@ -20,10 +21,15 @@ export class SzTmuxBar extends LitElement {
   @property({ attribute: "nav", converter: jsonArrayAttribute }) nav: NavTab[] =
     [];
   @state() private time: ClockTime = clock.time;
-  private fontCtrl = new StateController(this, ["fontScale"]);
+  /** Text for the polite live region: text-size and shortcut-toggle changes. */
+  @state() private announcement = "";
+  /** Mirrors the palette so the toggle can announce whether it is expanded. */
+  @state() private searchOpen = false;
+  private fontCtrl = new StateController(this, ["fontScale", "keyShortcuts"]);
 
   private clockUnsub?: () => void;
   private routeUnsub?: () => void;
+  private paletteUnsub?: () => void;
 
   static styles = css`
     ${focusRing}${clockStyles}
@@ -53,7 +59,7 @@ export class SzTmuxBar extends LitElement {
       align-items: center;
       padding: 0 14px;
       height: 100%;
-      color: var(--sz-overlay1, #7f849c);
+      color: var(--sz-muted, #989caf);
       text-decoration: none;
       white-space: nowrap;
       transition:
@@ -101,7 +107,9 @@ export class SzTmuxBar extends LitElement {
       color: var(--sz-crust, #11111b);
       font-weight: 700;
     }
-    .font-size {
+    /* Shared chrome-control look for the two accessibility toggles. */
+    .font-size,
+    .keys-toggle {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -118,10 +126,22 @@ export class SzTmuxBar extends LitElement {
         background 0.2s;
     }
     .font-size:hover,
-    .font-size:focus-visible {
+    .font-size:focus-visible,
+    .keys-toggle:hover,
+    .keys-toggle:focus-visible {
       color: var(--sz-text, #cdd6f4);
       background: var(--sz-surface0, #313244);
       outline: none;
+    }
+    /* These two express focus as a background swap and deliberately drop the
+       shared ring. Windows High Contrast Mode discards author backgrounds, so
+       without this they would have no focus indicator at all. */
+    @media (forced-colors: active) {
+      .font-size:focus-visible,
+      .keys-toggle:focus-visible {
+        outline: 3px solid Highlight;
+        outline-offset: -3px;
+      }
     }
     /* Single inline run so the two letters share a baseline, while the run as
        a whole is centered in the bar. */
@@ -131,6 +151,16 @@ export class SzTmuxBar extends LitElement {
     }
     .font-size .a-small { font-size: 0.78em; }
     .font-size .a-large { font-size: 1.1em; font-weight: 700; }
+    .keys-toggle {
+      font-size: 1.05em;
+      letter-spacing: 0;
+    }
+    /* Struck through when the shortcuts are off, so the state reads at a
+       glance and not only from the button's aria-pressed. */
+    .keys-toggle[aria-pressed="false"] {
+      color: var(--sz-muted, #989caf);
+      text-decoration: line-through;
+    }
     .right-arrow {
       width: 0;
       height: 0;
@@ -144,8 +174,21 @@ export class SzTmuxBar extends LitElement {
     }
 
     @media (max-width: 768px) {
+      /* The document scrolls on mobile, so the bottom chrome has to be pinned
+         instead of riding along at the end of a fixed-height column. The
+         :host background (crust) was decorative inside an opaque window and is
+         now load-bearing: article text scrolls underneath. */
       :host {
-        height: 40px;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        /* Below the titlebar's 30, above the article. */
+        z-index: 25;
+        box-sizing: border-box;
+        height: calc(var(--sz-mobile-tmuxbar-h) + env(safe-area-inset-bottom));
+        /* Keep the tabs clear of the home-indicator strip. */
+        padding-bottom: env(safe-area-inset-bottom);
         border-top: 1px solid var(--sz-surface0, #313244);
       }
       .tabs {
@@ -166,7 +209,10 @@ export class SzTmuxBar extends LitElement {
       .right slot[name="widget"] {
         display: none;
       }
-      .font-size {
+      /* Both desktop-only: mobile browsers own text zoom, and there is no
+         physical keyboard to shortcut with. */
+      .font-size,
+      .keys-toggle {
         display: none;
       }
       .search-btn {
@@ -178,7 +224,9 @@ export class SzTmuxBar extends LitElement {
         background: none;
         border: none;
         border-left: 1px solid var(--sz-surface0, #313244);
-        color: var(--sz-overlay1, #7f849c);
+        /* The glyph is this button's only label, so it follows the content
+           ramp, not the decoration ramp. */
+        color: var(--sz-muted, #989caf);
         cursor: pointer;
         flex-shrink: 0;
         padding: 0;
@@ -195,6 +243,20 @@ export class SzTmuxBar extends LitElement {
         stroke-width: 2;
       }
     }
+
+    /* Announcement-only. Clipped rather than display:none — a hidden live
+       region is never announced. */
+    .sr-live {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+    }
   `;
 
   private isActive(tabPath: string): boolean {
@@ -209,6 +271,9 @@ export class SzTmuxBar extends LitElement {
     this.routeUnsub = actions.on(ROUTER_ACTION.ROUTE_CHANGED, (a) => {
       this.activePath = (a.payload as RouteChangedDetail).path;
     });
+    this.paletteUnsub = actions.on(NEOVIM_ACTION.PALETTE_STATE, (a) => {
+      this.searchOpen = (a.payload as PaletteStateDetail).open;
+    });
   }
 
   disconnectedCallback() {
@@ -216,6 +281,7 @@ export class SzTmuxBar extends LitElement {
     this.clockUnsub?.();
     document.removeEventListener("keydown", this.handleKeydown);
     this.routeUnsub?.();
+    this.paletteUnsub?.();
   }
 
   private handleKeydown = (e: KeyboardEvent) => {
@@ -229,7 +295,9 @@ export class SzTmuxBar extends LitElement {
       }
       return;
     }
-    // Single-letter shortcut: first char of tab name (no modifiers)
+    // Single-letter shortcut: first char of tab name (no modifiers). Alt+N
+    // above is a modified binding and stays live regardless of the setting.
+    if (!singleKeyAllowed()) return;
     if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key.length === 1) {
       const key = e.key.toLowerCase();
       const tab = this.nav.find((t) => t.name.charAt(0).toLowerCase() === key);
@@ -240,29 +308,52 @@ export class SzTmuxBar extends LitElement {
     }
   };
 
-  private openSearch = () => {
-    actions.dispatch("neovim:palette-open", { prefix: "/" });
+  // Toggle, not open. sz-palette already toggles when re-asked for the source
+  // it is showing; the button just has to declare itself a palette toggle so
+  // the palette's capture-phase outside-click handler does not close it out
+  // from under this click and leave the press re-opening it.
+  private toggleSearch = () => {
+    actions.dispatch(NEOVIM_ACTION.PALETTE_OPEN, { prefix: "/" });
   };
 
   // Step to the next text size, wrapping back to 100% after the largest.
   private cycleFontScale = () => {
     const current = this.fontCtrl.get("fontScale");
     const idx = FONT_SCALES.findIndex((s) => Math.abs(s - current) < 0.001);
-    this.fontCtrl.set("fontScale", FONT_SCALES[(idx + 1) % FONT_SCALES.length]);
+    const next = FONT_SCALES[(idx + 1) % FONT_SCALES.length];
+    this.fontCtrl.set("fontScale", next);
+    // The button's own label updates, but a label change on the element you
+    // just pressed is not reliably re-announced — say the new size out loud.
+    this.announcement = `Text size ${Math.round(next * 100)} percent`;
+  };
+
+  // WCAG 2.1.4's "mechanism to turn the shortcut off", as a control rather
+  // than only a command: `:set keys off` would otherwise be a one-way door,
+  // since `:` is itself one of the single-character shortcuts it disables.
+  private toggleKeyShortcuts = () => {
+    const next = !this.fontCtrl.get("keyShortcuts");
+    this.fontCtrl.set("keyShortcuts", next);
+    this.announcement = next
+      ? "Single-key shortcuts on"
+      : "Single-key shortcuts off. Alt shortcuts still work.";
   };
 
   render() {
     const tabs = this.nav;
 
     return html`
-      <nav class="tabs" role="tablist">
+      ${/* These are page links, not tabs: role="tablist" would override the
+            nav element's implicit landmark and leave the site's primary
+            navigation contributing nothing to the landmark tree — and a
+            tablist with no aria-controls, no tabpanel and no roving tabindex
+            is malformed anyway. */ ""}
+      <nav class="tabs" aria-label="Sections">
         ${tabs.map(
           (tab) => html`
             <a
               class="tab ${this.isActive(tab.path) ? "active" : ""}"
               href="${tab.path}"
-              role="tab"
-              aria-selected=${this.isActive(tab.path) ? "true" : undefined}
+              aria-current=${this.isActive(tab.path) ? "page" : nothing}
             >
               <span class="tab-key">${tab.name.charAt(0)}</span
               >${tab.name.slice(1)}
@@ -270,7 +361,13 @@ export class SzTmuxBar extends LitElement {
           `,
         )}
       </nav>
-      <button class="search-btn" @click=${this.openSearch} aria-label="Search">
+      <button
+        class="search-btn"
+        data-palette-toggle
+        @click=${this.toggleSearch}
+        aria-label=${this.searchOpen ? "Close search" : "Search"}
+        aria-expanded=${this.searchOpen}
+      >
         <svg viewBox="0 0 24 24">
           <circle cx="11" cy="11" r="7" />
           <line x1="16.5" y1="16.5" x2="21" y2="21" />
@@ -285,11 +382,25 @@ export class SzTmuxBar extends LitElement {
         >
           <span class="aa"><span class="a-small">a</span><span class="a-large">A</span></span>
         </button>
+        <button
+          class="keys-toggle"
+          @click=${this.toggleKeyShortcuts}
+          aria-pressed=${this.fontCtrl.get("keyShortcuts")}
+          aria-label=${this.fontCtrl.get("keyShortcuts")
+            ? "Single-key shortcuts are on. Activate to turn them off."
+            : "Single-key shortcuts are off. Activate to turn them on."}
+          title=${this.fontCtrl.get("keyShortcuts")
+            ? "Single-key shortcuts: on — click to disable (also :set keys off)"
+            : "Single-key shortcuts: off — click to enable (also :set keys on)"}
+        >
+          <span aria-hidden="true">⌨</span>
+        </button>
         <slot name="widget">
           <div class="right-arrow"></div>
           <span class="right-item accent">${this.time.hh}<span class="clock-colon">:</span>${this.time.mm}</span>
         </slot>
       </div>
+      <span class="sr-live" role="status" aria-live="polite">${this.announcement}</span>
     `;
   }
 }

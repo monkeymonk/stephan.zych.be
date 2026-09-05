@@ -79,11 +79,13 @@ export class SzStatusbar extends LitElement {
     .branch:hover {
       opacity: 0.8;
     }
+    /* The separator is a bare "·" between segments — decoration, and it stays
+       on the overlay ramp; .info next to it is read, so it does not. */
     .separator {
       color: var(--sz-overlay0, #6c7086);
     }
     .info {
-      color: var(--sz-overlay1, #7f849c);
+      color: var(--sz-muted, #989caf);
     }
     .social-link {
       color: var(--sz-subtext, #a6adc8);
@@ -107,6 +109,20 @@ export class SzStatusbar extends LitElement {
     }
 
     @media (max-width: 768px) {
+      /* Pinned directly on top of the fixed tmux bar — with a document
+         scroller this bar would otherwise scroll away with the article. The
+         :host mantle background is load-bearing now that text passes under
+         it, and the safe-area inset belongs to the bar below us. */
+      :host {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: calc(var(--sz-mobile-tmuxbar-h) + env(safe-area-inset-bottom));
+        /* Below the titlebar's 30, above the article. */
+        z-index: 25;
+        box-sizing: border-box;
+        height: var(--sz-mobile-statusbar-h);
+      }
       .center {
         display: none;
       }
@@ -126,7 +142,10 @@ export class SzStatusbar extends LitElement {
     const theme = this.stateCtrl.get("theme");
 
     return html`
-      <div class="segment" role="status">
+      ${/* No role="status": this is decorative chrome, and a live region here
+            re-announces "NORMAL ~/path" on every SPA navigation and every
+            theme change. Route announcements belong to core/router.ts. */ ""}
+      <div class="segment">
         <span class="mode">NORMAL</span>
         <span class="route">${this.routeToPath(this.route)}</span>
       </div>

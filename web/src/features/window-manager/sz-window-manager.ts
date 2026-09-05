@@ -300,7 +300,9 @@ export class SzWindowManager extends LitElement {
 
   // --- Z-Stack ---
 
-  private handleWindowFocus = (e: MouseEvent) => {
+  // Bound to both mousedown and focusin, so it is typed to their common base;
+  // only composedPath() is used.
+  private handleWindowFocus = (e: Event) => {
     const path = e.composedPath();
     for (const node of path) {
       if (node instanceof HTMLElement && node.tagName === 'SZ-WINDOW' && this.windows.has(node)) {
@@ -311,14 +313,29 @@ export class SzWindowManager extends LitElement {
   };
 
   private focusWindow(el: HTMLElement) {
+    this.w(el).bringToFront();
+    this.syncFocusTraps();
+  }
+
+  // A focused window is not a modal window. The trap used to arm on the first
+  // focusin anywhere inside <sz-window> and, with the single window base.njk
+  // renders, nothing ever turned it off — pinning Tab inside the terminal and
+  // making the skip link, the wallpaper controls and the footer's Terms /
+  // Privacy links permanently unreachable (WCAG 2.1.2). It now arms only for a
+  // window that declares itself modal, and Escape releases it back to the
+  // invoker.
+  private syncFocusTraps() {
     for (const managed of this.windows.values()) {
-      if (managed.el !== el) {
+      const modal = managed.el.hasAttribute('modal') && !this.w(managed.el).windowHidden;
+      if (modal === managed.focusTrap.isActive) continue;
+      if (modal) {
+        managed.focusTrap.activate({
+          onEscape: () => actions.dispatch(WM_ACTION.HIDE, { windowId: managed.el.id }),
+        });
+      } else {
         managed.focusTrap.deactivate();
       }
     }
-    this.w(el).bringToFront();
-    const managed = this.windows.get(el);
-    managed?.focusTrap.activate();
   }
 
   // --- Tiling ---
@@ -332,6 +349,10 @@ export class SzWindowManager extends LitElement {
   }
 
   private toggleTiling() {
+    // Nothing to tile on mobile: the one window is the scrolling document,
+    // and tiling only expresses itself as inline px geometry.
+    if (this.isMobile) return;
+
     if (this.tiled) {
       this.untileWindows();
     } else {
@@ -370,6 +391,10 @@ export class SzWindowManager extends LitElement {
   }
 
   private applyTileLayout(windows: HTMLElement[]) {
+    // Reachable on mobile only by resizing a tiled desktop session across the
+    // breakpoint; the window owns no geometry there.
+    if (this.isMobile) return;
+
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const count = windows.length;
@@ -426,14 +451,18 @@ export class SzWindowManager extends LitElement {
     const win = this.findWindowById(payload?.windowId);
     if (!win) return;
     this.w(win).hideWindow();
-    const managed = this.windows.get(win);
-    managed?.focusTrap.deactivate();
+    this.syncFocusTraps();
     if (this.tiled) this.applyTileLayout(this.getVisibleWindows());
   }
 
   // --- Maximize ---
 
   private handleMaximize(payload: { windowId: string }) {
+    // Already "maximized" on mobile — the window is the full page and its
+    // size comes from CSS, so both branches below would only write geometry
+    // the mobile rules override.
+    if (this.isMobile) return;
+
     const win = this.findWindowById(payload?.windowId);
     if (!win) return;
 
@@ -459,6 +488,9 @@ export class SzWindowManager extends LitElement {
       this.w(win).setLayout({ x: 0, y: 0, w: vw, h: vh });
       this.w(win).setResizeHandlesVisible(false);
     }
+    // The button that toggles this lives in the window's own shadow root, and
+    // its pressed state is the only announcement a screen reader gets.
+    this.w(win).setMaximized(managed.maximized);
   }
 
   // --- Fullscreen ---
@@ -495,12 +527,16 @@ export class SzWindowManager extends LitElement {
     }
   };
 
+  /**
+   * Mobile owns no window geometry: `.window` is a relative, auto-height
+   * block so the document can scroll. Anything inline we wrote in a previous
+   * desktop session (width/height/top/left) is dead weight the CSS only beats
+   * via !important, so clear it rather than leave a trap for the next reader.
+   */
   private forceFullPage() {
     for (const [el] of this.windows) {
       this.w(el).setResizeHandlesVisible(false);
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      this.w(el).setLayout({ x: 0, y: 0, w: vw, h: vh });
+      this.w(el).resetLayout();
     }
   }
 

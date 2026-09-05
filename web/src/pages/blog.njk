@@ -5,6 +5,11 @@ permalink: /blog/
 section: { name: blog, path: /blog/ }
 ---
 {% set allTags = collections.blog | collectTags(['blog']) %}
+{# The tmux tab bar is what tells a sighted reader which section this is, so
+   the page has no visible title — but it still needs exactly one h1. Kept
+   outside sz-portfolio: its shadow template slots children straight into the
+   grid/list container, and a heading is not one of the feed's items. #}
+<h1 class="sr-only">Blog — engineering notes &amp; experiments</h1>
 <sz-portfolio layout="list" filters="{{ allTags | join(',') }}" page-size="10">
   <div class="post-list">
     {% for group in collections.blog | groupByMonth %}

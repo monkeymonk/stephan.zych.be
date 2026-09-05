@@ -12,8 +12,8 @@ eleventyExcludeFromCollections: true
 {%- set contact = [] -%}
 {%- if cv.basics.email -%}{%- set contact = (contact.push("[" + cv.basics.email + "](mailto:" + cv.basics.email + ")"), contact) -%}{%- endif -%}
 {%- if cv.basics.website -%}{%- set contact = (contact.push("[" + cv.basics.website + "](https://" + cv.basics.website + ")"), contact) -%}{%- endif -%}
-{%- if cv.basics.linkedin -%}{%- set contact = (contact.push("[LinkedIn](https://" + cv.basics.linkedin + ")"), contact) -%}{%- endif -%}
-{%- if cv.basics.github -%}{%- set contact = (contact.push("[GitHub](https://" + cv.basics.github + ")"), contact) -%}{%- endif -%}
+{%- if cv.basics.linkedin -%}{%- set contact = (contact.push("[" + cv.basics.linkedin + "](https://" + cv.basics.linkedin + ")"), contact) -%}{%- endif -%}
+{%- if cv.basics.github -%}{%- set contact = (contact.push("[" + cv.basics.github + "](https://" + cv.basics.github + ")"), contact) -%}{%- endif -%}
 {%- if contact.length -%}{%- set headerLines = (headerLines.push(contact | join(" · ")), headerLines) -%}{%- endif -%}
 {%- if cv.basics.pdf -%}{%- set headerLines = (headerLines.push("**Print / PDF:** " + site.url + cv.basics.pdf), headerLines) -%}{%- endif -%}
 

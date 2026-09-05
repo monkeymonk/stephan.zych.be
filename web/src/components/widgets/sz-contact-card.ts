@@ -48,7 +48,7 @@ export class SzContactCard extends LitElement {
     .row:last-of-type { border-bottom: none; }
     .tag {
       flex: 0 0 2.4ch;
-      color: var(--sz-overlay1, #7f849c);
+      color: var(--sz-muted, #989caf);
       text-align: center;
     }
     .row a {
@@ -78,7 +78,7 @@ export class SzContactCard extends LitElement {
       flex-wrap: wrap;
       gap: 8px 14px;
       margin-top: 14px;
-      color: var(--sz-overlay1, #7f849c);
+      color: var(--sz-muted, #989caf);
       font-size: calc(var(--sz-font-size, 13px) * 0.88);
     }
     .meta .online { color: var(--sz-green, #a6e3a1); }

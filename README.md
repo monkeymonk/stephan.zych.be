@@ -21,12 +21,14 @@ shots used in blog posts) with `make screenshots`.
 - Terminal-inspired UI with window management, tmux-style tabs and panes
 - Neovim-flavored markdown rendering with syntax highlighting — every page and article reads in a rendered **html** view by default, with a **markdown** toggle that swaps in the line-numbered source
 - Command palette with fuzzy search
-- Full keyboard navigation — arrow/`hjkl` roaming on the listings, `space`/`enter` to activate, `q`/`esc` to close or leave focus
+- Full keyboard navigation — arrow/`hjkl` roaming on the listings, `space`/`enter` to activate, `q`/`esc` to close or leave focus, `gg`/`G`/`Home`/`End` to jump. The single-key shortcuts can be switched off (`:set keys off`, or the control in the tmux bar) for readers whose assistive tech or type-ahead-find needs the keys back
 - Catppuccin Mocha theme (+ additional themes)
 - Screen shader with time-of-day lighting
 - Animated background with grain/grid overlays
 - Easter egg commands
-- Responsive design with `prefers-reduced-motion` support
+- Accessible by construction, not by accident — WCAG 2.1 AA across every route in all three themes, verified at both desktop and phone widths by `npm run check:a11y`, which also drives a real keyboard journey, because static scanning cannot see a focus trap
+- Honours `prefers-reduced-motion`, `prefers-contrast` and `forced-colors`
+- Print stylesheet for the whole site — any article or page prints as a clean typeset document with the terminal chrome stripped, code that wraps instead of clipping off the page edge, and external link URLs written out
 - Lean, code-split JS — desktop-only and per-page code load on demand, not eagerly
 
 ## Tech Stack
@@ -59,6 +61,8 @@ The web `dev` task starts Eleventy's dev server and esbuild in watch mode concur
 | `npm run clean` | Remove build output |
 | `npm run check:cv` | Verify the CV's headline facts haven't drifted across files |
 | `npm run check:assets` | Verify every post/project declares social-preview images that exist |
+| `npm run check:a11y` | Fail on any WCAG violation, keyboard/scroll/print regression, or Lighthouse a11y drop |
+| `npm run audit` | Record Lighthouse + axe across the audited routes (`-- --baseline` to re-record) |
 
 The CV lives once, as structured data in `content/data/cv.json`, and is rendered
 four ways from that single source: the web page at `/cv/`, the TUI `cv` screen, a

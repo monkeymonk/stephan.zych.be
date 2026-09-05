@@ -1,5 +1,8 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, state, query } from 'lit/decorators.js';
+import { focusRing } from '../../core/styles.js';
+import { deepActiveElement } from '../../core/keyboard.js';
+import { FocusTrap } from '../../features/window-manager/focus-trap.js';
 
 // sz-diagram wraps a ```mermaid block (emitted as <sz-diagram><pre class="mermaid">…).
 // Once mermaid has rendered the inline <svg>, it reveals an "enlarge" button that
@@ -12,12 +15,18 @@ export class SzDiagram extends LitElement {
   @state() private tx = 0;
   @state() private ty = 0;
 
+  @query('.modal') private modalEl!: HTMLElement;
+
   private observer?: MutationObserver;
   private dragging = false;
   private startX = 0;
   private startY = 0;
+  private trap?: FocusTrap;
+  /** Element that opened the lightbox; focus goes back to it on close. */
+  private invoker: HTMLElement | null = null;
 
   static styles = css`
+    ${focusRing}
     :host { position: relative; display: block; }
 
     .enlarge {
@@ -115,6 +124,21 @@ export class SzDiagram extends LitElement {
       font-size: calc(var(--sz-font-size, 13px) * 0.85);
       pointer-events: none;
     }
+
+    /* Print: the rendered <svg> is slotted light DOM, so styles/print.css
+       recolours it for paper. Only this component's own controls are hidden
+       here — the enlarge affordance and the zoom/pan overlay, which is
+       position: fixed and would otherwise print over the page it covers. */
+    @media print {
+      .enlarge,
+      .modal {
+        display: none !important;
+      }
+      :host {
+        position: static;
+        break-inside: avoid;
+      }
+    }
   `;
 
   connectedCallback() {
@@ -138,6 +162,7 @@ export class SzDiagram extends LitElement {
     super.disconnectedCallback();
     this.observer?.disconnect();
     document.removeEventListener('keydown', this.onKey);
+    this.trap?.destroy();
   }
 
   private onKey = (e: KeyboardEvent) => {
@@ -153,10 +178,23 @@ export class SzDiagram extends LitElement {
   private enlarge() {
     if (!this.querySelector('svg')) return;
     this.reset();
+    const active = deepActiveElement();
+    this.invoker = active instanceof HTMLElement ? active : null;
     this.open = true;
   }
 
-  private close() { this.open = false; }
+  // The lightbox covers the page, so it is a modal in every sense except the
+  // semantics it used to carry: without a trap, Tab walked out of it into the
+  // article behind, and closing left focus nowhere.
+  private close() {
+    if (!this.open) return;
+    this.open = false;
+    if (this.trap?.isActive) this.trap.deactivate();
+    const target = this.invoker;
+    this.invoker = null;
+    if (target?.isConnected) target.focus();
+  }
+
   private reset() { this.scale = 1; this.tx = 0; this.ty = 0; }
   private zoom(factor: number) {
     this.scale = Math.min(8, Math.max(0.4, this.scale * factor));
@@ -183,14 +221,23 @@ export class SzDiagram extends LitElement {
   // (Cloning the node — rather than re-parsing its HTML — keeps the SVG intact;
   // we give it a definite, viewport-fitted size so it can't collapse to zero.)
   protected updated(changed: Map<string, unknown>) {
-    if (changed.has('open') && this.open) {
-      const stage = this.renderRoot.querySelector('.zoomable') as HTMLElement | null;
-      const svg = this.querySelector('svg') as SVGSVGElement | null;
-      if (!stage || !svg) return;
+    if (!changed.has('open') || !this.open) return;
+    const stage = this.renderRoot.querySelector('.zoomable') as HTMLElement | null;
+    const svg = this.querySelector('svg') as SVGSVGElement | null;
+    if (stage && svg) {
       const clone = svg.cloneNode(true) as SVGElement;
       this.fitToViewport(clone, svg);
       stage.replaceChildren(clone);
     }
+
+    const modal = this.modalEl;
+    if (!modal) return;
+    // The overlay is a fresh element on every open, so the trap must be too.
+    this.trap?.destroy();
+    this.trap = new FocusTrap(modal);
+    this.trap.activate({ returnFocusTo: this.invoker, onEscape: () => this.close() });
+    // Land on Close: the first thing a keyboard user needs is the way out.
+    modal.querySelector<HTMLElement>('.close-btn')?.focus();
   }
 
   private fitToViewport(clone: SVGElement, src: SVGSVGElement) {
@@ -215,12 +262,18 @@ export class SzDiagram extends LitElement {
         : nothing}
       ${this.open
         ? html`
-            <div class="modal" @click=${(e: MouseEvent) => { if (e.target === e.currentTarget) this.close(); }}>
+            <div
+              class="modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Diagram viewer"
+              @click=${(e: MouseEvent) => { if (e.target === e.currentTarget) this.close(); }}
+            >
               <div class="toolbar">
                 <button @click=${() => this.zoom(1.25)} title="Zoom in" aria-label="Zoom in">+</button>
                 <button @click=${() => this.zoom(1 / 1.25)} title="Zoom out" aria-label="Zoom out">−</button>
                 <button @click=${this.reset} title="Reset" aria-label="Reset zoom">⟳</button>
-                <button @click=${this.close} title="Close (Esc)" aria-label="Close">✕</button>
+                <button class="close-btn" @click=${this.close} title="Close (Esc)" aria-label="Close">✕</button>
               </div>
               <div
                 class="stage"

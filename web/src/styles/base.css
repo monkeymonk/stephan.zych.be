@@ -35,12 +35,63 @@ html, body {
   color: var(--sz-text, #cdd6f4);
 }
 
+/* ── Mobile: hand the scroller back to the document ──
+   Under 768px the whole UI stops being a fixed window and flows in the
+   document, because iOS Safari routes the status-bar scroll-to-top tap to the
+   main frame's scroll view only — it never enters an overflow:auto subtree.
+   Same reason pull-to-refresh and URL-bar collapse only work here: leaving
+   overscroll-behavior at its default is what returns them. */
+@media (max-width: 768px) {
+  html, body {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  /* The mobile chrome (titlebar, statusbar, tmux bar) is position:fixed, so it
+     is out of flow and cannot reserve its own space. These are the single
+     source of those heights: sz-window/sz-statusbar/sz-tmux-bar size their
+     bars from them, and sz-window's content column pads by the two totals.
+     Custom properties inherit into shadow roots, so all of them read these. */
+  :root {
+    --sz-mobile-titlebar-h: 28px;
+    --sz-mobile-statusbar-h: 24px;
+    --sz-mobile-tmuxbar-h: 40px;
+    --sz-mobile-chrome-top: calc(var(--sz-mobile-titlebar-h) + env(safe-area-inset-top));
+    --sz-mobile-chrome-bottom: calc(
+      var(--sz-mobile-statusbar-h) + var(--sz-mobile-tmuxbar-h) + env(safe-area-inset-bottom)
+    );
+  }
+
+  /* Anchor jumps (heading permalinks, the outline rail) land under the fixed
+     titlebar without this. */
+  .sz-prose :is(h1, h2, h3, h4, h5, h6)[id] {
+    scroll-margin-top: calc(var(--sz-mobile-chrome-top) + 8px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* The block above shortens transitions but leaves transition-property at its
+     initial value, `all` — so on any element that declared no transition it
+     *creates* one, for every animatable property. Inside an SVG that includes
+     the geometry properties width/height, which libraries write imperatively as
+     data rather than as style: mermaid sizes each label <foreignObject> to the
+     text it just measured, Chromium then interpolates that write, and the
+     getBBox() taken one statement later reports a graph ~2000px square. The
+     viewBox is baked from that, so with reduced motion on, every diagram
+     rendered at about a fifth of its size (measured: viewBox 2118x2050 for a
+     556x426 graph). Geometry inside an SVG is never decoration, so opt SVG
+     subtrees out of transitions altogether — which is what reduced motion
+     wants anyway — instead of letting them inherit `all`. */
+  svg, svg * {
+    transition-property: none !important;
   }
 }
 
@@ -269,11 +320,23 @@ a:hover { text-decoration: underline; }
 }
 /* Briefly dim the raw source before the renderer swaps in the SVG. */
 .sz-prose pre.mermaid:not([data-processed]) {
-  color: var(--sz-overlay0, #6c7086);
+  color: var(--sz-muted, #989caf);
 }
 .sz-prose pre.mermaid svg {
   max-width: 100%;
   height: auto;
+}
+/* Mermaid appends a single global tooltip div to <body> and ships its styling
+   only inside the rendered SVG's scope, so at document level it is an unstyled
+   in-flow block ~6px tall. It also outlives the diagram: once any page with a
+   diagram has been visited, the SPA router leaves it behind and every later
+   page reports 6px of phantom scroll extent. Absolute is what mermaid itself
+   assumes anyway — it writes inline top/left when it shows the thing. */
+.mermaidTooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
 }
 
 /* Per-code-block line numbers — shown only in the reading/glow view, where
@@ -330,9 +393,22 @@ html[data-view="reading"] .code-gutter span { display: block; }
   color: inherit;
 }
 
-/* ── Links — no underline ── */
-.sz-prose a { text-decoration: none; }
-.sz-prose a:hover { color: var(--sz-lavender, #b4befe); }
+/* ── Links ──
+   Underlined, not bare. Colour alone is a WCAG 1.4.1 failure: --sz-accent
+   against --sz-text is only 1.45:1, so a reader who does not perceive the hue
+   difference cannot tell a prose link from body text at all. The offset and
+   dimmed decoration keep it from reading as a 1990s hyperlink while still
+   being a real non-colour cue. */
+.sz-prose a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+  text-underline-offset: 3px;
+}
+.sz-prose a:hover {
+  color: var(--sz-lavender, #b4befe);
+  text-decoration-color: currentColor;
+}
 .sz-prose .sz-link-icon {
   font-style: normal;
   margin-right: 2px;
@@ -343,7 +419,7 @@ html[data-view="reading"] .code-gutter span { display: block; }
 /* ── Inline text ── */
 .sz-prose strong { color: var(--sz-peach, #fab387); }
 .sz-prose em { color: var(--sz-yellow, #f9e2af); font-style: italic; }
-.sz-prose del { color: var(--sz-overlay0, #6c7086); text-decoration: line-through; }
+.sz-prose del { color: var(--sz-muted, #989caf); text-decoration: line-through; }
 .sz-prose mark {
   background: color-mix(in srgb, var(--sz-yellow, #f9e2af) 25%, transparent);
   color: var(--sz-yellow, #f9e2af);
@@ -510,7 +586,7 @@ html[data-view="reading"] .code-gutter span { display: block; }
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--sz-overlay1, #7f849c);
+  color: var(--sz-muted, #989caf);
 }
 .post-month::-webkit-details-marker { display: none; }
 .post-month::before {
@@ -521,7 +597,7 @@ html[data-view="reading"] .code-gutter span { display: block; }
 .post-group:not([open]) .post-month::before { transform: rotate(-90deg); }
 .post-month:hover { color: var(--sz-text, #cdd6f4); }
 .post-month:focus-visible { outline: 1px solid var(--sz-accent, #89b4fa); outline-offset: 2px; }
-.post-month__count { font-weight: 400; color: var(--sz-overlay0, #6c7086); }
+.post-month__count { font-weight: 400; color: var(--sz-muted, #989caf); }
 .post-month::after {
   content: "";
   flex: 1;
@@ -545,7 +621,15 @@ html[data-view="reading"] .code-gutter span { display: block; }
   background: color-mix(in srgb, var(--sz-accent, #89b4fa) 8%, transparent);
   border-left-color: var(--sz-accent, #89b4fa);
   text-decoration: none;
-  outline: none;
+}
+/* The 8% accent tint above is a hover affordance, not a focus indicator — it
+   resolves to well under WCAG 1.4.11's 3:1 against the pane. Keyboard focus
+   gets a real ring; inset, because the rows are flush and a positive offset
+   would bleed over the neighbouring row. */
+.post-row:focus,
+.post-row:focus-visible {
+  outline: 2px solid var(--sz-accent, #89b4fa);
+  outline-offset: -2px;
 }
 
 .post-row__date {
@@ -557,12 +641,12 @@ html[data-view="reading"] .code-gutter span { display: block; }
   padding-top: 2px;
 }
 .post-row__date time {
-  color: var(--sz-overlay1, #7f849c);
+  color: var(--sz-muted, #989caf);
   font-variant-numeric: tabular-nums;
   font-size: calc(var(--sz-font-size) * 0.9);
 }
 .post-row__read {
-  color: var(--sz-overlay0, #6c7086);
+  color: var(--sz-muted, #989caf);
   font-size: calc(var(--sz-font-size) * 0.76);
 }
 
@@ -597,7 +681,7 @@ html[data-view="reading"] .code-gutter span { display: block; }
   flex-shrink: 0;
   white-space: nowrap;
   font-size: calc(var(--sz-font-size) * 0.76);
-  color: var(--sz-overlay1, #7f849c);
+  color: var(--sz-muted, #989caf);
 }
 .post-row__tag::before { content: "#"; opacity: 0.5; }
 
@@ -668,7 +752,7 @@ html[data-view="reading"] .code-gutter span { display: block; }
   justify-content: center;
   flex-wrap: wrap;
   gap: 12px;
-  color: var(--sz-overlay0, #6c7086);
+  color: var(--sz-muted, #989caf);
   margin-bottom: 16px;
 }
 .sz-article__meta time {
@@ -681,7 +765,12 @@ html[data-view="reading"] .code-gutter span { display: block; }
 }
 .sz-article__tag {
   background: var(--sz-surface0, #313244);
-  color: var(--sz-lavender, #b4befe);
+  /* Gruvbox's --sz-lavender is its blue-green (#83a598) and lands at 4.31:1 on
+     --sz-surface0 — the pill is 11px, so there is no large-text exemption.
+     Lifting the lightness 15% toward --sz-text takes gruvbox to 4.80:1 and
+     leaves mocha/tokyonight visually identical (7.29:1 / 7.86:1). Same trick
+     as --sz-muted: keep the hue, raise the lightness. */
+  color: color-mix(in srgb, var(--sz-lavender, #b4befe) 85%, var(--sz-text, #cdd6f4));
   padding: 1px 8px;
   border-radius: 2px;
   font-size: calc(var(--sz-font-size) * 0.85);
@@ -709,7 +798,7 @@ html[data-view="reading"] .code-gutter span { display: block; }
   text-align: left;
 }
 .sz-article__facts .sz-fact { display: contents; }
-.sz-article__facts dt { color: var(--sz-overlay1, #7f849c); }
+.sz-article__facts dt { color: var(--sz-muted, #989caf); }
 .sz-article__facts dd { margin: 0; color: var(--sz-subtext0, #a6adc8); }
 .sz-article__facts a { color: var(--sz-accent, #89b4fa); }
 
@@ -778,7 +867,7 @@ html[data-view="reading"] .sz-md-series { display: none; }
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 6px;
-  color: var(--sz-overlay1, #7f849c);
+  color: var(--sz-muted, #989caf);
   font-size: calc(var(--sz-font-size) * 0.9);
 }
 .sz-md-header .md-tag { color: var(--sz-lavender, #b4befe); }
@@ -805,7 +894,7 @@ html[data-view="reading"] .sz-md-series { display: none; }
   font-size: calc(var(--sz-font-size) * 0.9);
   color: var(--sz-subtext0, #a6adc8);
 }
-.sz-md-header .md-fact-key { color: var(--sz-overlay1, #7f849c); }
+.sz-md-header .md-fact-key { color: var(--sz-muted, #989caf); }
 .sz-md-header .md-facts a { color: var(--sz-accent, #89b4fa); }
 
 /* Series nav, markdown-source twin (code view) — a blockquote-style part list
@@ -816,23 +905,25 @@ html[data-view="reading"] .sz-md-series { display: none; }
   border-left: 3px solid var(--sz-surface2, #585b70);
 }
 .sz-md-series .md-series-lead { color: var(--sz-subtext0, #a6adc8); }
-.sz-md-series .md-series-key { color: var(--sz-overlay1, #7f849c); }
+.sz-md-series .md-series-key { color: var(--sz-muted, #989caf); }
 .sz-md-series strong { color: var(--sz-text, #cdd6f4); }
 .sz-md-series .md-series-list { list-style: none; margin: 6px 0 0; padding: 0; }
 .sz-md-series .md-series-item { margin: 2px 0; color: var(--sz-subtext0, #a6adc8); }
 /* We render our own zero-padded "01." number, so drop the prose ol counter. */
 .sz-md-series .md-series-item::before { content: none; }
 .sz-md-series .md-series-num {
-  color: var(--sz-overlay0, #6c7086);
+  color: var(--sz-muted, #989caf);
   font-variant-numeric: tabular-nums;
   margin-right: 4px;
 }
 .sz-md-series .md-series-item a { color: var(--sz-accent, #89b4fa); }
-.sz-md-series .md-series-here { color: var(--sz-overlay1, #7f849c); }
+.sz-md-series .md-series-here { color: var(--sz-muted, #989caf); }
 .sz-md-series .md-series-item.is-current strong { color: var(--sz-accent, #89b4fa); }
 
 .sz-md-footer { margin-top: 1.5em; color: var(--sz-subtext0, #a6adc8); }
-.sz-md-footer .md-hr { color: var(--sz-overlay0, #6c7086); letter-spacing: 2px; margin: 18px 0 12px; }
+/* The "---" is a real text node (markdown-source view renders the rule
+   literally), so it has to clear AA like any other text. */
+.sz-md-footer .md-hr { color: var(--sz-muted, #989caf); letter-spacing: 2px; margin: 18px 0 12px; }
 .sz-md-footer .md-foot { margin: 4px 0; }
 .sz-md-footer a { color: var(--sz-accent, #89b4fa); text-decoration: none; }
 .sz-md-footer a:hover { text-decoration: underline; }
@@ -879,15 +970,29 @@ html[data-view="reading"] .sz-md-series { display: none; }
 .project-pane:hover,
 .project-pane:focus,
 .project-pane:focus-visible {
-  /* active-pane border, like tmux's highlighted pane */
+  /* active-pane border, like tmux's highlighted pane. This 2px inset ring is
+     a genuine >=3:1 focus indicator, but box-shadow is not painted in forced-
+     colors mode — the @media (forced-colors: active) block at the foot of this
+     file is what keeps this pane focusable-looking there. */
   box-shadow: inset 0 0 0 2px var(--sz-accent, #89b4fa);
   background: color-mix(in srgb, var(--sz-accent, #89b4fa) 7%, var(--sz-base, #1e1e2e));
   text-decoration: none;
   outline: none;
 }
 
-/* display-panes style index watermark */
-.project-pane__num {
+/* display-panes style index watermark.
+   Generated content, not a DOM text node, because that is what it actually is:
+   pure decoration with no information in it. As real text it was a WCAG 1.4.3
+   failure in every theme (--sz-surface1 on --sz-base is ~2:1) that could only
+   have been "fixed" by making a background flourish as legible as the prose.
+   A counter also renumbers contiguously when sz-portfolio filters the list,
+   where the old build-time loop index left gaps. */
+/* Starts at -1 so the first increment lands on 0: tmux's display-panes numbers
+   panes from zero, and the old build-time loop.index0 matched it. */
+sz-portfolio { counter-reset: sz-pane -1; }
+.project-pane { counter-increment: sz-pane; }
+.project-pane::after {
+  content: counter(sz-pane);
   position: absolute;
   top: 8px;
   right: 12px;
@@ -899,9 +1004,9 @@ html[data-view="reading"] .sz-md-series { display: none; }
   pointer-events: none;
   transition: color 0.15s ease;
 }
-.project-pane:hover .project-pane__num,
-.project-pane:focus .project-pane__num,
-.project-pane:focus-visible .project-pane__num {
+.project-pane:hover::after,
+.project-pane:focus::after,
+.project-pane:focus-visible::after {
   color: color-mix(in srgb, var(--sz-accent, #89b4fa) 45%, transparent);
 }
 
@@ -943,7 +1048,7 @@ html[data-view="reading"] .sz-md-series { display: none; }
   gap: 8px;
   min-width: 0;
   font-size: calc(var(--sz-font-size) * 0.88);
-  color: var(--sz-overlay1, #7f849c);
+  color: var(--sz-muted, #989caf);
 }
 /* Short crumbs stay put; only the current slug truncates so a long title keeps
    the breadcrumb on a single line instead of wrapping. */
@@ -964,7 +1069,7 @@ html[data-view="reading"] .sz-article__breadcrumb {
   text-decoration: none;
 }
 .sz-article__breadcrumb a:hover { color: var(--sz-accent, #89b4fa); }
-.sz-article__crumb-sep { color: var(--sz-overlay0, #6c7086); }
+.sz-article__crumb-sep { color: var(--sz-muted, #989caf); }
 .sz-article__crumb-current {
   color: var(--sz-text, #cdd6f4);
   min-width: 0;
@@ -1007,7 +1112,7 @@ html[data-view="reading"] .sz-article__breadcrumb {
   gap: 10px;
   font-size: calc(var(--sz-font-size) * 0.9);
 }
-.sz-article__share-label { color: var(--sz-overlay1, #7f849c); }
+.sz-article__share-label { color: var(--sz-muted, #989caf); }
 .sz-article__share a {
   color: var(--sz-subtext0, #a6adc8);
   text-decoration: none;
@@ -1054,7 +1159,7 @@ html[data-view="reading"] .sz-article__breadcrumb {
 .sz-pager__title { display: block; width: 100%; }
 .sz-pager__dir {
   font-size: calc(var(--sz-font-size) * 0.8);
-  color: var(--sz-overlay1, #7f849c);
+  color: var(--sz-muted, #989caf);
 }
 .sz-pager__link:hover .sz-pager__dir { color: var(--sz-accent, #89b4fa); }
 .sz-pager__title {
@@ -1073,6 +1178,81 @@ html[data-view="reading"] .sz-article__breadcrumb {
   .sz-article__pager { flex-direction: column; padding: 8px 16px 32px; }
   .sz-pager__link--next { text-align: left; }
   .sz-pager__spacer { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════
+   404 — terminal error screen
+   ═══════════════════════════════════════════════════ */
+
+/* Plain light DOM, deliberately not a web component: this used to be slotted
+   into <sz-dashboard>, which has no <slot>, so the whole screen was dropped
+   from the page the moment the component upgraded. See src/pages/404.njk. */
+.sz-404 {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  text-align: center;
+  color: var(--sz-text, #cdd6f4);
+}
+.sz-404__art {
+  margin: 0 0 24px;
+  color: var(--sz-red, #f38ba8);
+  font-size: clamp(6px, 1.5vw, 12px);
+  line-height: 1.2;
+  white-space: pre;
+}
+/* The design's "404 — Page not found" is the ASCII slab plus this line; the
+   heading carries the whole string for AT and stays at body size like every
+   other heading on the site (see the prose heading block above). */
+.sz-404__title {
+  margin: 0 0 8px;
+  font-size: var(--sz-font-size);
+  font-weight: 700;
+  color: var(--sz-subtext, #a6adc8);
+}
+.sz-404__hint {
+  margin: 0;
+  color: var(--sz-muted, #989caf);
+}
+.sz-404__hint code {
+  color: var(--sz-accent, #89b4fa);
+  font-family: inherit;
+}
+.sz-404__hint kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  background: var(--sz-surface0, #313244);
+  border: 1px solid var(--sz-surface1, #45475a);
+  border-radius: 3px;
+  color: var(--sz-subtext, #a6adc8);
+  font-family: inherit;
+  font-size: inherit;
+}
+.sz-404__home {
+  display: inline-block;
+  margin-top: 24px;
+  padding: 8px 16px;
+  border: 1px solid var(--sz-surface1, #45475a);
+  border-radius: 4px;
+  color: var(--sz-accent, #89b4fa);
+}
+.sz-404__home:hover {
+  border-color: var(--sz-accent, #89b4fa);
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  /* Same reasoning as sz-dashboard: on mobile the document scrolls, every
+     ancestor is auto-height and `min-height: 100%` collapses to the content
+     height, so measure against the viewport minus the fixed bars instead. */
+  .sz-404 {
+    min-height: calc(100dvh - var(--sz-mobile-chrome-top) - var(--sz-mobile-chrome-bottom));
+  }
+  .sz-404__art { font-size: clamp(5px, 2.6vw, 10px); }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1101,6 +1281,24 @@ html[data-view="reading"] .sz-article__breadcrumb {
 
 /* Skip-link target — focusable but no visible ring */
 #main-content:focus { outline: none; }
+
+/* Visually-hidden but readable by AT. The shell needs this in light DOM for
+   headings a sighted user reads off the design instead (the ASCII wordmark on
+   /, the terminal error screen on /404.html) and for the SPA route
+   announcement. Kept in sync with the same rule inside sz-dashboard's shadow
+   root, which cannot see this sheet. `clip-path` rather than `clip` so a
+   contained inline element is not left with a 1px scroll box. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* Keyboard focus indicator for light-DOM links & buttons */
 a:focus-visible,
@@ -1168,7 +1366,7 @@ html[data-view="reading"] .sz-series { display: block; }
   font-size: calc(var(--sz-font-size) * 0.8);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--sz-overlay1, #7f849c);
+  color: var(--sz-muted, #989caf);
 }
 .sz-series__kicker {
   color: var(--sz-accent, #89b4fa);
@@ -1208,13 +1406,18 @@ a.sz-series__row:hover,
 a.sz-series__row:focus-visible {
   background: color-mix(in srgb, var(--sz-accent, #89b4fa) 8%, transparent);
   color: var(--sz-text, #cdd6f4);
-  outline: none;
+}
+/* Same reasoning as .post-row: the tint is hover feedback, the ring is the
+   focus indicator. Inset so it tracks the row's own 4px radius. */
+a.sz-series__row:focus-visible {
+  outline: 2px solid var(--sz-accent, #89b4fa);
+  outline-offset: -2px;
 }
 .sz-series__num {
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
   font-size: calc(var(--sz-font-size) * 0.82);
-  color: var(--sz-overlay0, #6c7086);
+  color: var(--sz-muted, #989caf);
 }
 .sz-series__title {
   flex: 1;
@@ -1269,4 +1472,82 @@ a.sz-series__row:focus-visible .sz-series__arrow {
   padding: 0 6px;
   border-radius: 3px;
   font-variant-numeric: tabular-nums;
+}
+
+/* ═══════════════════════════════════════════════════
+   Forced colours / increased contrast
+   ═══════════════════════════════════════════════════ */
+
+/* Windows High Contrast Mode (and any forced-colors backend) discards author
+   colours, color-mix() tints and box-shadows outright. Every focus affordance
+   on this page is built from exactly those three things, so without this block
+   a keyboard user in HCM gets no focus indicator at all. Restore real
+   outlines, drawn in the system's own CanvasText so they survive the override.
+
+   Only light-DOM rules live here: base.css does not cross shadow boundaries,
+   so the components' own roots are a separate job. */
+@media (forced-colors: active) {
+  .post-row:focus,
+  .post-row:focus-visible,
+  a.sz-series__row:focus-visible,
+  .post-month:focus-visible,
+  .project-pane:focus,
+  .project-pane:focus-visible,
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
+
+  /* Inset offsets read as "no gap" once the system repaints the background, so
+     these two go back to a normal outside ring. */
+  .post-row:focus,
+  .post-row:focus-visible,
+  a.sz-series__row:focus-visible {
+    outline-offset: -2px;
+  }
+
+  /* Highlight/selection states that were carried purely by a tint or a shadow
+     have to say so structurally instead. */
+  .post-row:hover,
+  .post-row:focus,
+  .post-row:focus-visible,
+  a.sz-series__row:hover,
+  a.sz-series__row:focus-visible,
+  .sz-series__item.is-current .sz-series__row,
+  .project-pane:hover,
+  .project-pane:focus,
+  .project-pane:focus-visible {
+    background: Canvas;
+    color: CanvasText;
+  }
+  .project-pane { border: 1px solid CanvasText; }
+
+  /* Tag pills, marks and the series part badge are legible only because of
+     their tinted background; keep it so the system doesn't flatten them into
+     the page and lose the boundary. */
+  .sz-article__tag,
+  .sz-prose mark,
+  .post-row__series-part {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+
+  /* The prose heading bands are pure background tint — a 1px rule keeps the
+     document outline readable once the tint is dropped. */
+  .sz-prose :is(h1, h2, h3) {
+    border-bottom: 1px solid CanvasText;
+  }
+}
+
+/* Users asking for more contrast get the muted ramp promoted a step: --sz-muted
+   moves up to --sz-subtext0 (the next brighter *content* token), which lifts
+   every migrated muted-text rule at once without touching the palettes.
+   The :root[data-theme] compound is deliberate — the theme sheets load after
+   this file and their [data-theme="…"] selector would otherwise tie on
+   specificity and win on order. */
+@media (prefers-contrast: more) {
+  :root[data-theme] {
+    --sz-muted: var(--sz-subtext0, #a6adc8);
+  }
 }

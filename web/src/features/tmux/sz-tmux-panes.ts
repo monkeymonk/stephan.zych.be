@@ -76,6 +76,20 @@ export class SzTmuxPanes extends LitElement {
     }
 
     @media (max-width: 768px) {
+      /* Under 768px the document is the scroller (iOS only delivers the
+         status-bar tap-to-top to the main frame's scroll view), so every
+         ancestor of the article has to stop clipping and stop being a
+         fixed-height flex box. */
+      :host {
+        display: block;
+        flex: none;
+        overflow: visible;
+      }
+      .single {
+        display: block;
+        flex: none;
+        overflow: visible;
+      }
       .panes.horizontal, .panes.vertical {
         flex-direction: column;
       }
@@ -88,6 +102,39 @@ export class SzTmuxPanes extends LitElement {
         width: 100% !important;
         height: 2px !important;
         cursor: row-resize;
+      }
+    }
+
+    /* Print: every box in this component clips or pins a height. After the
+       mobile block because an A4 page box is ~680px wide, so
+       (max-width: 768px) matches while printing as well. */
+    @media print {
+      :host {
+        display: block;
+        flex: none;
+        overflow: visible;
+      }
+      .panes,
+      .panes.horizontal,
+      .panes.vertical {
+        display: block;
+        width: auto;
+        height: auto;
+      }
+      .pane,
+      .single {
+        display: block;
+        flex: none !important;
+        width: auto !important;
+        min-height: 0;
+        height: auto;
+        overflow: visible;
+        border: none;
+      }
+      /* Pane splits are an on-screen affordance; on paper they are a stray
+         rule between two chunks of prose. */
+      .divider {
+        display: none !important;
       }
     }
   `];
@@ -235,11 +282,15 @@ export class SzTmuxPanes extends LitElement {
               @mousedown=${(event: MouseEvent) => this.startDividerDrag(i - 1, event)}
             ></div>
           ` : nothing}
+          ${/* No role="tabpanel": there is no tablist and no owning tab, so it
+                described a widget that does not exist. The active-pane
+                highlight is decoration; @focusin gives it the keyboard
+                equivalent of the click that used to be mouse-only. */ ""}
           <div
             class="pane ${i === this.activePane ? 'active' : ''}"
             style=${this.getPaneStyle(sizes[i])}
             @click=${() => { this.activePane = i; }}
-            role="tabpanel"
+            @focusin=${() => { this.activePane = i; }}
           >
             <slot name="pane-${i}"></slot>
           </div>

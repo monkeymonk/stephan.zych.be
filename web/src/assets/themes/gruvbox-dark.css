@@ -8,6 +8,15 @@
   --sz-overlay0: #7c6f64;
   --sz-overlay1: #928374;
   --sz-overlay2: #a89984;
+
+  /* Muted *content* text — see catppuccin-mocha.css for the full policy.
+     Short version: --sz-overlay0/1/2 are canonical upstream Gruvbox and are
+     decoration only (borders, gutters, glyphs, separators, hover states);
+     any text a reader is meant to *read* uses --sz-muted or brighter.
+     Derived from this theme's --sz-overlay1, lightened until it clears
+     4.6:1 on both --sz-base (5.89) and --sz-surface0 (4.63). */
+  --sz-muted: #ada296;
+
   --sz-text: #ebdbb2;
   --sz-subtext: #d5c4a1;
   --sz-subtext0: #bdae93;
@@ -29,7 +38,6 @@
   --sz-maroon: #cc241d;
 
   --sz-terminal-bg: var(--sz-base);
-  --sz-terminal-opacity: 0.95;
   --sz-tab-bg: var(--sz-mantle);
   --sz-tab-active: var(--sz-accent);
   --sz-tab-text: var(--sz-subtext);
@@ -42,6 +50,9 @@
   --sz-cursor: var(--sz-accent);
   --sz-command-bg: var(--sz-surface0);
   --sz-command-text: var(--sz-text);
-  --sz-command-highlight: var(--sz-accent);
+  /* The only theme that cannot inherit the accent here: Gruvbox's #83a598 on
+     --sz-command-bg (= --sz-surface0) is 4.31:1, just under AA, and this is
+     match-highlight text inside the palette. Nudged up to 4.65:1. */
+  --sz-command-highlight: #8bab9e;
   --sz-shadow: rgba(0, 0, 0, 0.5);
 }

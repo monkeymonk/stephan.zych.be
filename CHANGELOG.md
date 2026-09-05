@@ -9,6 +9,140 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-09-05
+
+### Added
+- Printing the on-site CV — `Ctrl+P` on `/cv/`, the browser's own print
+  command, anything — now produces the **résumé print version** rather than a
+  de-terminalised screen CV: pixel-for-pixel the same document `/cv/print/`
+  serves, verified page by page. `styles/cv.css` and `styles/cv-print.css` are
+  the two twins over one markup source (`_includes/cv-body.njk`), so they are
+  now linked at `media="screen"` and `media="print"` respectively instead of
+  both reaching paper and fighting in the cascade.
+- A **print stylesheet for the whole site**. Any article, project or page now
+  prints as a typeset document instead of one clipped page of terminal chrome:
+  sans-serif prose with a real heading size ramp, monospace kept for code, code
+  blocks that wrap instead of running off the page edge, external link
+  addresses written out beside their text, and page breaks that never strand a
+  heading at the foot of a page. Six components carry their own `@media print`
+  block because their internals live in a shadow root a document stylesheet
+  cannot reach. Two traps worth recording: an article's header exists twice in
+  the DOM (the reading view and its markdown-source twin), so the sheet pins
+  one and a reader in either view gets the same paper; and `/blog/` would have
+  printed only the first ten posts, because the lazy-load window hides the rest
+  with an inline style. `/cv/print/` is untouched — it was already right.
+- Jump-scroll keys — <kbd>gg</kbd>, <kbd>G</kbd>, <kbd>Home</kbd>,
+  <kbd>End</kbd> — plus a tap-to-top control in the mobile titlebar, and
+  <kbd>j</kbd>/<kbd>k</kbd> finally documented in the shared keymap after
+  existing undocumented since the keyboard layer was written.
+- A switch for the single-key shortcuts (`:set keys off`, or the control in the
+  tmux bar). The vim bindings stay on by default — they are the point of the
+  site — but unmodified single characters are a WCAG 2.1.4 failure without a way
+  off: they kill the browser's own type-ahead-find, and a keystroke passed
+  through by assistive tech navigates the page out from under its reader. The
+  modified bindings (<kbd>Alt+1-5</kbd>, <kbd>Alt+W/F/N</kbd>) are unaffected.
+- `npm run check:a11y` — an accessibility gate that fails the build on any WCAG
+  violation across 8 routes × 3 themes × 2 viewports, any Lighthouse
+  accessibility regression against `audit/baseline.json`, or any of 22
+  behavioural checks that static scanning cannot express: a real Tab journey
+  through the composed tree, dialog focus handling, the scroll model at both
+  widths, and print output. It exists because the trap below sat behind a 92-97
+  Lighthouse score for months — axe reads a static DOM, and never once pressed a
+  key. Deliberately not part of `npm run build`, on the same reasoning as
+  `check:assets`.
+
+### Changed
+- The CV contact row carries the **real LinkedIn and GitHub addresses** instead
+  of the words "LinkedIn" and "GitHub", matching the two rows above it (email,
+  website) and the SSH TUI, which already rendered them that way. The words
+  were dead ink on a printed CV: an address the reader cannot click is worth
+  nothing without the URL beside it.
+- Links inside prose are **underlined**. They were distinguished from body text
+  by colour alone at a 1.45:1 difference — a WCAG 1.4.1 failure, and invisible
+  to a reader who does not separate those two hues. The underline is 1px,
+  dimmed to 45% and offset 3px, so it reads as a link without reading as 1995.
+- Muted text that a reader is actually meant to read moved onto a new per-theme
+  `--sz-muted` token. `--sz-overlay0`/`1`/`2` keep their canonical Catppuccin,
+  Gruvbox and TokyoNight values and are now **decoration only** — borders,
+  gutters, glyphs, separators. Article dates, reading times, breadcrumbs, code
+  comments, the command palette's hints and paths were all real content
+  rendered in decoration tokens, some as low as 2.15:1.
+- The project index watermark numbers are generated content rather than DOM
+  text. They are a background flourish carrying no information, and as real
+  text the only way to pass contrast was to make a watermark as legible as the
+  prose. As a counter they also renumber contiguously when the list is
+  filtered, where the old build-time index left gaps.
+- The mobile tap-to-top control now appears only once you are more than half a
+  viewport down, and sits flush against the right edge of the screen rather
+  than inset by the titlebar's notch padding. Parked at the top of the page it
+  was a no-op occupying a tab stop.
+
+### Fixed
+- Archive pages overflowed **horizontally by 12px** at phone width. The filter
+  row is full-bleed so it can scroll edge to edge, and it got there with
+  negative margins cancelling the host's padding — which works only while
+  something clips, and nothing does since the host stopped being a scroller.
+  The knock-on was the reported vertical symptom: a horizontal scrollbar eats
+  vertical space, which pushes `100dvh` content past the fold and parks the
+  fixed tab bar underneath it. Children carry their own inset now.
+- The mobile search button never closed the palette, and on a cold phone load
+  did nothing at all. Two separate faults: the palette's outside-click handler
+  runs in the **capture** phase, so it hid the palette *before* the button's own
+  handler re-opened it — a toggle that could only open; and the palette module
+  was bundled as desktop-only, so on a phone the button was a visible, labelled
+  control with nothing behind it unless the session happened to start at desktop
+  width. It now lazy-loads on first press, toggles, and reports `aria-expanded`.
+- Mermaid leaves a global tooltip `div` on `<body>` and styles it only inside
+  the rendered SVG's scope, so at document level it was an unstyled in-flow
+  block. It outlived its diagram: after visiting any page with one, every later
+  page carried 6px of phantom scroll extent.
+- **Tapping the status bar on iOS no longer does nothing.** The whole UI hung
+  off a `position: fixed` window with `html, body { overflow: hidden }`, so the
+  document had *zero* scroll extent and the real scroller was a `<main>` five
+  boxes deep behind two shadow roots. iOS delivers that gesture to the main
+  frame's scroll view only and never walks into an `overflow: auto` subtree, so
+  it was a silent no-op. Under 768px the document scrolls again and the chrome
+  is pinned. Three more symptoms of the same root cause went with it: the URL
+  bar never collapsed, there was no pull-to-refresh, and Back always dumped you
+  at the top of the page. Content below the fold is now also reachable with
+  JavaScript disabled, which it was not.
+- **A permanent keyboard trap** around the terminal window (WCAG 2.1.2, level
+  A). The focus trap armed on the first <kbd>Tab</kbd> and was never released,
+  so the skip link, the wallpaper controls and the Terms & Conditions and
+  Privacy links were unreachable by keyboard for the rest of the session. It
+  now arms only for a genuinely modal window, releases on <kbd>Esc</kbd>, and
+  returns focus to whatever opened it.
+- **`/404.html` rendered none of its own content.** The whole page body was
+  written as light-DOM children of a component that has no `<slot>`, so it was
+  silently dropped for every visitor the moment the component upgraded; all a
+  reader ever saw was a stray line of keyboard hints. It is now plain markup
+  with a real `<h1>`, and its ASCII slab is hidden from screen readers instead
+  of being read out as 150 box-drawing characters.
+- A closed terminal window stayed focusable and readable by screen readers —
+  invisible, but still in the tab order behind the start screen. It is `inert`.
+- The link picker declared itself a modal dialog but never moved focus into
+  itself, which told assistive tech to hide the page *and* left the dialog
+  unreachable. It manages and restores focus properly, as does the diagram
+  lightbox, which had no dialog semantics at all.
+- Landmarks and headings: the site had exactly one landmark, and its primary
+  navigation contributed none at all because a `role="tablist"` was overriding
+  it. `/`, `/blog/` and `/projects/` had no `<h1>`, and the projects list
+  started at `<h3>`.
+- Client-side navigation is announced to screen readers. It updated the title
+  and moved focus, but said nothing; the only thing that spoke was the status
+  bar accidentally re-reading `NORMAL ~/path` on every route change.
+- Diagrams rendered at roughly one fifth their size for anyone with
+  `prefers-reduced-motion` set — a transition on the SVG was still settling
+  when Mermaid measured the graph, and the reduced-motion path skipped the
+  animation that used to hide it.
+- The copyright and legal links sat `position: fixed` over a rotating
+  wallpaper photograph at unbounded contrast, and lost their focus ring
+  entirely. They now have a backdrop and a real indicator.
+- `prefers-contrast` and `forced-colors` are honoured. In Windows High Contrast
+  Mode the `color-mix()` focus tints and `box-shadow` rings vanished completely,
+  leaving no focus indicator anywhere.
+- The CV contact links were under the 24×24px minimum touch target (WCAG 2.5.8).
+
 ## [1.7.0] - 2026-09-05
 
 ### Added
@@ -313,7 +447,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.5.0...v1.5.1

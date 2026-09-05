@@ -3,8 +3,8 @@ import { customElement, state, query, property } from 'lit/decorators.js';
 import { paletteRegistry, type PaletteSource, type PaletteItem } from '../../core/palette.js';
 import { actions } from '../../core/actions.js';
 import { NEOVIM_ACTION } from './actions.js';
-import { isInputFocused } from '../../core/keyboard.js';
-import { scrollbarStyles, focusRing, mobileQuery } from '../../core/styles.js';
+import { deepActiveElement, singleKeyAllowed } from '../../core/keyboard.js';
+import { scrollbarStyles, focusRing, mobileQuery, reducedMotion } from '../../core/styles.js';
 import type { Shortcut } from '../../core/registry.js';
 import { jsonArrayAttribute } from '../../core/data.js';
 
@@ -60,11 +60,11 @@ export class SzPalette extends LitElement {
     /* The command/search input never shows the shared focus ring. */
     input:focus-visible { outline: none; }
     .ghost {
-      color: var(--sz-overlay0, #6c7086);
+      color: var(--sz-muted, #989caf);
       pointer-events: none;
     }
     .match-count {
-      color: var(--sz-overlay1, #7f849c);
+      color: var(--sz-muted, #989caf);
       white-space: nowrap;
       margin-left: 8px;
     }
@@ -73,7 +73,11 @@ export class SzPalette extends LitElement {
       overflow-y: auto;
       background: var(--sz-command-bg, #313244);
       border-top: 1px solid var(--sz-surface1, #45475a);
-      scroll-behavior: smooth;
+    }
+    /* Opt-in rather than a reduced-motion override: base.css's global
+       scroll-behavior: auto !important cannot cross this shadow boundary. */
+    @media (prefers-reduced-motion: no-preference) {
+      .suggestions { scroll-behavior: smooth; }
     }
     .suggestion {
       display: flex;
@@ -89,22 +93,36 @@ export class SzPalette extends LitElement {
       color: var(--sz-command-highlight, #89b4fa);
     }
     .suggestion-args {
-      color: var(--sz-overlay0, #6c7086);
+      color: var(--sz-muted, #989caf);
       margin-left: 6px;
     }
     .suggestion-desc {
-      color: var(--sz-overlay1, #7f849c);
+      color: var(--sz-muted, #989caf);
     }
     .suggestion-path {
-      color: var(--sz-overlay0, #6c7086);
+      color: var(--sz-muted, #989caf);
       margin-left: 6px;
     }
     .suggestion-context {
-      color: var(--sz-overlay1, #7f849c);
+      color: var(--sz-muted, #989caf);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       max-width: 300px;
+    }
+    /* --sz-surface1 is the lightest surface in every theme, and nothing below
+       --sz-subtext1 clears 4.5:1 on it — the accent name lands at 4.32:1 and
+       --sz-muted at 3.35:1. So the selected row promotes its whole text ramp
+       one step instead of inheriting the resting colours; reading stronger is
+       what a selected row should do anyway. */
+    .suggestion:hover .suggestion-name,
+    .suggestion.selected .suggestion-name {
+      color: var(--sz-text, #cdd6f4);
+      font-weight: 700;
+    }
+    .suggestion:hover :is(.suggestion-args, .suggestion-desc, .suggestion-path, .suggestion-context),
+    .suggestion.selected :is(.suggestion-args, .suggestion-desc, .suggestion-path, .suggestion-context) {
+      color: var(--sz-subtext1, #bac2de);
     }
 
     /* Help man page */
@@ -154,10 +172,27 @@ export class SzPalette extends LitElement {
       font-family: inherit;
     }
     .help-footer {
-      color: var(--sz-overlay0, #6c7086);
+      color: var(--sz-muted, #989caf);
       margin-top: 8px;
       border-top: 1px solid var(--sz-surface1, #45475a);
       padding-top: 8px;
+    }
+
+    @media (max-width: 768px) {
+      /* sz-neovim is no longer a viewport-sized positioned box on mobile — it
+         is as tall as the whole article — so position absolute would park
+         these at the bottom of the *document*, permanently off-screen. Pin
+         them just above the fixed statusbar/tmux bar instead. sz-palette
+         itself is desktop-only (app/index.ts), so this is defensive. */
+      .overlay,
+      .help-overlay {
+        position: fixed;
+        bottom: var(--sz-mobile-chrome-bottom);
+      }
+      .help-overlay {
+        /* Clear the fixed titlebar at the other end. */
+        top: var(--sz-mobile-chrome-top);
+      }
     }
   `];
 
@@ -232,11 +267,14 @@ export class SzPalette extends LitElement {
 
   private handleGlobalKey = (e: KeyboardEvent) => {
     if (this.helpOpen) {
-      if (e.key === 'Escape' || e.key === 'q') { e.preventDefault(); this.helpOpen = false; return; }
-      if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); this.helpEl?.scrollBy({ top: 40, behavior: 'smooth' }); return; }
-      if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); this.helpEl?.scrollBy({ top: -40, behavior: 'smooth' }); return; }
-      if (e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); this.helpEl?.scrollBy({ top: 200, behavior: 'smooth' }); return; }
-      if (e.key === 'PageUp') { e.preventDefault(); this.helpEl?.scrollBy({ top: -200, behavior: 'smooth' }); return; }
+      // base.css's reduced-motion scroll override cannot reach this shadow
+      // root, so the behaviour has to be decided here.
+      const behavior: ScrollBehavior = reducedMotion.matches ? 'auto' : 'smooth';
+      if (e.key === 'Escape' || e.key === 'q') { e.preventDefault(); this.hideHelp(); return; }
+      if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); this.helpEl?.scrollBy({ top: 40, behavior }); return; }
+      if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); this.helpEl?.scrollBy({ top: -40, behavior }); return; }
+      if (e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); this.helpEl?.scrollBy({ top: 200, behavior }); return; }
+      if (e.key === 'PageUp') { e.preventDefault(); this.helpEl?.scrollBy({ top: -200, behavior }); return; }
       return;
     }
 
@@ -251,7 +289,9 @@ export class SzPalette extends LitElement {
       if (e.key === 'Tab') return; // handled by capture
     }
 
-    if (isInputFocused()) return;
+    // The prefix keys are bare characters, so they answer to the WCAG 2.1.4
+    // switch; Escape and Tab above are outside it and stay live.
+    if (!singleKeyAllowed()) return;
     if (mobileQuery.matches) return;
 
     // Open palette for matching prefix key
@@ -283,6 +323,7 @@ export class SzPalette extends LitElement {
       this.hide();
       return;
     }
+    this.rememberInvoker();
     this.open = true;
     this.activeSource = source;
     this.helpOpen = false;
@@ -292,6 +333,28 @@ export class SzPalette extends LitElement {
     this.loadItems('');
     this.updateComplete.then(() => this.inputEl?.focus());
     document.addEventListener('click', this.handleOutsideClick, true);
+    actions.dispatch(NEOVIM_ACTION.PALETTE_STATE, { open: true });
+  }
+
+  /**
+   * The palette steals focus into its own input, so closing it has to put
+   * focus back where it came from — otherwise focus falls to <body> and the
+   * user restarts the Tab order from the top of the page.
+   */
+  private invoker: HTMLElement | null = null;
+
+  private rememberInvoker() {
+    if (this.open || this.helpOpen) return; // already ours; keep the original
+    const active = deepActiveElement();
+    this.invoker = active instanceof HTMLElement && !this.shadowRoot?.contains(active)
+      ? active
+      : null;
+  }
+
+  private restoreInvokerFocus() {
+    const target = this.invoker;
+    this.invoker = null;
+    if (target?.isConnected) target.focus();
   }
 
   private hide() {
@@ -302,19 +365,33 @@ export class SzPalette extends LitElement {
     this.items = [];
     this.activeSource = null;
     document.removeEventListener('click', this.handleOutsideClick, true);
+    actions.dispatch(NEOVIM_ACTION.PALETTE_STATE, { open: false });
+    this.restoreInvokerFocus();
   }
 
+  // A control that toggles the palette marks itself `data-palette-toggle`. It
+  // has to be excluded here or it can never close anything: this listener is on
+  // document in the CAPTURE phase, so on a click it runs BEFORE the button's own
+  // handler — hide() fires first, then the button re-opens a palette it believes
+  // was shut. The result is a toggle that only ever opens.
   private handleOutsideClick = (e: MouseEvent) => {
     if (!this.open) return;
     const path = e.composedPath();
     // Stay open if click is inside the palette shadow DOM
     if (path.includes(this.shadowRoot as unknown as EventTarget)) return;
+    if (path.some(t => t instanceof HTMLElement && t.hasAttribute('data-palette-toggle'))) return;
     this.hide();
   };
 
   private showHelp() {
+    this.rememberInvoker();
     this.helpOpen = true;
     this.open = false;
+  }
+
+  private hideHelp() {
+    this.helpOpen = false;
+    this.restoreInvokerFocus();
   }
 
   private async loadItems(query: string) {

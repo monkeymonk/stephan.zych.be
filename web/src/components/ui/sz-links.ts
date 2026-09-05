@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import { isInputFocused } from '../../core/keyboard.js';
+import { customElement, state, query } from 'lit/decorators.js';
+import { deepActiveElement, singleKeyAllowed } from '../../core/keyboard.js';
 import { scrollbarStyles, mobileQuery } from '../../core/styles.js';
 
 interface LinkItem {
@@ -19,6 +19,11 @@ export class SzLinks extends LitElement {
   @state() private open = false;
   @state() private items: LinkItem[] = [];
   @state() private selected = 0;
+
+  @query('.list') private listEl!: HTMLElement;
+
+  /** What to hand focus back to when the picker closes. */
+  private invoker: HTMLElement | null = null;
 
   static styles = [
     scrollbarStyles,
@@ -42,11 +47,15 @@ export class SzLinks extends LitElement {
         border-bottom: 1px solid var(--sz-surface1, #45475a);
       }
       .title { color: var(--sz-mauve, #cba6f7); font-weight: 700; }
-      .count { color: var(--sz-overlay1, #7f849c); }
+      .count { color: var(--sz-muted, #989caf); }
       .list {
         max-height: 240px;
         overflow-y: auto;
-        scroll-behavior: smooth;
+      }
+      /* Opt-in rather than a reduced-motion override: base.css's global
+         scroll-behavior: auto !important cannot cross this shadow boundary. */
+      @media (prefers-reduced-motion: no-preference) {
+        .list { scroll-behavior: smooth; }
       }
       .item {
         display: flex;
@@ -57,7 +66,7 @@ export class SzLinks extends LitElement {
       }
       .item:hover, .item.selected { background: var(--sz-surface1, #45475a); }
       .idx {
-        color: var(--sz-overlay0, #6c7086);
+        color: var(--sz-muted, #989caf);
         min-width: 1.5em;
         text-align: right;
         flex-shrink: 0;
@@ -72,7 +81,7 @@ export class SzLinks extends LitElement {
         min-width: 0;
       }
       .dest {
-        color: var(--sz-overlay1, #7f849c);
+        color: var(--sz-muted, #989caf);
         margin-left: auto;
         white-space: nowrap;
         overflow: hidden;
@@ -80,12 +89,33 @@ export class SzLinks extends LitElement {
         max-width: 45%;
         flex-shrink: 0;
       }
+      /* Same reason as sz-palette: --sz-surface1 is too light to carry either
+         the accent or --sz-muted at 4.5:1, so the highlighted row moves its
+         whole ramp up a step rather than inheriting the resting colours. */
+      .item:hover .text,
+      .item.selected .text {
+        color: var(--sz-text, #cdd6f4);
+        font-weight: 700;
+      }
+      .item:hover :is(.idx, .dest),
+      .item.selected :is(.idx, .dest) {
+        color: var(--sz-subtext1, #bac2de);
+      }
       .hint {
         padding: 5px 12px;
         border-top: 1px solid var(--sz-surface1, #45475a);
-        color: var(--sz-overlay0, #6c7086);
+        color: var(--sz-muted, #989caf);
       }
-      @media (max-width: 768px) { .dest { display: none; } }
+      @media (max-width: 768px) {
+        .dest { display: none; }
+        /* sz-neovim is as tall as the article on mobile, not the viewport, so
+           position absolute would park the picker at the bottom of the
+           *document*. Pin it just above the fixed statusbar/tmux bar. */
+        .overlay {
+          position: fixed;
+          bottom: var(--sz-mobile-chrome-bottom);
+        }
+      }
     `,
   ];
 
@@ -99,10 +129,29 @@ export class SzLinks extends LitElement {
     document.removeEventListener('keydown', this.onKey);
   }
 
-  // Reflect open state to the host so global wiring (e.g. [ / ] article nav) can
-  // yield while the picker owns the keyboard.
-  protected updated() {
-    this.toggleAttribute('open', this.open);
+  // Reflect open state to the host so global wiring (e.g. [ / ] article nav)
+  // can yield while the picker owns the keyboard. Written synchronously in
+  // setOpen(), not here: Lit's update runs a microtask later, and a document
+  // keydown dispatch reaches its other listeners in between.
+  //
+  // The panel declares aria-modal, which tells assistive tech to hide the rest
+  // of the document — so focus has to actually be in here, or the AT user gets
+  // an unreachable dialog and a hidden page. The listbox itself takes focus and
+  // carries aria-activedescendant; the options stay unfocusable.
+  protected updated(changed: Map<PropertyKey, unknown>) {
+    if (!changed.has('open')) return;
+    if (this.open) {
+      this.listEl?.focus();
+    } else if (this.invoker?.isConnected) {
+      const target = this.invoker;
+      this.invoker = null;
+      target.focus();
+    }
+  }
+
+  private setOpen(open: boolean) {
+    this.open = open;
+    this.toggleAttribute('open', open);
   }
 
   // Gather the article-body links at open time, deduped by destination.
@@ -136,19 +185,27 @@ export class SzLinks extends LitElement {
         case 'g': e.preventDefault(); this.selected = 0; return;
         case 'G': e.preventDefault(); this.selected = this.items.length - 1; return;
         case 'Enter': case ' ': e.preventDefault(); this.follow(); return;
+        // aria-modal hides the document behind us, so Tab must not walk into
+        // it. The listbox is the dialog's only focusable, so holding still is
+        // the whole trap.
+        case 'Tab': e.preventDefault(); this.listEl?.focus(); return;
       }
       return;
     }
 
     if (e.key !== 'l' || e.ctrlKey || e.metaKey || e.altKey) return;
-    if (isInputFocused()) return;
+    if (!singleKeyAllowed()) return;
+    // Desktop-only on purpose: there is no `l` key to press on a phone, and
+    // the overlay would cover the article it lists.
     if (mobileQuery.matches) return;
     const items = this.collect();
     if (items.length === 0) return;
     e.preventDefault();
+    const invoker = deepActiveElement();
+    this.invoker = invoker instanceof HTMLElement ? invoker : null;
     this.items = items;
     this.selected = 0;
-    this.open = true;
+    this.setOpen(true);
   };
 
   private move(delta: number) {
@@ -161,7 +218,7 @@ export class SzLinks extends LitElement {
   }
 
   private close() {
-    this.open = false;
+    this.setOpen(false);
   }
 
   private follow() {
@@ -179,11 +236,18 @@ export class SzLinks extends LitElement {
             <span class="title">🔗 links in this article</span>
             <span class="count">${this.items.length}</span>
           </div>
-          <div class="list" role="listbox" aria-label="Links in this article">
+          <div
+            class="list"
+            role="listbox"
+            tabindex="0"
+            aria-label="Links in this article"
+            aria-activedescendant="sz-links-opt-${this.selected}"
+          >
             ${this.items.map((item, i) => html`
               <div
                 class="item ${i === this.selected ? 'selected' : ''}"
                 role="option"
+                id="sz-links-opt-${i}"
                 aria-selected=${i === this.selected}
                 @click=${() => { this.selected = i; this.follow(); }}
               >

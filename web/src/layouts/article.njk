@@ -18,9 +18,14 @@ layout: base.njk
   </div>
 
   {# Styled chrome — shown only in reading (glow) view #}
+  {# alt="" on purpose: the poster is chrome above the title, and the <h1> two
+     lines down already carries the only description we have of it — an alt of
+     the title made AT read the same string twice. Applies to project case
+     studies too: their poster is a screenshot, but nothing in the front matter
+     describes it, and a duplicated title is not a description. #}
   {% if poster %}
   <div class="sz-article__hero">
-    <img src="{{ poster }}" alt="{{ title }}" fetchpriority="high" decoding="async"{{ poster | imgDimAttrs | safe }}>
+    <img src="{{ poster }}" alt="" fetchpriority="high" decoding="async"{{ poster | imgDimAttrs | safe }}>
   </div>
   {% endif %}
   <header class="sz-article__header">
@@ -64,7 +69,8 @@ layout: base.njk
       {% endif %}
       {% if description %}<blockquote class="md-desc">{{ description }}</blockquote>{% endif %}
       {% if section.name == 'projects' and (client or role or timeframe or liveUrl) %}<div class="md-facts">{% if client %}<span class="md-fact"><span class="md-fact-key">client:</span> {{ client }}</span>{% endif %}{% if role %}<span class="md-fact"><span class="md-fact-key">role:</span> {{ role }}</span>{% endif %}{% if timeframe %}<span class="md-fact"><span class="md-fact-key">when:</span> {{ timeframe }}</span>{% endif %}{% if liveUrl %}<span class="md-fact"><span class="md-fact-key">live:</span> <a href="{{ liveUrl }}" rel="noopener">{{ liveUrl | replace('https://','') | replace('http://','') }}</a></span>{% endif %}</div>{% endif %}
-      {% if poster %}<img class="md-img" src="{{ poster }}" alt="{{ heading or title }}" loading="lazy" decoding="async"{{ poster | imgDimAttrs | safe }}>{% endif %}
+      {# Same poster, code view — same reasoning: decorative, see above. #}
+      {% if poster %}<img class="md-img" src="{{ poster }}" alt="" loading="lazy" decoding="async"{{ poster | imgDimAttrs | safe }}>{% endif %}
     </div>
 
     {% include "series-source.njk" %}

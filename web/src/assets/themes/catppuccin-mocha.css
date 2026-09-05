@@ -8,6 +8,17 @@
   --sz-overlay0: #6c7086;
   --sz-overlay1: #7f849c;
   --sz-overlay2: #9399b2;
+
+  /* Muted *content* text. The overlay ramp above is verbatim upstream
+     Catppuccin and stays that way — but overlay0/1 as text bottom out at
+     2.57:1 on --sz-surface0, far under WCAG AA. So: --sz-overlay0/1/2 are
+     decoration only (borders, gutters, glyphs, separators, hover states —
+     things a screen reader never reads); anything a reader is meant to *read*
+     uses --sz-muted or brighter. Derived from this theme's own --sz-overlay1
+     with lightness raised until it clears 4.6:1 on both --sz-base (6.02) and
+     --sz-surface0 (4.62). */
+  --sz-muted: #989caf;
+
   --sz-text: #cdd6f4;
   --sz-subtext: #a6adc8;
   --sz-subtext0: #a6adc8;
@@ -29,7 +40,6 @@
   --sz-maroon: #eba0ac;
 
   --sz-terminal-bg: var(--sz-base);
-  --sz-terminal-opacity: 0.95;
   --sz-tab-bg: var(--sz-mantle);
   --sz-tab-active: var(--sz-accent);
   --sz-tab-text: var(--sz-subtext);

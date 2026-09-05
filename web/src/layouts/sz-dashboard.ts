@@ -80,7 +80,13 @@ export class SzDashboard extends LitElement {
     .link:hover, .link:focus-visible {
       background: var(--sz-surface0, #313244);
       text-decoration: none;
-      outline: none;
+    }
+    /* The surface0 tint is 1.3:1 against the pane — hover feedback, not a
+       focus indicator. Let the shared focusRing through instead of killing it.
+       Inset so the ring hugs the row's own 4px radius. */
+    .link:focus-visible {
+      outline: 2px solid var(--sz-accent, #89b4fa);
+      outline-offset: -2px;
     }
     .link-key {
       color: var(--sz-accent, #89b4fa);
@@ -90,7 +96,7 @@ export class SzDashboard extends LitElement {
     }
     .hint {
       margin-top: 32px;
-      color: var(--sz-overlay0, #6c7086);
+      color: var(--sz-muted, #989caf);
     }
     .hint kbd {
       display: inline-block;
@@ -103,6 +109,14 @@ export class SzDashboard extends LitElement {
     }
 
     @media (max-width: 768px) {
+      /* The document scrolls on mobile, so the host's ancestors are all
+         auto-height and height:100% resolves to content height — the hero
+         would stop filling the screen and lose its vertical centring. Measure
+         against the viewport minus the fixed titlebar/status/tmux bars. */
+      :host {
+        min-height: calc(100dvh - var(--sz-mobile-chrome-top) - var(--sz-mobile-chrome-bottom));
+        height: auto;
+      }
       .ascii { font-size: clamp(3px, 2vw, 6px); }
       .hint { display: none; }
     }
@@ -134,6 +148,9 @@ export class SzDashboard extends LitElement {
       .map(tab => ({ label: tab.name, key: tab.key!, href: tab.path, icon: tab.icon || 'file' }));
   }
 
+  // The ASCII wordmark below is decoration (aria-hidden); its text equivalent
+  // is the page's h1, which lives in light DOM (src/pages/index.njk) rather
+  // than in here so it is in the served HTML before — and without — the bundle.
   render() {
     return html`
       <div class="ascii" aria-hidden="true">${this.asciiArt}</div>

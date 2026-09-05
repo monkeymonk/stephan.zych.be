@@ -45,6 +45,12 @@
   <link rel="preload" href="/assets/fonts/JetBrainsMono-Bold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/styles/reset.css">
   <link rel="stylesheet" href="/styles/base.css">
+  {# Site-wide print sheet. Linked (not inlined) and media="print", so it never
+     blocks first paint, and it sits after base.css so it wins ties against that
+     sheet's deliberately-last block-spacing rules. A media="print" link in
+     <head> also survives SPA navigation for free — core/router.ts only swaps
+     #main-content's children. #}
+  <link rel="stylesheet" href="/styles/print.css" media="print">
   {# Page-scoped stylesheets. The `page-css-` id prefix is load-bearing: the SPA
      router swaps only #main-content, so it uses these ids to adopt whichever
      sheet the destination page needs and the current document lacks (see
@@ -54,7 +60,15 @@
   <link rel="stylesheet" id="page-css-prism" href="/styles/prism-catppuccin.css">
   {% endif %}
   {% if page.fileSlug == 'cv' %}
-  <link rel="stylesheet" id="page-css-cv" href="/styles/cv.css">
+  {# The CV has two stylesheets over the same markup (_includes/cv-body.njk),
+     and they are scoped to one medium each rather than left to fight in the
+     cascade: cv.css is the on-screen terminal CV, cv-print.css is the résumé
+     sheet /cv/print/ serves. That media split is what makes a plain Ctrl+P on
+     /cv/ produce the print version, instead of print.css merely de-terminalising
+     the screen CV. print.css is still needed alongside it — it is what flattens
+     the terminal chrome that the bare /cv/print/ page does not have. #}
+  <link rel="stylesheet" id="page-css-cv" href="/styles/cv.css" media="screen">
+  <link rel="stylesheet" id="page-css-cv-print" href="/styles/cv-print.css" media="print">
   {% endif %}
   {# Only the default theme ships render-blocking; others load on demand (app/index.ts). #}
   <link rel="stylesheet" id="theme-css-catppuccin-mocha" href="/assets/themes/catppuccin-mocha.css">
@@ -62,6 +76,9 @@
      umami tag below. core/campaign.ts captures history.replaceState while it is
      still unhooked, so stripping utm params can't trigger a second pageview. #}
   <script type="module" src="/assets/components.js"></script>
+  {# Print-only DOM fixes (lazy images, folded <details>, iframe/link URLs).
+     External file because the CSP has no 'unsafe-inline'; see its header. #}
+  <script defer src="/assets/print.js"></script>
   {%- if site.analyticsId %}
   {# Self-hosted, cookieless Umami — no cookies, nothing written to storage, so
      no consent banner. data-do-not-track is required to make the tracker honour
@@ -103,6 +120,21 @@
   </sz-window-manager>
 
   <sz-notifications></sz-notifications>
-  <sz-copyright-footer></sz-copyright-footer>
+
+  {# Route announcer for client-side navigation. core/router.ts writes the
+     destination's <title> here after the swap, because setting document.title
+     alone announces nothing — a screen reader only re-reads the title on a real
+     document load. Lives at body level, outside #main-content (whose children
+     the router destroys) and outside sz-window (which goes `inert` when the
+     window is closed, taking its subtree out of the accessibility tree). #}
+  <div id="sz-route-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  {# The site's only content outside the terminal window: the copyright line and
+     the legal links, pinned over the desktop wallpaper. That is contentinfo, so
+     it gets the landmark. The wrapper stays out of the layout on its own — the
+     host inside is position: fixed, so this box is zero-height in flow. #}
+  <footer>
+    <sz-copyright-footer></sz-copyright-footer>
+  </footer>
 </body>
 </html>

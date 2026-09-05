@@ -8,6 +8,15 @@
   --sz-overlay0: #565f89;
   --sz-overlay1: #6b7394;
   --sz-overlay2: #737aa2;
+
+  /* Muted *content* text — see catppuccin-mocha.css for the full policy.
+     Short version: --sz-overlay0/1/2 are canonical upstream TokyoNight and are
+     decoration only (borders, gutters, glyphs, separators, hover states);
+     any text a reader is meant to *read* uses --sz-muted or brighter.
+     Derived from this theme's --sz-overlay1, lightened until it clears
+     4.6:1 on both --sz-base (5.90) and --sz-surface0 (4.64). */
+  --sz-muted: #9197af;
+
   --sz-text: #c0caf5;
   --sz-subtext: #a9b1d6;
   --sz-subtext0: #9aa5ce;
@@ -29,7 +38,6 @@
   --sz-maroon: #db4b4b;
 
   --sz-terminal-bg: var(--sz-base);
-  --sz-terminal-opacity: 0.95;
   --sz-tab-bg: var(--sz-mantle);
   --sz-tab-active: var(--sz-accent);
   --sz-tab-text: var(--sz-subtext);

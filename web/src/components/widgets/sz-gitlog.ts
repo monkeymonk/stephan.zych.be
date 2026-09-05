@@ -77,7 +77,7 @@ export class SzGitlog extends LitElement {
         color: var(--sz-text, #cdd6f4);
       }
       .date {
-        color: var(--sz-overlay1, #7f849c);
+        color: var(--sz-muted, #989caf);
         font-size: calc(var(--sz-font-size, 13px) * 0.85);
         margin-left: auto;
         white-space: nowrap;

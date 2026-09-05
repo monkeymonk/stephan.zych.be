@@ -1,12 +1,13 @@
 {
   "name": "stephan.zych.be",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "",
   "scripts": {
     "dev": "concurrently \"npx @11ty/eleventy --serve\" \"node esbuild.config.mjs --watch\"",
     "build": "npx @11ty/eleventy && node esbuild.config.mjs",
     "check:cv": "node scripts/check-cv-drift.mjs",
     "check:assets": "node scripts/check-content-assets.mjs",
+    "check:a11y": "node scripts/check-a11y.mjs",
     "screenshot": "node screenshot.mjs",
     "audit": "node audit.mjs",
     "clean": "rm -rf _site dist"

@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { scrollbarStyles } from '../../core/styles.js';
+import { scrollbarStyles, mobileQuery, reducedMotion } from '../../core/styles.js';
+import { scrollRoot } from '../../core/scroll.js';
 
 interface TocItem {
   id: string;
@@ -15,8 +16,9 @@ interface TocItem {
  * scroll through the article. Reads headings straight from the rendered light
  * DOM, so it needs no data wiring — drop <sz-toc> above an article body.
  *
- * The article scrolls inside #main-content (sz-neovim makes it the scroller),
- * not the window, so progress and active-section are measured against it.
+ * The scroller depends on the viewport: #main-content on desktop (sz-neovim
+ * promotes it), the document itself under 768px. Progress and active-section
+ * are measured against whichever core/scroll.js reports.
  */
 @customElement('sz-toc')
 export class SzToc extends LitElement {
@@ -79,7 +81,7 @@ export class SzToc extends LitElement {
 
     .rail__label {
       padding: 0 0.9rem calc(var(--sz-line-px) * 0.35);
-      color: var(--sz-overlay0, #6c7086);
+      color: var(--sz-muted, #989caf);
       text-transform: uppercase;
       letter-spacing: 0.12em;
       font-size: calc(var(--sz-font-size, 13px) * 0.72);
@@ -119,6 +121,12 @@ export class SzToc extends LitElement {
     :host(.compact) .rail { display: none; }
 
     @media print { :host { display: none; } }
+
+    @media (max-width: 768px) {
+      /* The titlebar is position:fixed here, so sticking at 0 would hide the
+         progress bar behind it. */
+      :host { top: var(--sz-mobile-chrome-top); }
+    }
   `];
 
   connectedCallback() {
@@ -126,12 +134,28 @@ export class SzToc extends LitElement {
     // Defer one frame so the article body (and its build-time heading ids) is
     // in the DOM — during SPA navigation children are appended just before.
     requestAnimationFrame(() => this.collect());
+    // Which element scrolls flips with the breakpoint, and the scroll listener
+    // is bound to one target — re-bind or progress freezes after a rotation.
+    mobileQuery.addEventListener('change', this.onScrollModeChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    mobileQuery.removeEventListener('change', this.onScrollModeChange);
     this.detach();
   }
+
+  private onScrollModeChange = () => {
+    if (!this.items.length) return;
+    // Defer a frame: the media query and the layout it drives do not flip in a
+    // guaranteed order, and scrollRoot() measures the live scroller.
+    requestAnimationFrame(() => {
+      this.detach();
+      this.scroller = scrollRoot();
+      this.attach();
+      this.reflow();
+    });
+  };
 
   private collect() {
     const main = document.getElementById('main-content');
@@ -162,7 +186,7 @@ export class SzToc extends LitElement {
       return;
     }
 
-    this.scroller = main;
+    this.scroller = scrollRoot();
     const scope: ParentNode = main ?? document;
     this.bodyEl = scope.querySelector<HTMLElement>('.sz-article__body');
     this.articleEl = scope.querySelector<HTMLElement>('.sz-article');
@@ -190,8 +214,19 @@ export class SzToc extends LitElement {
     }
   }
 
+  /**
+   * Where the bound scroller's scroll event actually fires — attach() and
+   * detach() must agree on this or the listener leaks. A document scroll is
+   * dispatched at `document` and bubbles straight to window; it never reaches
+   * documentElement, so listening on that element would hear nothing.
+   */
+  private scrollEventTarget(): EventTarget {
+    const sc = this.scroller;
+    return sc && sc !== document.scrollingElement ? sc : window;
+  }
+
   private attach() {
-    const target: EventTarget = this.scroller ?? window;
+    const target: EventTarget = this.scrollEventTarget();
     target.addEventListener('scroll', this.onScroll, { passive: true });
     window.addEventListener('resize', this.onScroll, { passive: true });
     if (this.scroller) {
@@ -211,7 +246,7 @@ export class SzToc extends LitElement {
   }
 
   private detach() {
-    const target: EventTarget = this.scroller ?? window;
+    const target: EventTarget = this.scrollEventTarget();
     target.removeEventListener('scroll', this.onScroll);
     window.removeEventListener('resize', this.onScroll);
     this.resizeObserver?.disconnect();
@@ -246,13 +281,15 @@ export class SzToc extends LitElement {
 
   private recompute() {
     const sc = this.scroller;
-    const scrollTop = sc ? sc.scrollTop : window.scrollY;
-    const clientH = sc ? sc.clientHeight : window.innerHeight;
-    const scrollH = sc ? sc.scrollHeight : document.documentElement.scrollHeight;
-    const max = Math.max(1, scrollH - clientH);
-    this.progress = Math.min(100, Math.max(0, (scrollTop / max) * 100));
+    if (!sc) return;
+    const clientH = sc.clientHeight;
+    const max = Math.max(1, sc.scrollHeight - clientH);
+    this.progress = Math.min(100, Math.max(0, (sc.scrollTop / max) * 100));
 
-    const viewportTop = sc ? sc.getBoundingClientRect().top : 0;
+    // Client rects are viewport-relative already, so when the document is the
+    // scroller there is nothing to subtract; a subtree scroller (desktop's
+    // #main-content) sits at an arbitrary y and must be discounted.
+    const viewportTop = sc === document.scrollingElement ? 0 : sc.getBoundingClientRect().top;
 
     // Anchor the rail to the body's top so it begins just under the article
     // header, then let it ride up with the page until it sticks at the offset.
@@ -272,16 +309,25 @@ export class SzToc extends LitElement {
 
   private jump(e: Event, item: TocItem) {
     e.preventDefault();
-    item.el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    history.replaceState(null, '', `#${item.id}`);
+    // A JS `behavior` option beats CSS, and base.css's reduced-motion
+    // scroll-behavior override cannot cross this shadow boundary anyway.
+    item.el.scrollIntoView({
+      behavior: reducedMotion.matches ? 'auto' : 'smooth',
+      block: 'start',
+    });
+    // Preserve the router's per-entry key: replacing state with null would
+    // orphan the saved scroll offset for this history entry.
+    history.replaceState(history.state, '', `#${item.id}`);
     this.activeId = item.id;
   }
 
   render() {
     if (!this.items.length) return html``;
     return html`
-      <div class="progress" role="progressbar" aria-label="Reading progress"
-           aria-valuemin="0" aria-valuemax="100" aria-valuenow=${Math.round(this.progress)}>
+      ${/* aria-hidden, not role="progressbar": aria-valuenow was recomputed on
+            every scroll frame, so a purely decorative bar generated a stream
+            of screen-reader announcements. */ ""}
+      <div class="progress" aria-hidden="true">
         <div class="progress__fill" style="width:${this.progress}%"></div>
       </div>
       <nav class="rail" aria-label="Article outline">

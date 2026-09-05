@@ -1,15 +1,5 @@
-import { isInputFocused } from '../../core/keyboard.js';
+import { deepActiveElement, isInputFocused, singleKeyAllowed } from '../../core/keyboard.js';
 import { router } from '../../core/router.js';
-
-// Walk document.activeElement through shadow roots to find the deepest
-// focused element (mirrors the pattern used across the keyboard features).
-function deepActive(): Element | null {
-  let el: Element | null = document.activeElement;
-  while (el?.shadowRoot?.activeElement) {
-    el = el.shadowRoot.activeElement;
-  }
-  return el;
-}
 
 // Blog posts and project detail pages have an archive to back out to
 // (/blog/<slug>/ -> /blog/, /projects/<slug>/ -> /projects/); the archive
@@ -25,16 +15,24 @@ function archiveFor(path: string): string | null {
 // article/project's archive or — with nothing to back out of — blur focus back
 // to #main-content, mirroring the TUI's leave-focus behaviour. (Tab itself is
 // left to the browser: from #main-content it lands on the first content
-// focusable — e.g. the home dashboard links — with the per-window focus trap
-// keeping the cycle inside the terminal window.)
+// focusable — e.g. the home dashboard links — and then keeps going out of the
+// terminal window into the wallpaper controls and the footer. Nothing traps it
+// unless a genuinely modal surface is open.)
 export function wireFocusNav(): () => void {
   const handler = (e: KeyboardEvent) => {
+    // An overlay that handled the key already called preventDefault. Checking
+    // the reflected `[open]` attributes below is not enough on its own: Lit
+    // flushes its update between two document listeners, so by the time this
+    // runs the closing overlay may already have dropped the attribute — which
+    // is how Escape used to both close the link picker / diagram lightbox and
+    // back out to the archive behind it.
+    if (e.defaultPrevented) return;
     if (isInputFocused()) return;
     if (document.querySelector('sz-links[open]')) return;
     if (document.querySelector('sz-palette[open]')) return;
     if (document.querySelector('sz-palette[help-open]')) return;
 
-    const el = deepActive();
+    const el = deepActiveElement();
 
     if (e.key === ' ') {
       if (el?.tagName === 'A') {
@@ -44,7 +42,9 @@ export function wireFocusNav(): () => void {
       return;
     }
 
-    if (e.key === 'q' || e.key === 'Escape') {
+    // `q` is a bare letter and answers to the WCAG 2.1.4 switch; Escape does
+    // the same job and is outside the criterion, so it always works.
+    if (e.key === 'Escape' || (e.key === 'q' && singleKeyAllowed())) {
       const archive = archiveFor(window.location.pathname);
       if (archive) {
         e.preventDefault();

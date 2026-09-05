@@ -14,8 +14,12 @@
       <ul class="sz-cv__contact">
         {% if cv.basics.email %}<li><a href="mailto:{{ cv.basics.email }}">{{ cv.basics.email }}</a></li>{% endif %}
         {% if cv.basics.website %}<li><a href="https://{{ cv.basics.website }}">{{ cv.basics.website }}</a></li>{% endif %}
-        {% if cv.basics.linkedin %}<li><a href="https://{{ cv.basics.linkedin }}">LinkedIn</a></li>{% endif %}
-        {% if cv.basics.github %}<li><a href="https://{{ cv.basics.github }}">GitHub</a></li>{% endif %}
+        {# Link text is the address itself, like the two rows above it: this
+           markup is also the printed CV, where "LinkedIn" is a dead word and
+           the URL is the whole point. Matches tui/cv.go, which already renders
+           the bare URL. #}
+        {% if cv.basics.linkedin %}<li><a href="https://{{ cv.basics.linkedin }}">{{ cv.basics.linkedin }}</a></li>{% endif %}
+        {% if cv.basics.github %}<li><a href="https://{{ cv.basics.github }}">{{ cv.basics.github }}</a></li>{% endif %}
       </ul>
       {% if cv.basics.pdf %}
       <a class="sz-cv__download no-print" href="{{ cv.basics.pdf }}" target="_blank" rel="noopener">⎙ Print / Save as PDF</a>

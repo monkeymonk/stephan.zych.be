@@ -70,12 +70,14 @@ pre[class*="language-"] {
   color: var(--sz-overlay1, #7f849c);
 }
 
-/* Comments: overlay0 italic */
+/* Comments: --sz-muted italic. Not --sz-overlay0: that token is decoration
+   only (2.6:1 on the code background) and a code comment is prose a reader is
+   meant to read. */
 .token.comment,
 .token.prolog,
 .token.doctype,
 .token.cdata {
-  color: var(--sz-overlay0, #6c7086);
+  color: var(--sz-muted, #989caf);
   font-style: italic;
 }
 
@@ -125,7 +127,7 @@ pre[class*="language-"] {
 
 /* Shell/bash specific */
 .token.shebang {
-  color: var(--sz-overlay0, #6c7086);
+  color: var(--sz-muted, #989caf);
   font-style: italic;
 }
 .token.assign-left {

@@ -1,98 +1,542 @@
 {
-  "generatedAt": "2026-06-29T19:58:30.462Z",
-  "base": "http://127.0.0.1:34769",
+  "generatedAt": "2026-09-05T08:58:16.229Z",
+  "base": "http://127.0.0.1:33563",
+  "themes": [
+    "catppuccin-mocha",
+    "gruvbox-dark",
+    "tokyonight"
+  ],
+  "viewports": [
+    "desktop 1280x720",
+    "mobile 390x844"
+  ],
   "routes": {
     "/": {
       "desktop": {
-        "performance": 100,
-        "accessibility": 96,
+        "performance": 99,
+        "accessibility": 100,
         "best-practices": 100,
         "seo": 100
       },
       "mobile": {
-        "performance": 88,
-        "accessibility": 96,
+        "performance": 89,
+        "accessibility": 100,
         "best-practices": 100,
         "seo": 100
       },
       "axe": {
         "violations": 0,
-        "ids": []
+        "ids": [],
+        "byCombo": {
+          "catppuccin-mocha@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "catppuccin-mocha@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@mobile": {
+            "violations": 0,
+            "ids": []
+          }
+        },
+        "contrast": {
+          "catppuccin-mocha@desktop": 0,
+          "gruvbox-dark@desktop": 0,
+          "tokyonight@desktop": 0,
+          "catppuccin-mocha@mobile": 0,
+          "gruvbox-dark@mobile": 0,
+          "tokyonight@mobile": 0
+        },
+        "structure": {
+          "violations": 0,
+          "ids": [],
+          "byViewport": {
+            "desktop": {
+              "violations": 0,
+              "ids": []
+            },
+            "mobile": {
+              "violations": 0,
+              "ids": []
+            }
+          }
+        }
+      }
+    },
+    "/404.html": {
+      "desktop": {
+        "performance": 99,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "mobile": {
+        "performance": 97,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "axe": {
+        "violations": 0,
+        "ids": [],
+        "byCombo": {
+          "catppuccin-mocha@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "catppuccin-mocha@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@mobile": {
+            "violations": 0,
+            "ids": []
+          }
+        },
+        "contrast": {
+          "catppuccin-mocha@desktop": 0,
+          "gruvbox-dark@desktop": 0,
+          "tokyonight@desktop": 0,
+          "catppuccin-mocha@mobile": 0,
+          "gruvbox-dark@mobile": 0,
+          "tokyonight@mobile": 0
+        },
+        "structure": {
+          "violations": 0,
+          "ids": [],
+          "byViewport": {
+            "desktop": {
+              "violations": 0,
+              "ids": []
+            },
+            "mobile": {
+              "violations": 0,
+              "ids": []
+            }
+          }
+        }
       }
     },
     "/about/": {
       "desktop": {
         "performance": 99,
-        "accessibility": 96,
-        "best-practices": 100,
-        "seo": 100
-      },
-      "mobile": {
-        "performance": 87,
-        "accessibility": 96,
-        "best-practices": 100,
-        "seo": 100
-      },
-      "axe": {
-        "violations": 0,
-        "ids": []
-      }
-    },
-    "/blog/": {
-      "desktop": {
-        "performance": 100,
-        "accessibility": 96,
-        "best-practices": 100,
-        "seo": 100
-      },
-      "mobile": {
-        "performance": 87,
-        "accessibility": 96,
-        "best-practices": 100,
-        "seo": 100
-      },
-      "axe": {
-        "violations": 0,
-        "ids": []
-      }
-    },
-    "/blog/terminal-over-ssh/": {
-      "desktop": {
-        "performance": 93,
-        "accessibility": 97,
-        "best-practices": 96,
-        "seo": 100
-      },
-      "mobile": {
-        "performance": 71,
-        "accessibility": 97,
-        "best-practices": 100,
-        "seo": 100
-      },
-      "axe": {
-        "violations": 0,
-        "ids": []
-      }
-    },
-    "/projects/": {
-      "desktop": {
-        "performance": 100,
-        "accessibility": 92,
+        "accessibility": 100,
         "best-practices": 100,
         "seo": 100
       },
       "mobile": {
         "performance": 86,
-        "accessibility": 92,
+        "accessibility": 100,
         "best-practices": 100,
         "seo": 100
       },
       "axe": {
-        "violations": 2,
-        "ids": [
-          "color-contrast(13)",
-          "scrollable-region-focusable(1)"
-        ]
+        "violations": 0,
+        "ids": [],
+        "byCombo": {
+          "catppuccin-mocha@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "catppuccin-mocha@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@mobile": {
+            "violations": 0,
+            "ids": []
+          }
+        },
+        "contrast": {
+          "catppuccin-mocha@desktop": 0,
+          "gruvbox-dark@desktop": 0,
+          "tokyonight@desktop": 0,
+          "catppuccin-mocha@mobile": 0,
+          "gruvbox-dark@mobile": 0,
+          "tokyonight@mobile": 0
+        },
+        "structure": {
+          "violations": 0,
+          "ids": [],
+          "byViewport": {
+            "desktop": {
+              "violations": 0,
+              "ids": []
+            },
+            "mobile": {
+              "violations": 0,
+              "ids": []
+            }
+          }
+        }
+      }
+    },
+    "/blog/": {
+      "desktop": {
+        "performance": 99,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "mobile": {
+        "performance": 87,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "axe": {
+        "violations": 0,
+        "ids": [],
+        "byCombo": {
+          "catppuccin-mocha@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "catppuccin-mocha@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@mobile": {
+            "violations": 0,
+            "ids": []
+          }
+        },
+        "contrast": {
+          "catppuccin-mocha@desktop": 0,
+          "gruvbox-dark@desktop": 0,
+          "tokyonight@desktop": 0,
+          "catppuccin-mocha@mobile": 0,
+          "gruvbox-dark@mobile": 0,
+          "tokyonight@mobile": 0
+        },
+        "structure": {
+          "violations": 0,
+          "ids": [],
+          "byViewport": {
+            "desktop": {
+              "violations": 0,
+              "ids": []
+            },
+            "mobile": {
+              "violations": 0,
+              "ids": []
+            }
+          }
+        }
+      }
+    },
+    "/blog/terminal-over-ssh/": {
+      "desktop": {
+        "performance": 95,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "mobile": {
+        "performance": 76,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "axe": {
+        "violations": 0,
+        "ids": [],
+        "byCombo": {
+          "catppuccin-mocha@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "catppuccin-mocha@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@mobile": {
+            "violations": 0,
+            "ids": []
+          }
+        },
+        "contrast": {
+          "catppuccin-mocha@desktop": 0,
+          "gruvbox-dark@desktop": 0,
+          "tokyonight@desktop": 0,
+          "catppuccin-mocha@mobile": 0,
+          "gruvbox-dark@mobile": 0,
+          "tokyonight@mobile": 0
+        },
+        "structure": {
+          "violations": 0,
+          "ids": [],
+          "byViewport": {
+            "desktop": {
+              "violations": 0,
+              "ids": []
+            },
+            "mobile": {
+              "violations": 0,
+              "ids": []
+            }
+          }
+        }
+      }
+    },
+    "/contact/": {
+      "desktop": {
+        "performance": 99,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "mobile": {
+        "performance": 86,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "axe": {
+        "violations": 0,
+        "ids": [],
+        "byCombo": {
+          "catppuccin-mocha@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "catppuccin-mocha@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@mobile": {
+            "violations": 0,
+            "ids": []
+          }
+        },
+        "contrast": {
+          "catppuccin-mocha@desktop": 0,
+          "gruvbox-dark@desktop": 0,
+          "tokyonight@desktop": 0,
+          "catppuccin-mocha@mobile": 0,
+          "gruvbox-dark@mobile": 0,
+          "tokyonight@mobile": 0
+        },
+        "structure": {
+          "violations": 0,
+          "ids": [],
+          "byViewport": {
+            "desktop": {
+              "violations": 0,
+              "ids": []
+            },
+            "mobile": {
+              "violations": 0,
+              "ids": []
+            }
+          }
+        }
+      }
+    },
+    "/cv/": {
+      "desktop": {
+        "performance": 99,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "mobile": {
+        "performance": 85,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "axe": {
+        "violations": 0,
+        "ids": [],
+        "byCombo": {
+          "catppuccin-mocha@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "catppuccin-mocha@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@mobile": {
+            "violations": 0,
+            "ids": []
+          }
+        },
+        "contrast": {
+          "catppuccin-mocha@desktop": 0,
+          "gruvbox-dark@desktop": 0,
+          "tokyonight@desktop": 0,
+          "catppuccin-mocha@mobile": 0,
+          "gruvbox-dark@mobile": 0,
+          "tokyonight@mobile": 0
+        },
+        "structure": {
+          "violations": 0,
+          "ids": [],
+          "byViewport": {
+            "desktop": {
+              "violations": 0,
+              "ids": []
+            },
+            "mobile": {
+              "violations": 0,
+              "ids": []
+            }
+          }
+        }
+      }
+    },
+    "/projects/": {
+      "desktop": {
+        "performance": 99,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "mobile": {
+        "performance": 87,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "axe": {
+        "violations": 0,
+        "ids": [],
+        "byCombo": {
+          "catppuccin-mocha@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@desktop": {
+            "violations": 0,
+            "ids": []
+          },
+          "catppuccin-mocha@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "gruvbox-dark@mobile": {
+            "violations": 0,
+            "ids": []
+          },
+          "tokyonight@mobile": {
+            "violations": 0,
+            "ids": []
+          }
+        },
+        "contrast": {
+          "catppuccin-mocha@desktop": 0,
+          "gruvbox-dark@desktop": 0,
+          "tokyonight@desktop": 0,
+          "catppuccin-mocha@mobile": 0,
+          "gruvbox-dark@mobile": 0,
+          "tokyonight@mobile": 0
+        },
+        "structure": {
+          "violations": 0,
+          "ids": [],
+          "byViewport": {
+            "desktop": {
+              "violations": 0,
+              "ids": []
+            },
+            "mobile": {
+              "violations": 0,
+              "ids": []
+            }
+          }
+        }
       }
     }
   }

@@ -33,6 +33,7 @@ export function wireNeovimPalette() {
             { name: 'transparency', values: ['100', '90', '80', '70', '60', '50'] },
             { name: 'shader', values: ['off', 'css', 'webgl'] },
             { name: 'view', values: ['code', 'reading'] },
+            { name: 'keys', values: ['on', 'off'] },
           ] },
         { id: 'whoami', label: 'whoami', description: 'man page for one (1) developer' },
         { id: 'ssh', label: 'ssh', description: 'Copy the SSH connect string for the terminal' },
@@ -70,6 +71,18 @@ export function wireNeovimPalette() {
       }
       if (item.id === 'set' && args?.[0] === 'view' && (args?.[1] === 'code' || args?.[1] === 'reading')) {
         appState.set('viewMode', args[1]); return;
+      }
+      // WCAG 2.1.4: the off switch for the bare-letter shortcuts. Alt+…,
+      // Escape and Tab are unaffected either way.
+      if (item.id === 'set' && args?.[0] === 'keys' && (args?.[1] === 'on' || args?.[1] === 'off')) {
+        const on = args[1] === 'on';
+        appState.set('keyShortcuts', on);
+        actions.dispatch(NOTIFY_ACTION.SHOW, {
+          text: on
+            ? 'Single-key shortcuts enabled'
+            : 'Single-key shortcuts disabled — Alt shortcuts still work',
+        });
+        return;
       }
       if (item.id === 'matrix') { actions.dispatch(EFFECT_ACTION.MATRIX); return; }
       if (item.id === 'party') { actions.dispatch(EFFECT_ACTION.CONFETTI); return; }

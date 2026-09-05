@@ -1,8 +1,15 @@
 /* ═══════════════════════════════════════════════════
-   CV print / PDF stylesheet — /cv/print/
-   Bare, chrome-free page the reader prints (or saves as
-   PDF) straight from the browser. Light, single-column,
-   A4, optimised for a clean 1–2 page résumé printout.
+   CV print / PDF stylesheet. Light, single-column, A4,
+   optimised for a clean 1–2 page résumé printout.
+
+   Loaded twice over the same markup (_includes/cv-body.njk):
+   as the only sheet of /cv/print/, the chrome-free page the
+   reader prints or saves as PDF, and at media="print" on
+   /cv/ itself, so printing the on-site CV yields this
+   document and not the terminal one. Everything here must
+   therefore hold on both pages — no rule may assume the
+   bare /cv/print/ document, and styling anything outside
+   .sz-cv* belongs in styles/print.css instead.
    ═══════════════════════════════════════════════════ */
 
 @page {
@@ -205,6 +212,10 @@ body {
 }
 .sz-cv__job-summary { color: #333; }
 .sz-cv__job-list {
+  /* Declared, not inherited from the UA sheet: on /cv/ this sheet sits over
+     styles/reset.css, whose `ul, ol { list-style: none }` otherwise prints the
+     role bullets as unmarked indented lines. */
+  list-style: disc;
   margin: 5pt 0;
   padding-left: 1.2em;
 }

@@ -1,4 +1,5 @@
 import { actions, ROUTER_ACTION } from './actions.js';
+import { scrollRoot, scrollToTop } from './scroll.js';
 
 export interface RouteChangedAttributes {
   [key: string]: Record<string, string>;
@@ -13,7 +14,23 @@ export interface RouteChangedDetail {
 class SpaRouter {
   private currentPath = window.location.pathname;
 
+  /**
+   * Scroll offset per history entry. The browser's own restoration only ever
+   * covers *document* scroll, and this router destroys and rebuilds
+   * #main-content on every navigation — so nothing survives unless we keep it.
+   */
+  private scrollPositions = new Map<string, number>();
+  private keySeq = 0;
+  private currentKey = '';
+  /** Cached #sz-route-announcer (base.njk); body-level, so it outlives swaps. */
+  private announcer: HTMLElement | null = null;
+
   init() {
+    // We own scroll position: the browser would fight us by restoring document
+    // scroll against content that has not been swapped in yet.
+    history.scrollRestoration = 'manual';
+    this.currentKey = this.adoptEntryKey();
+
     document.addEventListener('click', (e) => {
       const path = e.composedPath();
       let anchor: HTMLAnchorElement | null = null;
@@ -37,16 +54,55 @@ class SpaRouter {
     });
 
     window.addEventListener('popstate', () => {
-      void this.loadPage(window.location.pathname, false);
+      // popstate lands after the entry has already changed, so the offset we
+      // are leaving has to be filed under the key we were still tracking.
+      this.scrollPositions.set(this.currentKey, scrollRoot().scrollTop);
+      this.currentKey = this.adoptEntryKey();
+      void this.loadPage(
+        window.location.pathname,
+        false,
+        this.scrollPositions.get(this.currentKey) ?? 0,
+      );
     });
+  }
+
+  /**
+   * Speak the destination page. A client-side navigation changes no document,
+   * so assistive tech never re-reads the title on its own; writing it into a
+   * polite live region is the announcement. Assigning textContent always
+   * replaces the text node, so a repeat of the same title still registers as a
+   * mutation and is still spoken.
+   */
+  private announce(title: string): void {
+    this.announcer ??= document.getElementById('sz-route-announcer');
+    if (this.announcer) this.announcer.textContent = title;
+  }
+
+  /**
+   * Stable id for the current history entry, minted into `history.state` on
+   * first sight so a Back/Forward jump can find its saved offset again.
+   * Keys carry a load-time stamp: a reload clears scrollPositions, and a bare
+   * counter would then hand fresh entries keys that restored entries still use.
+   */
+  private adoptEntryKey(): string {
+    const state: unknown = history.state;
+    const isObject = typeof state === 'object' && state !== null;
+    const carried = isObject && 'szKey' in state ? state.szKey : undefined;
+    if (typeof carried === 'string') return carried;
+    const key = `${Date.now().toString(36)}-${++this.keySeq}`;
+    // Merge rather than replace: another owner (the analytics tag, campaign.ts)
+    // may already be keeping something here.
+    history.replaceState({ ...(isObject ? state : {}), szKey: key }, '', window.location.href);
+    return key;
   }
 
   async navigate(path: string) {
     if (path === this.currentPath) return;
+    this.scrollPositions.set(this.currentKey, scrollRoot().scrollTop);
     await this.loadPage(path, true);
   }
 
-  private async loadPage(path: string, pushState: boolean) {
+  private async loadPage(path: string, pushState: boolean, restoreTop = 0) {
     try {
       const res = await fetch(path);
       if (!res.ok) return this.fallbackNavigate(path);
@@ -84,6 +140,7 @@ class SpaRouter {
 
       if (pushState) {
         history.pushState(null, '', path);
+        this.currentKey = this.adoptEntryKey();
       }
 
       this.currentPath = path;
@@ -95,11 +152,17 @@ class SpaRouter {
 
       // Move keyboard focus into the content region so arrow/space scrolling
       // works immediately and a subsequent Tab starts from the page content
-      // (links, media, buttons). New (pushed) navigations also reset scroll to
-      // the top; popstate keeps the position the browser restores.
+      // (links, media, buttons). New (pushed) navigations land at the top of
+      // the page; Back/Forward re-applies the offset we saved for that entry
+      // when we navigated away from it.
       requestAnimationFrame(() => {
-        if (pushState) currentContent.scrollTop = 0;
+        if (restoreTop > 0) scrollRoot().scrollTo({ top: restoreTop, behavior: 'auto' });
+        else scrollToTop();
         currentContent.focus({ preventScroll: true });
+        // After the focus move, so the polite announcement queues behind
+        // whatever the screen reader says about the newly focused region
+        // instead of being cut off by it.
+        this.announce(newTitle);
       });
     } catch {
       this.fallbackNavigate(path);

@@ -7,6 +7,8 @@ export interface AppStateSchema {
   shaderMode: 'off' | 'css' | 'webgl';
   viewMode: 'code' | 'reading';
   fontScale: number;
+  /** WCAG 2.1.4 escape hatch for the bare-letter shortcuts. See core/keyboard.ts. */
+  keyShortcuts: boolean;
 }
 
 const STORAGE_KEY = 'sz-state-v1';
@@ -20,6 +22,7 @@ const defaults: AppStateSchema = {
   shaderMode: 'css',
   viewMode: 'reading',
   fontScale: 1,
+  keyShortcuts: true,
 };
 
 type Listener = () => void;

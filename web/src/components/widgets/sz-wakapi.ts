@@ -38,7 +38,7 @@ export class SzWakapi extends LitElement {
       font-weight: 700;
       color: var(--sz-accent, #89b4fa);
     }
-    .muted { color: var(--sz-overlay1, #7f849c); font-size: calc(var(--sz-font-size, 13px) * 0.9); }
+    .muted { color: var(--sz-muted, #989caf); font-size: calc(var(--sz-font-size, 13px) * 0.9); }
     .lang { margin-bottom: 10px; }
     .lang:last-child { margin-bottom: 0; }
     .lang__head {
@@ -49,7 +49,7 @@ export class SzWakapi extends LitElement {
     }
     .lang__name { color: var(--sz-subtext0, #a6adc8); }
     .lang__meta {
-      color: var(--sz-overlay1, #7f849c);
+      color: var(--sz-muted, #989caf);
       font-size: calc(var(--sz-font-size, 13px) * 0.85);
       white-space: nowrap;
     }

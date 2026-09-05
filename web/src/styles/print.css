@@ -1,0 +1,776 @@
+/* ═══════════════════════════════════════════════════
+   Site-wide print / PDF stylesheet — linked media="print"
+   from layouts/base.njk. Every page on the site lives
+   inside a fixed, clipping terminal chrome; printed as-is
+   that yields exactly one clipped page. This sheet takes
+   the chrome off, hands the flow back to the document,
+   and sets the content as a plain A4 document.
+
+   Blog articles are the priority target. The CV is not
+   styled here at all: /cv/print/ loads styles/cv-print.css
+   alone, and /cv/ loads that same sheet at media="print"
+   after this one (base.njk), so a Ctrl+P on /cv/ prints
+   the résumé rather than a de-terminalised screen CV. What
+   this sheet contributes there is the chrome flattening the
+   bare /cv/print/ page has no need of — so nothing below
+   may target .sz-cv*, or the two sheets start fighting.
+   cv-print.css's conventions are the ones followed here:
+   A4 with mm margins, pt typography, sans-serif prose,
+   a hard-coded light palette with no CSS variables, and
+   the page-break doctrine at cv-print.css:177.
+
+   Prose selectors are written against three roots, not
+   one, and :is() keeps that from tripling the file:
+     .sz-prose    — sz-markdown once its class is added
+     .sz-content  — the wrapper addLineNumbers() moves
+                    the prose into, so it becomes the
+                    real parent post-hydration
+     sz-markdown  — pre-hydration / no-JS, where neither
+                    class exists yet
+   :is() takes the specificity of its most specific arm
+   (.sz-prose), so these tie base.css's own `.sz-prose x`
+   rules and win on source order — this sheet is linked
+   after base.css. prism-catppuccin.css and the theme
+   sheets are linked *after* it, so anything overriding
+   those needs !important; each one says so.
+
+   Print media also matches base.css's
+   @media (max-width: 768px) block: an A4 page box is
+   180mm ≈ 680px wide. Every mobile rule is live here,
+   which is why several rules below exist only to undo
+   one.
+   ═══════════════════════════════════════════════════ */
+
+@page {
+  size: A4;
+  margin: 14mm 15mm;
+}
+
+/* ── Root reset ── */
+
+:root {
+  /* The "aA" text-size control writes --sz-font-scale inline on <html> and
+     --sz-line-px derives from it, so without a fixed print size the reader's
+     screen preference leaks into their PDF. Pinning --sz-font-size outright
+     (rather than resetting the scale) drops the scale out of the calc
+     entirely; --sz-line-px still derives in base.css and becomes the ~15pt
+     blank-line rhythm the block-spacing rules space everything by.
+     !important because the inline scale is an author declaration too. */
+  --sz-font-size: 10.5pt !important;
+  --sz-line-height: 1.45 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+html, body {
+  width: auto !important;
+  /* base.css pins these to the viewport (and the mobile block to 100dvh
+     min-height) because the window is the UI; on paper the document flows. */
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  color: #1a1a1a;
+}
+
+body {
+  /* Family is set on :root, which is where base.css declares the monospace
+     stack this replaces. */
+  font-size: 10.5pt;
+  line-height: 1.45;
+}
+
+/* ── Chrome kill-list ──
+   Terminal furniture, overlays, effects and navigation: on-site UI with no
+   meaning on paper. Hosts are light-DOM elements, so the document reaches
+   them; each one's shadow content disappears with it. !important because
+   several of these are overlays that must never reach paper by accident: a
+   plain declaration would be defeated by any :host or inline display these
+   components grow later, and a fixed overlay leaking in would print over
+   every page.  */
+
+sz-tmux-bar,
+sz-statusbar,
+sz-background,
+sz-slideshow,
+sz-start-screen,
+sz-effect-matrix,
+sz-effect-confetti,
+sz-screen-shader,
+sz-notifications,
+sz-copyright-footer,
+sz-palette,
+sz-links,
+sz-view-toggle,
+.skip-link,
+#sz-nav-data {
+  display: none !important;
+}
+
+/* Focus rings are input affordances, and sz-portfolio.firstUpdated() focuses
+   its first entry on load — so without this every printed archive carries a
+   blue box around entry one, plus its focus background and inset ring. The
+   declarations being beaten are a:focus-visible (0-1-1) and
+   .project-pane:focus-visible (0-2-0), hence !important. */
+:is(a, button, summary, [tabindex]):is(:focus, :focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+  background: none !important;
+}
+
+/* Established opt-out — the same declaration, !important included, that
+   cv-print.css:104 carries. */
+.no-print { display: none !important; }
+
+/* ── Flatten the chain ──
+   html/body → sz-window(.window/.window-content) → sz-tmux-panes → sz-neovim
+   → #main-content is a nested stack of fixed-height, clipping flex boxes.
+   sz-neovim and #main-content carry *inline* styles from
+   sz-neovim.applyLayout(), so those need !important; .window/.window-content
+   are shadow-internal and handled by sz-window's own @media print block. */
+
+sz-window-manager {
+  /* No styles of its own, so it is an unknown inline element by default. */
+  display: block;
+}
+
+sz-tmux-panes,
+sz-neovim {
+  display: block !important;
+  flex: none !important;
+  overflow: visible !important;
+  position: static !important;
+  height: auto !important;
+}
+
+sz-neovim {
+  /* sz-neovim.connectedCallback() writes font-family/font-size/line-height
+     inline on the host, and slotted light DOM inherits from its flattened-tree
+     parent — so that one inline declaration makes the entire article
+     monospace, whatever body says. Everything printed inside it should take
+     the document's sans-serif prose settings instead; monospace comes back
+     only on pre/code/kbd below. */
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+#main-content {
+  display: block !important;
+  flex: none !important;
+  /* The desktop reading scroller — clipping everything past one viewport. */
+  overflow: visible !important;
+  height: auto !important;
+}
+
+.sz-article {
+  display: block;
+  min-height: 0;
+}
+
+/* ── View-mode pin ──
+   article.njk emits the header, series nav and footer twice: a reading-view
+   copy outside <sz-markdown> and a markdown-source twin (.sz-md-*) inside it,
+   with html[data-view="reading"|"code"] choosing which is visible. Print has
+   to pin one set regardless of what the reader last picked, or two readers
+   print different documents from the same URL. Reading view wins; !important
+   because the rules being beaten are html[data-view=…] (0-2-1). */
+
+.sz-article__header { display: block !important; }
+.sz-article__footer { display: block !important; }
+.sz-article__hero { display: block !important; }
+.sz-series { display: block !important; }
+
+.sz-md-header,
+.sz-md-series,
+.sz-md-footer { display: none !important; }
+
+/* The document line-number gutter and the per-block one both derive their
+   spacing from the screen line-height and mean nothing on paper. !important
+   because reading view turns the per-block gutter on at 0-2-1
+   (html[data-view="reading"] .code-gutter). */
+.sz-gutter,
+.code-gutter { display: none !important; }
+
+/* Visible (not hover-revealed) on touch devices via @media (hover: none),
+   which print media does not clear. */
+.code-copy { display: none; }
+
+/* Navigation, not content: prev/next, breadcrumb and share rows. Chromium's
+   own print header/footer already carries the source URL. */
+.sz-article__toolbar,
+.sz-article__pager,
+.sz-article__share { display: none; }
+
+/* Code view leaves the body a two-column flex box (gutter + content) capped
+   at the reading column; on paper the page box is the column. Everything here
+   is !important because the declarations it replaces are
+   .sz-prose.sz-prose--numbered (0-2-0) and, for the padding and centering,
+   html[data-view="reading"] .sz-prose--numbered (0-2-0). */
+.sz-prose,
+.sz-prose--numbered,
+sz-markdown {
+  display: block !important;
+  max-width: none !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  color: #1a1a1a;
+  font-size: 10.5pt;
+  line-height: 1.45;
+}
+
+:is(.sz-prose, .sz-content, sz-markdown) {
+  /* .sz-content is `overflow-x: auto` so wide blocks scroll on screen; a
+     scroll container on paper is a clipped rectangle. Declared at 0-2-0 in
+     base.css (.sz-prose--numbered .sz-content), hence !important. */
+  overflow: visible !important;
+}
+
+.sz-content {
+  /* Reading view pads and caps this at 0-3-0
+     (html[data-view="reading"] .sz-prose--numbered .sz-content). */
+  max-width: none !important;
+  padding: 0 !important;
+  flex: none !important;
+}
+
+/* ── Prose ── */
+
+:is(.sz-prose, .sz-content, sz-markdown) :is(h1, h2, h3, h4, h5, h6) {
+  /* base.css forces every level to body size and distinguishes them by colour
+     alone (a tinted color-mix() band). Colour is not a heading level on paper
+     — and greyscale printing erases it entirely — so restore a size ramp and
+     drop the bands. */
+  display: block;
+  background: none;
+  color: #1a1a1a;
+  font-weight: 700;
+  break-after: avoid;
+}
+:is(.sz-prose, .sz-content, sz-markdown) > h1 { font-size: 16pt; line-height: 1.25; }
+:is(.sz-prose, .sz-content, sz-markdown) > h2 { font-size: 13pt; line-height: 1.3; border-bottom: 0.5pt solid #ccc; padding-bottom: 2pt; }
+:is(.sz-prose, .sz-content, sz-markdown) > h3 { font-size: 11.5pt; }
+:is(.sz-prose, .sz-content, sz-markdown) > h4 { font-size: 10.5pt; }
+:is(.sz-prose, .sz-content, sz-markdown) > h5 { font-size: 10pt; }
+:is(.sz-prose, .sz-content, sz-markdown) > h6 { font-size: 9.5pt; color: #333; text-transform: uppercase; letter-spacing: 0.03em; }
+
+/* Heading furniture: the `##` level indicator, the hover permalink, and the
+   🌐/🔗 glyph prepended to every prose link. !important because base.css
+   declares the glyph visible at 0-2-0 (.sz-prose .sz-link-icon). */
+.sz-heading-indicator,
+.sz-heading-anchor,
+.sz-link-icon { display: none !important; }
+
+/* Block rhythm — one blank line after each direct-child block, tightened
+   around headings so a heading reads as attached to what follows it. */
+:is(.sz-prose, .sz-content, sz-markdown) > :is(p, ul, ol, blockquote, pre, table, hr, dl, details, figure, img, .embed-container, sz-diagram) {
+  margin: 0 0 6pt;
+}
+:is(.sz-prose, .sz-content, sz-markdown) > :is(h1, h2, h3, h4, h5, h6) {
+  margin: 12pt 0 4pt;
+}
+:is(.sz-prose, .sz-content, sz-markdown) > :first-child { margin-top: 0; }
+:is(.sz-prose, .sz-content, sz-markdown) > :last-child { margin-bottom: 0; }
+
+/* Links: ink, not accent blue, and underlined so they still read as links. */
+:is(.sz-prose, .sz-content, sz-markdown) a {
+  color: #1a1a1a;
+  text-decoration: underline;
+  text-underline-offset: 1.5pt;
+}
+
+/* Printed URLs for external links only — a new convention for this site,
+   introduced deliberately: on paper a reference the reader cannot click is
+   worth nothing without its address. Nowhere else in the repo expands href
+   via ::after, and it stays off for internal links (same domain, reachable
+   from the page they are already reading), inside code, and for links whose
+   visible text already *is* the URL — assets/print.js marks that last case
+   with data-print-selfurl, since CSS cannot compare text to attribute. */
+:is(.sz-prose, .sz-content, sz-markdown) a[href^="http"]:not([href*="stephan.zych.be"])::after {
+  content: " \2039" attr(href) "\203A";
+  font-size: 8.5pt;
+  font-weight: 400;
+  color: #555;
+  text-decoration: none;
+  word-break: break-all;
+}
+/* The expansion selector above is 0-3-1 and these are 0-1-3/0-2-1, so they
+   lose on specificity without !important — measured: a link whose text was
+   its own URL still printed the URL a second time, and one inside a code
+   block printed one too. */
+:is(.sz-prose, .sz-content, sz-markdown) :is(pre, code, kbd) a::after,
+:is(.sz-prose, .sz-content, sz-markdown) a[data-print-selfurl]::after,
+:is(.sz-prose, .sz-content, sz-markdown) .footnote-ref a::after {
+  content: none !important;
+}
+
+/* Inline emphasis: base.css colour-codes strong/em/del/mark from the palette,
+   which on white paper ranges from washed out to invisible. */
+:is(.sz-prose, .sz-content, sz-markdown) strong { color: #1a1a1a; font-weight: 700; }
+:is(.sz-prose, .sz-content, sz-markdown) em { color: #1a1a1a; font-style: italic; }
+:is(.sz-prose, .sz-content, sz-markdown) del { color: #666; text-decoration: line-through; }
+:is(.sz-prose, .sz-content, sz-markdown) mark {
+  /* Chrome prints background graphics only if the reader opts in, so the
+     highlight is carried by a rule under the text instead of a fill. */
+  background: none;
+  color: #1a1a1a;
+  padding: 0;
+  border-bottom: 1pt solid #999;
+}
+:is(.sz-prose, .sz-content, sz-markdown) abbr {
+  text-decoration: underline dotted;
+  text-underline-offset: 2pt;
+}
+
+/* Monospace survives only where it carries meaning: code and keys. */
+:is(.sz-prose, .sz-content, sz-markdown) :is(pre, code, kbd, samp) {
+  font-family: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+:is(.sz-prose, .sz-content, sz-markdown) code {
+  background: none;
+  color: #1a1a1a;
+  font-size: 9pt;
+  padding: 0 1pt;
+  border: 0.5pt solid #ddd;
+  border-radius: 2pt;
+}
+:is(.sz-prose, .sz-content, sz-markdown) kbd {
+  background: none;
+  color: #1a1a1a;
+  font-size: 9pt;
+  padding: 0 3pt;
+  border: 0.5pt solid #999;
+  border-bottom-width: 1pt;
+  border-radius: 2pt;
+}
+:is(.sz-prose, .sz-content, sz-markdown) pre {
+  background: none;
+  color: #1a1a1a;
+  border: 0.5pt solid #ccc;
+  border-radius: 0;
+  padding: 4pt 6pt;
+  font-size: 9pt;
+  line-height: 1.35;
+  overflow: visible;
+  /* prism-catppuccin.css:13 sets `white-space: pre` on BOTH the <pre> and the
+     inner <code>, so a long line runs off the page edge and is simply lost.
+     Overriding only the <pre> is not enough — measured at the A4 content
+     width, the unwrapped <code> still overflowed its parent by 108px. prism is
+     linked after this sheet and its selector ties on specificity, hence the
+     !important marks. */
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+}
+:is(.sz-prose, .sz-content, sz-markdown) pre code {
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+}
+/* Syntax colour is a dark-theme palette: printed on white it is either
+   invisible or a garish waste of toner, and greyscale flattens it anyway.
+   Everything goes to ink except comments, the one distinction that still
+   reads. !important on both because prism is linked after this sheet. */
+:is(.sz-prose, .sz-content, sz-markdown) .token { color: #1a1a1a !important; }
+:is(.sz-prose, .sz-content, sz-markdown) :is(.token.comment, .token.prolog, .token.doctype, .token.cdata) {
+  color: #666 !important;
+}
+
+:is(.sz-prose, .sz-content, sz-markdown) blockquote {
+  margin: 0 0 6pt;
+  padding: 0 0 0 8pt;
+  border-left: 1.5pt solid #ccc;
+  color: #333;
+}
+:is(.sz-prose, .sz-content, sz-markdown) blockquote p + p { margin-top: 5pt; }
+
+/* Lists — the ::before pseudo-bullets do print, so they only need ink.
+   !important because base.css tints each nesting level from the palette with
+   ever-deeper selectors (.sz-prose ul ul ul li::before is 0-1-4). */
+:is(.sz-prose, .sz-content, sz-markdown) :is(ul, ol) { padding-left: 1.6em; }
+:is(.sz-prose, .sz-content, sz-markdown) li {
+  margin: 0 0 2pt;
+  break-inside: avoid;
+}
+:is(.sz-prose, .sz-content, sz-markdown) li::before { color: #555 !important; }
+:is(.sz-prose, .sz-content, sz-markdown) ol li::before { color: #333 !important; }
+:is(.sz-prose, .sz-content, sz-markdown) :is(li > ul, li > ol) { margin-top: 2pt; }
+/* Task lists: the real <input> is display:none'd by JS and replaced with a
+   glyph span, so the glyph is the only thing on paper. */
+:is(.sz-prose, .sz-content, sz-markdown) .sz-checkbox--unchecked { color: #555; }
+:is(.sz-prose, .sz-content, sz-markdown) .sz-checkbox--checked { color: #1a1a1a; }
+:is(.sz-prose, .sz-content, sz-markdown) .task-list-item input[type="checkbox"] {
+  /* No-JS: the replacement glyph never ran, so print the native box. */
+  vertical-align: middle;
+}
+
+:is(.sz-prose, .sz-content, sz-markdown) summary {
+  color: #1a1a1a;
+  font-weight: 700;
+  break-after: avoid;
+}
+/* assets/print.js opens every closed <details> before printing, because a
+   collapsed section prints collapsed and that is DOM state CSS cannot set.
+   This is the no-JS fallback for the same problem: Chromium hides the closed
+   state through this pseudo-element, so overriding it prints the body under
+   the summary. Verified with JavaScript disabled. Kept as its own rule — an
+   unknown pseudo-element invalidates the whole selector list it appears in. */
+details::details-content {
+  content-visibility: visible !important;
+  display: block !important;
+}
+
+/* base.css draws the rule as a linear-gradient; background images are dropped
+   unless the reader enables background graphics, so use a real border. */
+:is(.sz-prose, .sz-content, sz-markdown) hr {
+  height: 0;
+  background: none;
+  border: none;
+  border-top: 0.5pt solid #ccc;
+  margin: 8pt 0;
+}
+
+/* Tables: base.css uses separate borders with per-cell border-left tricks to
+   hit the screen line grid, and the mobile block (live in print) turns the
+   table into an overflow-x scroller. Collapse to a plain hairline grid. */
+:is(.sz-prose, .sz-content, sz-markdown) table {
+  display: table;
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 9.5pt;
+}
+:is(.sz-prose, .sz-content, sz-markdown) :is(th, td) {
+  padding: 2pt 5pt;
+  border: 0.5pt solid #ccc;
+  color: #1a1a1a;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.35;
+}
+:is(.sz-prose, .sz-content, sz-markdown) th {
+  color: #1a1a1a;
+  font-weight: 700;
+  border-bottom-width: 0.75pt;
+}
+:is(.sz-prose, .sz-content, sz-markdown) thead { display: table-header-group; }
+:is(.sz-prose, .sz-content, sz-markdown) tr { break-inside: avoid; }
+
+/* Definition lists */
+:is(.sz-prose, .sz-content, sz-markdown) dt { font-weight: 700; color: #1a1a1a; }
+:is(.sz-prose, .sz-content, sz-markdown) dd { margin: 0 0 3pt 1.6em; }
+
+/* Images and figures */
+:is(.sz-prose, .sz-content, sz-markdown) :is(img, video) {
+  max-width: 100%;
+  height: auto;
+  border: 0.5pt solid #ccc;
+  break-inside: avoid;
+}
+:is(.sz-prose, .sz-content, sz-markdown) img { max-height: 110mm; }
+:is(.sz-prose, .sz-content, sz-markdown) video {
+  /* base.css caps this at 75vh; in print `vh` resolves against the page box,
+     so a portrait clip would still eat most of a page. */
+  max-height: 100mm;
+  background: none;
+}
+:is(.sz-prose, .sz-content, sz-markdown) figure { break-inside: avoid; text-align: left; }
+:is(.sz-prose, .sz-content, sz-markdown) figcaption {
+  color: #555;
+  font-size: 8.5pt;
+  font-style: italic;
+  padding-top: 2pt;
+}
+
+/* Mermaid diagrams. mermaid.ts initialises the "base" theme with this site's
+   dark palette, so every label is near-white and every node fill near-black:
+   on paper the text is invisible and the boxes are ink-soaked. The SVG is
+   slotted light DOM, so it is reachable from here — but mermaid emits its own
+   <style> inside the SVG and inline fills on the nodes, which is what the
+   !important is for. */
+pre.mermaid {
+  background: none;
+  padding: 0;
+  /* A diagram is not a code listing: it carries its own boxes, so the generic
+     pre border above would read as a stray frame around it. */
+  border: none;
+  margin: 6pt 0;
+}
+pre.mermaid svg {
+  max-width: 100%;
+  max-height: 150mm;
+  height: auto;
+  break-inside: avoid;
+}
+pre.mermaid svg :is(text, tspan, .nodeLabel, .edgeLabel, .label, foreignObject div, span) {
+  fill: #1a1a1a !important;
+  color: #1a1a1a !important;
+  background: none !important;
+}
+pre.mermaid svg :is(.node rect, .node circle, .node polygon, .node path, .cluster rect, rect.label-container) {
+  fill: #fff !important;
+  stroke: #555 !important;
+}
+pre.mermaid svg :is(.edgePath path, .flowchart-link, .messageLine0, .messageLine1, line, marker path) {
+  stroke: #555 !important;
+  fill: none !important;
+}
+pre.mermaid svg :is(.edgeLabel rect, .labelBkg, .edgeLabel foreignObject) {
+  fill: #fff !important;
+  background: #fff !important;
+}
+pre.mermaid svg marker :is(path, polygon) { fill: #555 !important; }
+
+/* Embeds. base.css gives .embed-container height:0 plus an aspect-ratio
+   padding-bottom set inline by sz-markdown.wrapIframes(), and an <iframe>
+   prints as a blank rectangle whatever its size. Collapse the box and print
+   the source address instead — assets/print.js copies the iframe's src onto
+   the container, because a replaced element has no ::after of its own. */
+:is(.sz-prose, .sz-content, sz-markdown) .embed-container {
+  position: static;
+  height: auto;
+  /* The only inline declaration in the block, so the only !important. */
+  padding-bottom: 0 !important;
+  overflow: visible;
+}
+:is(.sz-prose, .sz-content, sz-markdown) .embed-container iframe,
+:is(.sz-prose, .sz-content, sz-markdown) > iframe { display: none; }
+:is(.sz-prose, .sz-content, sz-markdown) .embed-container[data-print-src]::after {
+  content: "\25B8 Embedded media: " attr(data-print-src);
+  display: block;
+  padding: 3pt 5pt;
+  border: 0.5pt solid #ccc;
+  color: #555;
+  font-size: 8.5pt;
+  word-break: break-all;
+}
+
+/* Footnotes */
+:is(.sz-prose, .sz-content, sz-markdown) .footnotes {
+  color: #333;
+  font-size: 9pt;
+  padding-top: 6pt;
+  border-top: 0.5pt solid #ccc;
+}
+:is(.sz-prose, .sz-content, sz-markdown) .footnote-ref a {
+  color: #1a1a1a;
+  text-decoration: none;
+  font-size: 0.8em;
+  vertical-align: super;
+}
+
+/* ── Article chrome that stays ── */
+
+.sz-article__hero {
+  max-height: 55mm;
+  overflow: hidden;
+  border-bottom: none;
+  margin-bottom: 8pt;
+  break-inside: avoid;
+}
+.sz-article__hero img {
+  width: 100%;
+  height: auto;
+  max-height: 55mm;
+  object-fit: cover;
+  border: 0.5pt solid #ccc;
+}
+
+.sz-article__header {
+  max-width: none;
+  margin: 0 0 10pt;
+  padding: 0 0 6pt;
+  /* Same rule cv-print.css puts under the CV identity block. */
+  border-bottom: 1.5pt solid #1a1a1a;
+  text-align: left;
+  break-after: avoid;
+}
+.sz-article__title {
+  margin: 0 0 3pt;
+  color: #1a1a1a;
+  font-size: 18pt;
+  font-weight: 700;
+  line-height: 1.2;
+  break-after: avoid;
+}
+.sz-article__meta {
+  justify-content: flex-start;
+  gap: 4pt 10pt;
+  margin: 0 0 4pt;
+  color: #555;
+  font-size: 9pt;
+  break-after: avoid;
+}
+.sz-article__meta time,
+.sz-article__read { color: #555; }
+.sz-article__tag {
+  background: none;
+  color: #555;
+  padding: 0;
+  font-size: 9pt;
+}
+.sz-article__tag::before { content: "#"; }
+.sz-article__description {
+  max-width: none;
+  margin: 0;
+  color: #333;
+  font-style: italic;
+}
+
+.sz-article__facts {
+  max-width: none;
+  margin: 6pt 0 0;
+  padding: 5pt 8pt;
+  border: 0.5pt solid #ccc;
+  border-radius: 0;
+  font-size: 9pt;
+  gap: 2pt 10pt;
+  break-inside: avoid;
+}
+.sz-article__facts dt { color: #555; }
+.sz-article__facts dd,
+.sz-article__facts a { color: #1a1a1a; }
+
+/* Series list — genuinely informative on paper (which part of what, and what
+   else is in the set), so it is restyled rather than hidden. */
+.sz-series {
+  max-width: none;
+  margin: 8pt 0;
+  padding: 5pt 8pt;
+  background: none;
+  border: 0.5pt solid #ccc;
+  border-left: 1.5pt solid #555;
+  border-radius: 0;
+  break-inside: avoid;
+}
+.sz-series__label,
+.sz-series__kicker,
+.sz-series__desc,
+.sz-series__num,
+.sz-series__title,
+.sz-series__here { color: #333; }
+.sz-series__label strong,
+.sz-series__item.is-current :is(.sz-series__num, .sz-series__title) { color: #1a1a1a; }
+.sz-series__row {
+  padding: 1pt 0;
+  /* The current part gets a tinted fill at 0-3-0
+     (.sz-series__item.is-current .sz-series__row), hence !important. */
+  background: none !important;
+  color: #333;
+}
+.sz-series__arrow { display: none; }
+
+.sz-article__footer {
+  max-width: none;
+  margin: 10pt 0 0;
+  padding: 6pt 0 0;
+  border-top: 0.5pt solid #ccc;
+  font-size: 9pt;
+  break-inside: avoid;
+}
+.sz-article__author-name { color: #1a1a1a; font-weight: 700; }
+.sz-article__author-bio,
+.sz-article__author-bio a { color: #333; font-size: 9pt; }
+
+/* ── Page breaks ──
+   Same doctrine as cv-print.css:177 — nothing large is kept atomic (a held
+   block just leaves the rest of the page blank). What is pinned is every
+   heading-to-body join, plus the small leaves that must never split. */
+
+:is(.sz-prose, .sz-content, sz-markdown) :is(p, blockquote, li) {
+  orphans: 3;
+  widows: 3;
+}
+:is(.sz-prose, .sz-content, sz-markdown) :is(h1, h2, h3, h4, h5, h6) + * { break-before: avoid; }
+/* Long listings must be allowed to split; a 60-line block kept atomic would
+   push a whole page of white space ahead of itself. */
+:is(.sz-prose, .sz-content, sz-markdown) pre { break-inside: auto; }
+:is(.sz-prose, .sz-content, sz-markdown) :is(figure, img, table thead) { break-inside: avoid; }
+
+/* ── /blog/ and /projects/ archives ──
+   sz-portfolio lazy-loads: applyView() writes inline display:none on every
+   item past page-size (10 on /blog/, 20 on /projects/) and applyGroups()
+   hides whole month groups, so an unscrolled archive prints its first batch
+   and stops. Paper has no scroll event — reveal everything. !important is the
+   point of these rules: an inline declaration is what they beat. The values
+   are spelled out rather than `revert`, which would roll each element back to
+   the UA sheet and make the project panes inline again. */
+
+sz-portfolio li[data-tags] { display: list-item !important; }
+sz-portfolio a.project-pane[data-tags] { display: flex !important; }
+sz-portfolio .post-group,
+sz-portfolio .post-group__items,
+sz-portfolio .post-list { display: block !important; }
+
+/* Blog feed rows */
+.post-month {
+  padding: 6pt 0 2pt;
+  color: #1a1a1a;
+  font-size: 9pt;
+  break-after: avoid;
+}
+.post-month::after { background: #ccc; }
+/* The ▾ disclosure caret is a fold affordance; paper cannot fold. */
+.post-month::before { display: none; }
+.post-month__count { color: #555; }
+.post-row {
+  /* The mobile block (live in print) stacks this; the date column reads
+     better beside the title on paper. */
+  flex-direction: row;
+  gap: 8pt;
+  padding: 3pt 0;
+  border-left: none;
+  break-inside: avoid;
+}
+.post-row__date {
+  flex-direction: column;
+  width: 24mm;
+  gap: 0;
+  padding: 0;
+}
+.post-row__date time,
+.post-row__read,
+.post-row__desc,
+.post-row__tag,
+.post-row__series,
+.post-row__series-name { color: #555; }
+.post-row__series-part {
+  background: none;
+  color: #555;
+  padding: 0;
+}
+.post-row__title {
+  color: #1a1a1a;
+  font-size: 10.5pt;
+}
+.post-row__tags { flex-wrap: wrap; overflow: visible; }
+/* Decorative hover affordance. */
+.post-row__arrow { display: none; }
+
+/* Project panes. On screen these are a CSS grid with 1px gaps over a
+   surface-coloured backplate, which fakes shared tmux pane separators; on
+   paper that is a wall of dark gridded cards. Flow them as blocks with a
+   hairline box each — a printed grid also fragments unpredictably across
+   page boundaries, and one column per pane keeps every break clean. */
+.project-pane {
+  /* Display comes from the reveal rule above, which needs !important there. */
+  min-height: 0;
+  padding: 4pt 6pt;
+  margin-bottom: 4pt;
+  background: none;
+  box-shadow: none;
+  border: 0.5pt solid #ccc;
+  break-inside: avoid;
+}
+.project-pane__title { color: #1a1a1a; font-size: 10.5pt; margin-right: 0; }
+.project-pane__desc,
+.project-pane__tag { color: #333; }
+.project-pane__tags { padding-top: 3pt; }
+/* tmux display-panes index watermark — decoration, generated in base.css. */
+.project-pane::after { content: none; }

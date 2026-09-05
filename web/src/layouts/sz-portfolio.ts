@@ -1,7 +1,8 @@
 import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { scrollbarStyles, mobileQuery } from "../core/styles.js";
-import { isInputFocused } from "../core/keyboard.js";
+import { observerRoot } from "../core/scroll.js";
+import { isInputFocused, singleKeyAllowed } from "../core/keyboard.js";
 
 @customElement("sz-portfolio")
 export class SzPortfolio extends LitElement {
@@ -31,8 +32,11 @@ export class SzPortfolio extends LitElement {
   @state() private activeFilter = "";
   @state() private visible = 0;
   @state() private matchedCount = 0;
+  @state() private countAnnouncement = "";
 
   private observer?: IntersectionObserver;
+  /** Only announce counts the user caused; the first render is not news. */
+  private announceCount = false;
   private rovingActive: HTMLElement | null = null;
 
   static styles = [
@@ -117,24 +121,38 @@ export class SzPortfolio extends LitElement {
         padding-top: 12px;
         border-top: 1px solid var(--sz-surface0, #313244);
         font-size: calc(var(--sz-font-size, 13px) * 0.9);
-        color: var(--sz-overlay1, #7f849c);
+        /* The result count is content a reader reads, and at 0.9x there is no
+           large-text exemption; --sz-overlay1 is 3.70-4.48:1 across the themes. */
+        color: var(--sz-muted, #989caf);
       }
       .pager__info {
         white-space: nowrap;
       }
 
       @media (max-width: 768px) {
+        /* Stop being a scroller: iOS Safari only delivers the status-bar
+           scroll-to-top tap to the main frame's scroll view, and a nested
+           overflow:auto host swallows the gesture for the whole archive.
+
+           No horizontal padding on the host either. The filter row wants to be
+           full-bleed so it can scroll edge to edge, and the obvious way to get
+           there — negative margins cancelling the host's padding — overflowed
+           the document by exactly that padding on the right, because nothing in
+           this subtree clips any more now that the host is overflow:visible.
+           Children that want the inset carry it themselves instead. */
         :host {
-          padding: 12px;
+          padding: 12px 0;
+          height: auto;
+          overflow: visible;
         }
-        /* Filter tags: one full-bleed, horizontally-scrollable line instead of
-           wrapping into many rows. Negative margins let it scroll edge-to-edge. */
+        /* Filter tags: one horizontally-scrollable line instead of wrapping
+           into many rows. The titlebar is position:fixed here, so a sticky top
+           of 0 would park the bar underneath it. */
         .filter-bar {
+          top: var(--sz-mobile-chrome-top);
           flex-wrap: nowrap;
           overflow-x: auto;
           scrollbar-width: none;
-          margin-left: -12px;
-          margin-right: -12px;
           padding-left: 12px;
           padding-right: 12px;
         }
@@ -144,12 +162,65 @@ export class SzPortfolio extends LitElement {
         .filter-btn {
           flex-shrink: 0;
         }
+        .list,
+        .sentinel,
+        .pager {
+          margin-left: 12px;
+          margin-right: 12px;
+        }
+      }
+
+      /* Print: the archive becomes a plain list of every entry. After the
+         mobile block because an A4 page box is ~680px wide, so
+         (max-width: 768px) matches while printing too. */
+      @media print {
+        :host {
+          display: block;
+          padding: 0;
+          height: auto;
+          overflow: visible;
+        }
+        /* Filtering, lazy-load and the tmux-style counter are all interaction
+           state that paper cannot carry — and the filter bar is sticky, so it
+           would reprint on every page. */
+        .filter-bar,
+        .sentinel,
+        .pager {
+          display: none;
+        }
+        /* The 1px-gap-over-a-backplate trick that fakes shared tmux pane
+           separators prints as a wall of dark gridded cards. Flow the panes
+           instead: a printed grid also fragments unpredictably across page
+           boundaries, while blocks break cleanly (each pane carries its own
+           hairline box from styles/print.css). */
+        .list,
+        .list--list {
+          display: block;
+          gap: 0;
+          background: none;
+          border: 0;
+        }
+      }
+
+      /* Announcement-only. Clipped rather than display:none — a hidden live
+         region is never announced. */
+      .sr-live {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
       }
     `,
   ];
 
   private toggleFilter(filter: string) {
     this.activeFilter = this.activeFilter === filter ? "" : filter;
+    this.announceCount = true;
     this.visible = this.pageSize; // reset the lazy-load window on filter change
     this.dispatchEvent(
       new CustomEvent("filter-change", {
@@ -162,12 +233,16 @@ export class SzPortfolio extends LitElement {
 
   protected firstUpdated() {
     this.visible = this.pageSize;
+    this.syncScrollRegion();
     this.applyView();
     const slot = this.shadowRoot?.querySelector("slot");
     slot?.addEventListener("slotchange", () => this.applyView());
     this.setupObserver();
 
     document.addEventListener("keydown", this.onRovingKey, true);
+    // The lazy-load root differs per scroll mode, and a stale root just stops
+    // intersecting — the archive would silently never load its next batch.
+    mobileQuery.addEventListener("change", this.onScrollModeChange);
 
     if (!mobileQuery.matches) {
       this.applyRoving();
@@ -178,9 +253,26 @@ export class SzPortfolio extends LitElement {
     }
   }
 
+  // axe flags a scrollable container that no keyboard user can reach
+  // (scrollable-region-focusable). On desktop this host IS the scroller, so it
+  // needs a tab stop and a name; wave 1 handed scrolling back to the document
+  // under 768px, where a tab stop here would be a dead end.
+  private syncScrollRegion() {
+    if (mobileQuery.matches) {
+      this.removeAttribute("tabindex");
+      this.removeAttribute("role");
+      this.removeAttribute("aria-label");
+      return;
+    }
+    this.tabIndex = 0;
+    this.setAttribute("role", "region");
+    this.setAttribute("aria-label", "Entries");
+  }
+
   disconnectedCallback() {
     super.disconnectedCallback();
     this.observer?.disconnect();
+    mobileQuery.removeEventListener("change", this.onScrollModeChange);
     document.removeEventListener("keydown", this.onRovingKey, true);
   }
 
@@ -221,6 +313,14 @@ export class SzPortfolio extends LitElement {
       el.style.display = shown.has(el) ? "" : "none";
     }
     this.applyGroups(shown);
+
+    if (this.announceCount) {
+      const noun = this.matchedCount === 1 ? "entry" : "entries";
+      this.countAnnouncement =
+        shown.size < this.matchedCount
+          ? `Showing ${shown.size} of ${this.matchedCount} ${noun}`
+          : `${this.matchedCount} ${noun}`;
+    }
 
     // Keep the roving tabindex valid as items are filtered/lazy-loaded, without
     // stealing focus — only firstUpdated()'s initial pass focuses an item.
@@ -309,12 +409,18 @@ export class SzPortfolio extends LitElement {
     if (isInputFocused()) return;
     if (e.altKey || e.ctrlKey || e.metaKey) return;
 
+    // The hjkl aliases are bare character keys and answer to the WCAG 2.1.4
+    // switch; the arrow keys they mirror are not, and always work.
+    const chars = singleKeyAllowed();
+
     const active = this.deepActive();
     if (!active) return;
 
     // A focused filter button hands off to the grid: arrows/hjkl jump focus
     // into the (already filter-restricted) roving item instead of no-op'ing.
-    const navKey = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "h", "j", "k", "l"].includes(e.key);
+    const navKey =
+      ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key) ||
+      (chars && ["h", "j", "k", "l"].includes(e.key));
     const onFilter =
       !!this.shadowRoot?.contains(active) && !!(active as HTMLElement).closest?.(".filter-btn");
     if (onFilter) {
@@ -338,25 +444,45 @@ export class SzPortfolio extends LitElement {
 
     switch (e.key) {
       case "ArrowLeft":
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.moveRoving(-1, 0);
+        return;
       case "h":
+        if (!chars) return;
         e.preventDefault();
         e.stopImmediatePropagation();
         this.moveRoving(-1, 0);
         return;
       case "ArrowRight":
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.moveRoving(1, 0);
+        return;
       case "l":
+        if (!chars) return;
         e.preventDefault();
         e.stopImmediatePropagation();
         this.moveRoving(1, 0);
         return;
       case "ArrowUp":
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.moveRoving(0, -1);
+        return;
       case "k":
+        if (!chars) return;
         e.preventDefault();
         e.stopImmediatePropagation();
         this.moveRoving(0, -1);
         return;
       case "ArrowDown":
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this.moveRoving(0, 1);
+        return;
       case "j":
+        if (!chars) return;
         e.preventDefault();
         e.stopImmediatePropagation();
         this.moveRoving(0, 1);
@@ -381,11 +507,23 @@ export class SzPortfolio extends LitElement {
     }
   };
 
+  private onScrollModeChange = () => {
+    // Defer a frame: the media query and the layout it drives do not flip in a
+    // guaranteed order, and observerRoot() measures the live scroller.
+    requestAnimationFrame(() => {
+      this.setupObserver();
+      // The host stops being the scroller under 768px, so its tab stop and
+      // region role have to come and go with the breakpoint.
+      this.syncScrollRegion();
+    });
+  };
+
   private setupObserver() {
     const sentinel = this.shadowRoot?.querySelector(".sentinel");
     if (!sentinel) return;
-    // Both layouts scroll inside the host, so observe relative to it.
-    const root = this;
+    // On desktop the host is the scroller; under 768px the document is, and an
+    // IntersectionObserver rooted at the host would never intersect again.
+    const root = observerRoot();
     this.observer?.disconnect();
     this.observer = new IntersectionObserver(
       (entries) => {
@@ -405,6 +543,7 @@ export class SzPortfolio extends LitElement {
 
   private revealMore() {
     if (this.visible >= this.matchedCount) return;
+    this.announceCount = true;
     this.visible = Math.min(this.matchedCount, this.visible + this.pageSize);
   }
 
@@ -415,9 +554,10 @@ export class SzPortfolio extends LitElement {
     return html`
       ${this.filters.length > 0
         ? html`
-            <div class="filter-bar">
+            <div class="filter-bar" role="group" aria-label="Filter entries by tag">
               <button
                 class="filter-btn ${this.activeFilter === "" ? "active" : ""}"
+                aria-pressed=${this.activeFilter === ""}
                 @click=${() => this.toggleFilter("")}
               >
                 All
@@ -428,6 +568,7 @@ export class SzPortfolio extends LitElement {
                     class="filter-btn ${this.activeFilter === f
                       ? "active"
                       : ""}"
+                    aria-pressed=${this.activeFilter === f}
                     @click=${() => this.toggleFilter(f)}
                   >
                     ${f}
@@ -448,6 +589,10 @@ export class SzPortfolio extends LitElement {
             : `${this.matchedCount} ${noun}`}
         </span>
       </div>
+      ${/* Filtering and lazy-loading both change the result count silently:
+            the pager text is not a live region and the items themselves are
+            just shown or hidden. */ ""}
+      <span class="sr-live" role="status" aria-live="polite">${this.countAnnouncement}</span>
     `;
   }
 }

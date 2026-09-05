@@ -57,7 +57,7 @@ export class SzStats extends LitElement {
     .counter__num .suffix { color: var(--sz-mauve, #cba6f7); }
     .counter__label {
       margin-top: 2px;
-      color: var(--sz-overlay1, #7f849c);
+      color: var(--sz-muted, #989caf);
       font-size: calc(var(--sz-font-size, 13px) * 0.85);
     }
     .divider {
@@ -74,7 +74,7 @@ export class SzStats extends LitElement {
     }
     .skill__name { color: var(--sz-subtext0, #a6adc8); }
     .skill__pct {
-      color: var(--sz-overlay1, #7f849c);
+      color: var(--sz-muted, #989caf);
       font-variant-numeric: tabular-nums;
     }
     .skill__track {

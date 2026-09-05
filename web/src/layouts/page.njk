@@ -7,6 +7,8 @@ layout: base.njk
 <sz-markdown{% if lineNumbers !== false %} line-numbers{% endif %}>
   <h1>{{ heading or title }}</h1>
   {% if date %}<p style="color: var(--sz-subtext)">{{ date | dateDisplay }}</p>{% endif %}
-  {% if poster %}<img src="{{ poster }}" alt="{{ title }}" loading="lazy" decoding="async"{{ poster | imgDimAttrs | safe }}>{% endif %}
+  {# Decorative: the h1 above is the only description of it we have, and using
+     it as alt just makes AT read the title twice. #}
+  {% if poster %}<img src="{{ poster }}" alt="" loading="lazy" decoding="async"{{ poster | imgDimAttrs | safe }}>{% endif %}
   {{ content | safe }}
 </sz-markdown>

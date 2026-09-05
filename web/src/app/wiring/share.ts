@@ -1,5 +1,5 @@
 import { copyText } from '../../core/clipboard.js';
-import { isInputFocused } from '../../core/keyboard.js';
+import { singleKeyAllowed } from '../../core/keyboard.js';
 
 declare global {
   interface Window {
@@ -41,7 +41,7 @@ export function wireShare(): () => void {
 
   const onKeydown = (e: KeyboardEvent) => {
     if (e.key !== 'y' || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-    if (isInputFocused()) return;
+    if (!singleKeyAllowed()) return;
     // Scoped by presence, not by page type: no copy control, no shortcut.
     const anchor = document.querySelector<HTMLAnchorElement>('.js-share-copy');
     if (!anchor) return;

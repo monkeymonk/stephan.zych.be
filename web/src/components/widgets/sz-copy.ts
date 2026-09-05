@@ -42,6 +42,21 @@ export class SzCopy extends LitElement {
     }
     button:hover { color: var(--sz-accent, #89b4fa); background: var(--sz-surface1, #45475a); }
     button:focus-visible { outline: 1px solid var(--sz-accent, #89b4fa); color: var(--sz-accent, #89b4fa); }
+
+    /* Print: the command itself is slotted light DOM and prints fine; the chip
+       just loses its terminal skin. The copy button has no meaning on paper
+       and would print as a stray ⧉ glyph after the command. */
+    @media print {
+      :host {
+        background: none;
+        border: 0.5pt solid #ccc;
+        border-radius: 0;
+        padding: 0 2pt;
+        font-size: 9pt;
+      }
+      .text { color: #1a1a1a; }
+      button { display: none; }
+    }
   `;
 
   render() {
