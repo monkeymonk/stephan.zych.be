@@ -153,7 +153,9 @@ docker compose up -d --build
 - **`goaccess`** — turns Caddy's IP-masked access log into a private,
   basic-auth `/_stats` dashboard (no cookies, no banner).
 - **`umami` + `umami-db`** — self-hosted, cookieless analytics at
-  `analytics.zych.be`, shared by all three sites.
+  `analytics.zych.be`. Both front-ends report into one website there and are
+  told apart by tag (`web` for the browser, `tui` for the SSH session); the
+  GitHub Pages sites, which have no Caddy log to mine, share it too.
 
 `.github/workflows/deploy.yml` builds both images, pushes them to GHCR, and
 redeploys over SSH on push to `main`.

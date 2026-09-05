@@ -9,6 +9,41 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-09-05
+
+### Added
+- The SSH TUI now reports audience measurement too, so terminal readers show up
+  next to browser ones. It posts to the **same** Umami website as the web build
+  over the internal compose network (`umami:3000` — no public egress, no new
+  secret), using the website id already in `content/data/site.json` and the
+  canonical web permalinks (`/blog/<slug>/`, `/projects/`, …) so one URL row
+  counts reads from both surfaces. The two are told apart by tag — `tui` on
+  every SSH event, `web` on the browser tag — and per-session counting uses a
+  `crypto/rand` UUID rather than the visitor's IP, which is never forwarded.
+  Terminal size is reported as the screen dimension; session start/end give
+  visit duration. Tracking is silently off when `UMAMI_URL` is unset, and every
+  failure — full queue, dead collector, timeout — is dropped without ever
+  touching the input path.
+
+### Fixed
+- The privacy notice was inaccurate: it claimed the site runs **no analytics
+  script in the browser** and documented only the masked-access-log/GoAccess
+  measurement path, both of which stopped being true when self-hosted Umami was
+  added four days after that notice was written. `/privacy/` now describes both
+  systems, and spells out what the Umami script does and does not touch on the
+  device (no cookie, no write to `localStorage`/`sessionStorage`, only a read of
+  the optional `umami.disabled` opt-out flag) plus how to opt out. No change to
+  what is actually collected — the notice now matches it.
+- The Umami tag now honours **`Do Not Track`**. Umami's DNT check is gated
+  behind the `data-do-not-track` attribute, which the tag never set — so a
+  browser sending DNT had its signal read and ignored. With the attribute in
+  place the script sends nothing at all for those visitors, and `/privacy/` says
+  so.
+- The TL;DR of *The Cookie Banner Was Always Optional* still claimed the browser
+  runs **zero analytics JavaScript**, contradicting the post's own Umami section
+  further down (added days later, when Umami landed). The summary now matches
+  the body.
+
 ## [1.6.0] - 2026-09-04
 
 ### Added
@@ -278,7 +313,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.4.2...v1.5.0

@@ -53,6 +53,33 @@ func limitConcurrency(next ssh.Handler) ssh.Handler {
 	}
 }
 
+// trackerCtxKey carries the per-session analytics handle from the middleware to
+// teaHandler. A distinct type keeps it out of reach of any other ctx user.
+type trackerCtxKey struct{}
+
+// trackSession mints the per-session analytics handle (uuid + pty size) and
+// brackets the session with session_start / session_end.
+//
+// Chain placement matters and is not obvious: wish runs the middleware list in
+// reverse, so this sits between bm.Middleware and limitConcurrency in the list
+// to execute *after* activeterm and *inside* limitConcurrency — non-interactive
+// probes are never counted, and sessions rejected for capacity are never counted.
+func trackSession(t *tracker) wish.Middleware {
+	return func(next ssh.Handler) ssh.Handler {
+		return func(s ssh.Session) {
+			w, h := 80, 24
+			if pty, _, active := s.Pty(); active {
+				w, h = pty.Window.Width, pty.Window.Height
+			}
+			ts := t.session(w, h)
+			s.Context().SetValue(trackerCtxKey{}, ts)
+			ts.start()
+			next(s)
+			ts.end()
+		}
+	}
+}
+
 func main() {
 	local := flag.Bool("local", false, "run the TUI directly in this terminal (no SSH)")
 	flag.Parse()
@@ -95,6 +122,9 @@ func runSSH(content *Content, data *SiteData, wakapi *WakapiStats, loadErr error
 	// so the Catppuccin hex palette reaches the client's terminal intact.
 	lipgloss.SetColorProfile(termenv.TrueColor)
 
+	// One tracker per process — one HTTP client, one queue, one worker goroutine.
+	track := newTracker(data)
+
 	teaHandler := func(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 		pty, _, active := s.Pty()
 		w, h := 80, 24
@@ -109,7 +139,8 @@ func runSSH(content *Content, data *SiteData, wakapi *WakapiStats, loadErr error
 		}
 		d := LoadData(dataDir)
 		d.Wakapi = wakapi
-		return NewModel(c, d, err, w, h).withOutput(s), []tea.ProgramOption{tea.WithAltScreen()}
+		ts, _ := s.Context().Value(trackerCtxKey{}).(*trackerSession)
+		return NewModel(c, d, err, w, h).withOutput(s).withTracker(ts), []tea.ProgramOption{tea.WithAltScreen()}
 	}
 
 	s, err := wish.NewServer(
@@ -119,6 +150,7 @@ func runSSH(content *Content, data *SiteData, wakapi *WakapiStats, loadErr error
 		wish.WithMaxTimeout(sshMaxTimeout),
 		wish.WithMiddleware(
 			bm.Middleware(teaHandler),
+			trackSession(track),     // count real, admitted sessions only (see above)
 			limitConcurrency,        // cap concurrent sessions
 			activeterm.Middleware(), // require an interactive terminal
 			lm.Middleware(),

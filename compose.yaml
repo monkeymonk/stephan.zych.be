@@ -16,6 +16,18 @@ services:
       dockerfile: tui/Dockerfile
     image: ghcr.io/monkeymonk/szych-tui:latest
     restart: unless-stopped
+    depends_on:
+      - umami # the collector below; the TUI fails open if it's still starting
+    environment:
+      # Where the TUI posts its own pageviews. A literal, not a ${...}: it's not
+      # a secret, the umami service has no public port, and this reaches it over
+      # the compose network (same hop the Caddyfile takes with `reverse_proxy
+      # umami:3000`) — so no TLS, no public egress, no dependency on
+      # analytics.zych.be resolving. The website id isn't here either: it rides
+      # along in content/data/site.json, which tui/Dockerfile bakes into the
+      # image. Nothing to add to the CI secrets or deploy.yml.
+      # Unset this to turn TUI tracking off; it stays silent either way.
+      - UMAMI_URL=http://umami:3000
     ports:
       - "22:2222" # public SSH face; the host's own sshd must live elsewhere
     volumes:
@@ -99,9 +111,11 @@ services:
     mem_limit: 128m
     pids_limit: 64
 
-  # Self-hosted, cookieless analytics shared by all three sites (this one plus
-  # the two GitHub Pages sites, which can't use the Caddy-log path). Caddy
-  # reverse-proxies analytics.zych.be -> this container; it has no public port.
+  # Self-hosted, cookieless analytics shared by the web front-end, the SSH tui
+  # above (one website, the two surfaces separated by tag) and the two GitHub
+  # Pages sites, which can't use the Caddy-log path. Caddy reverse-proxies
+  # analytics.zych.be -> this container; it has no public port, so the tui
+  # posts straight to umami:3000 over this network.
   # Secrets come from the shell running compose (GitHub secrets in CI):
   #   UMAMI_DB_PASSWORD  Postgres password (shared with umami-db below)
   #   UMAMI_APP_SECRET   session/JWT signing secret

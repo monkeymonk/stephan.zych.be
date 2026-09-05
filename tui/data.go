@@ -75,6 +75,7 @@ type SiteMeta struct {
 	Email       string `json:"email"`
 	RepoURL     string `json:"repoUrl"`
 	CoffeeURL   string `json:"coffeeUrl"`
+	AnalyticsID string `json:"analyticsId"` // Umami website id, shared with the web build
 	Socials     struct {
 		Github   string `json:"github"`
 		Linkedin string `json:"linkedin"`

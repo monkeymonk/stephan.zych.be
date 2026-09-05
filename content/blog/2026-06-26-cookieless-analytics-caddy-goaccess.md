@@ -8,7 +8,7 @@ poster: /assets/content/goaccess-dashboard.webp
 ogImage: /assets/content/goaccess-dashboard.jpg
 ---
 
-> **TL;DR** — You don't need a cookie banner to know which pages people read. Banners exist because trackers *store something on the device*; if you store nothing, there's nothing to consent to. So my analytics stores nothing in your browser: **Caddy** writes an access log with the visitor IP already masked (`ip_mask`, last octet zeroed), **GoAccess** turns that log into a dashboard served behind basic-auth at `/_stats`, and the browser runs zero analytics JavaScript. Two gotchas the demos skip: Caddy logs the IP in *two* fields, and GoAccess's report needs `'unsafe-eval'` — both fixable in the `Caddyfile`.
+> **TL;DR** — You don't need a cookie banner to know which pages people read. Banners exist because trackers *store something on the device*; if you store nothing, there's nothing to consent to. So my analytics stores nothing in your browser: **Caddy** writes an access log with the visitor IP already masked (`ip_mask`, last octet zeroed), **GoAccess** turns that log into a dashboard served behind basic-auth at `/_stats`, and the one in-browser script I *did* end up adding — self-hosted **Umami**, a few days later — writes nothing to the device either. Two gotchas the demos skip: Caddy logs the IP in *two* fields, and GoAccess's report needs `'unsafe-eval'` — both fixable in the `Caddyfile`.
 
 Every analytics tutorial opens the same way: drop this `<script>` in your `<head>`, then bolt on a consent banner so you're allowed to. The banner is the part nobody wants — the modal, the "Reject all" dark-pattern hunt, the legal copy you paste from a generator and never read.
 

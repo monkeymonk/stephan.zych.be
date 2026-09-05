@@ -44,7 +44,8 @@ type Model struct {
 	content *Content
 	data    *SiteData
 	loadErr error
-	out     io.Writer // client terminal (SSH session / dev stdout), see copyURL
+	out     io.Writer       // client terminal (SSH session / dev stdout), see copyURL
+	tracker *trackerSession // nil in dev / when analytics is unconfigured
 
 	width, height int
 	screen        screen
@@ -129,7 +130,51 @@ func (m Model) withOutput(w io.Writer) Model {
 	return m
 }
 
-func (m Model) Init() tea.Cmd { return tea.Batch(tick(), animTick()) }
+func (m Model) Init() tea.Cmd {
+	m.trackPath() // a session that never navigates still records its landing view
+	return tea.Batch(tick(), animTick())
+}
+
+// withTracker attaches the session's analytics handle. It's a pointer, so it
+// survives the by-value copying of Model all through the update path — which is
+// also why the pageview dedupe lives on the tracker, not here.
+func (m Model) withTracker(t *trackerSession) Model {
+	m.tracker = t
+	return m
+}
+
+// trackPath reports the current screen under the same canonical path the web
+// build serves it at, so both surfaces aggregate on one URL row.
+func (m Model) trackPath() {
+	if m.tracker == nil {
+		return
+	}
+	if path, title := m.canonicalPath(); path != "" {
+		m.tracker.pageview(path, title)
+	}
+}
+
+// canonicalPath maps the current screen onto its web permalink. An empty path
+// means "don't report" (the effect overlay is transient, not a page).
+func (m Model) canonicalPath() (path, title string) {
+	switch m.screen {
+	case screenHome:
+		return "/", m.data.Site.Title
+	case screenList:
+		if m.listKind == "" {
+			return "", ""
+		}
+		return "/" + m.listKind + "/", m.listTitle
+	case screenReader:
+		if m.readerArticle.Slug == "" {
+			return "", ""
+		}
+		return articlePath(m.readerArticle), m.readerArticle.Title
+	case screenHelp:
+		return "/help/", "help"
+	}
+	return "", ""
+}
 
 func (m Model) needsAnim() bool {
 	return m.screen == screenHome || (m.paletteOpen && m.palFrame < paletteRevealLen) || m.screen == screenEffect
@@ -743,10 +788,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if m.paletteOpen {
-			return m.updatePalette(msg)
+			// The command palette (`:blog`, `/search`) is a primary navigation
+			// path and never reaches afterKey below — route it through so
+			// palette-driven reading is not invisible.
+			return m.afterKey(m.updatePalette(msg))
 		}
 		if m.linksOpen {
-			return m.updateLinks(msg)
+			// Same for in-article link following.
+			return m.afterKey(m.updateLinks(msg))
 		}
 		if m.screen == screenEffect {
 			m.screen = m.effectPrev
@@ -765,7 +814,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "?":
 			m.returnTo = m.screen
 			m.screen = screenHelp
-			return m, nil
+			return m.afterKey(m, nil)
 		}
 		// global tab shortcuts — every nav key (a/p/b/c…) works from any screen
 		for _, lk := range m.homeLinks() {
@@ -791,12 +840,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // afterKey ensures the animation loop is running when the resulting screen needs
-// it (e.g. returning to the home screen, whose tagline cycles).
+// it (e.g. returning to the home screen, whose tagline cycles), and reports the
+// resulting screen as a pageview. It is the funnel for every navigation path;
+// the tracker's own lastPath dedupe is what makes the overlapping callers
+// idempotent, so no dedupe state belongs on Model (which is copied by value).
 func (m Model) afterKey(model tea.Model, cmd tea.Cmd) (tea.Model, tea.Cmd) {
 	mm, ok := model.(Model)
 	if !ok {
 		return model, cmd
 	}
+	mm.trackPath()
 	if mm.needsAnim() && !mm.animating {
 		mm.animating = true
 		return mm, tea.Batch(cmd, animTick())

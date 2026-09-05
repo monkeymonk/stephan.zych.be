@@ -63,8 +63,11 @@
      still unhooked, so stripping utm params can't trigger a second pageview. #}
   <script type="module" src="/assets/components.js"></script>
   {%- if site.analyticsId %}
-  {# Self-hosted, cookieless Umami — no cookies/localStorage, so no consent banner. #}
-  <script defer src="https://analytics.zych.be/script.js" data-website-id="{{ site.analyticsId }}"></script>
+  {# Self-hosted, cookieless Umami — no cookies, nothing written to storage, so
+     no consent banner. data-do-not-track is required to make the tracker honour
+     the browser's DNT signal: its DNT check is gated behind this attribute, so
+     without it the signal is read and ignored. #}
+  <script defer src="https://analytics.zych.be/script.js" data-website-id="{{ site.analyticsId }}" data-tag="web" data-do-not-track="true"></script>
   {%- endif %}
 </head>
 <body>
