@@ -76,6 +76,12 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
   viewport down, and sits flush against the right edge of the screen rather
   than inset by the titlebar's notch padding. Parked at the top of the page it
   was a no-op occupying a tab stop.
+- Search results stack on a phone — title on one line, the path or description
+  full width beneath it at 0.85×, and rows tall enough to be real touch
+  targets. The desktop row is two columns pushed apart, which at 390px
+  squeezed both halves into slivers. The panel had simply never been designed
+  for that width, because the palette only started shipping to mobile in this
+  same release.
 
 ### Fixed
 - Archive pages overflowed **horizontally by 12px** at phone width. The filter

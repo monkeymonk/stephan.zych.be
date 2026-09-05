@@ -182,8 +182,7 @@ export class SzPalette extends LitElement {
       /* sz-neovim is no longer a viewport-sized positioned box on mobile — it
          is as tall as the whole article — so position absolute would park
          these at the bottom of the *document*, permanently off-screen. Pin
-         them just above the fixed statusbar/tmux bar instead. sz-palette
-         itself is desktop-only (app/index.ts), so this is defensive. */
+         them just above the fixed statusbar/tmux bar instead. */
       .overlay,
       .help-overlay {
         position: fixed;
@@ -192,6 +191,29 @@ export class SzPalette extends LitElement {
       .help-overlay {
         /* Clear the fixed titlebar at the other end. */
         top: var(--sz-mobile-chrome-top);
+      }
+
+      /* One row per suggestion, name over description. The desktop row is two
+         columns pushed apart with space-between, which at phone width squeezes
+         both into unreadable slivers and ragged-right wraps the description
+         against the label. */
+      .suggestion {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1px;
+        /* Also the touch target: a bare text row is ~21px, under the 24px
+           WCAG 2.5.8 minimum. These only became reachable on a phone when the
+           palette stopped being desktop-only. */
+        padding: 8px 12px;
+      }
+      .suggestion-desc {
+        font-size: calc(var(--sz-font-size, 13px) * 0.85);
+        line-height: 1.4;
+      }
+      /* Stacked rows are twice as tall, so the desktop 200px cap would show
+         barely three of them. */
+      .suggestions {
+        max-height: 45dvh;
       }
     }
   `];
