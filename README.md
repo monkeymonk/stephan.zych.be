@@ -67,9 +67,11 @@ The web `dev` task starts Eleventy's dev server and esbuild in watch mode concur
 The CV lives once, as structured data in `content/data/cv.json`, and is rendered
 four ways from that single source: the web page at `/cv/`, the TUI `cv` screen, a
 plain-text/Markdown copy at `/cv.md` (`curl stephan.zych.be/cv.md`), and a
-print-optimised `/cv/print/` page the reader saves as PDF straight from the
-browser (the "Print / Save as PDF" button) — no committed binary, no typesetting
-toolchain, always in sync with the data. `npm run check:cv` fails if the shared
+print-optimised résumé sheet — served as its own chrome-free `/cv/print/` page
+behind the "Print / Save as PDF" button, and linked `media="print"` on `/cv/`
+itself, so printing the on-site CV yields that same document rather than a
+de-terminalised screen page — no committed binary, no typesetting toolchain,
+always in sync with the data. `npm run check:cv` fails if the shared
 headline numbers drift between `cv.json`, `profile.json`, and the about/whoami
 pages, or if the CV section headings drift between the three renderers. It runs
 as its own CI job over the full checkout rather than inside `npm run build` —
