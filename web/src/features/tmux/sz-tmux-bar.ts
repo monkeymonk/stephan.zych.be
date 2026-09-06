@@ -177,19 +177,32 @@ export class SzTmuxBar extends LitElement {
       /* The document scrolls on mobile, so the bottom chrome has to be pinned
          instead of riding along at the end of a fixed-height column. The
          :host background (crust) was decorative inside an opaque window and is
-         now load-bearing: article text scrolls underneath. */
+         now load-bearing: article text scrolls underneath. The bar's height is
+         constant and the dynamic safe-area inset only lifts it off the bottom
+         edge, so iOS Safari retracting its toolbar mid-scroll cannot resize
+         it. */
       :host {
         position: fixed;
         left: 0;
         right: 0;
-        bottom: 0;
+        bottom: var(--sz-safe-bottom, 0px);
         /* Below the titlebar's 30, above the article. */
         z-index: 25;
         box-sizing: border-box;
-        height: calc(var(--sz-mobile-tmuxbar-h) + env(safe-area-inset-bottom));
-        /* Keep the tabs clear of the home-indicator strip. */
-        padding-bottom: env(safe-area-inset-bottom);
+        height: var(--sz-mobile-tmuxbar-h);
         border-top: 1px solid var(--sz-surface0, #313244);
+      }
+      /* The bar rides above the safe area instead of growing into it, so the
+         home-indicator strip underneath it needs painting. Background only:
+         it must never affect the bar's own height. */
+      :host::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        height: var(--sz-safe-bottom, 0px);
+        background: var(--sz-crust, #11111b);
       }
       .tabs {
         justify-content: space-around;

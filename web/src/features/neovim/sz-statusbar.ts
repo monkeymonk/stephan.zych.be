@@ -117,7 +117,7 @@ export class SzStatusbar extends LitElement {
         position: fixed;
         left: 0;
         right: 0;
-        bottom: calc(var(--sz-mobile-tmuxbar-h) + env(safe-area-inset-bottom));
+        bottom: calc(var(--sz-mobile-tmuxbar-h) + var(--sz-safe-bottom, 0px));
         /* Below the titlebar's 30, above the article. */
         z-index: 25;
         box-sizing: border-box;

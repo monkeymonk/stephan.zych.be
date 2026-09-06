@@ -1,6 +1,6 @@
 ---
 layout: base.njk
-title: Blog — Stéphan Zych
+title: Blog · Stéphan Zych
 permalink: /blog/
 section: { name: blog, path: /blog/ }
 ---
@@ -9,7 +9,7 @@ section: { name: blog, path: /blog/ }
    the page has no visible title — but it still needs exactly one h1. Kept
    outside sz-portfolio: its shadow template slots children straight into the
    grid/list container, and a heading is not one of the feed's items. #}
-<h1 class="sr-only">Blog — engineering notes &amp; experiments</h1>
+<h1 class="sr-only">Blog · engineering notes &amp; experiments</h1>
 <sz-portfolio layout="list" filters="{{ allTags | join(',') }}" page-size="10">
   <div class="post-list">
     {% for group in collections.blog | groupByMonth %}

@@ -9,6 +9,30 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-09-06
+
+### Fixed
+- The bottom chrome no longer grows while you scroll on iOS. Safari retracts its
+  toolbar as the page moves, and `env(safe-area-inset-bottom)` flips between `0`
+  and the home-indicator height while it does; that value was feeding the tab
+  bar's `height`, so the tabs visibly got taller mid-scroll. The dynamic inset
+  now only lifts the bar off the bottom edge (a background strip paints the area
+  underneath it), space is reserved from the constant
+  `env(safe-area-max-inset-bottom)`, and the bar's own height is fixed.
+- Tables are readable on a phone. Cells align to the top of their row instead of
+  floating in the middle of it, rows carry a separator, and a step down in size
+  with tighter padding puts every column on screen — the last column used to be
+  cut off behind a horizontal scroll with nothing to hint it was there. Only
+  inline code may still break mid-token.
+
+### Changed
+- Em-dashes are rationed across the whole corpus: roughly 500 of them became
+  colons, commas, parentheses and full stops, taking the site from one every ~50
+  words down to a handful in total. The dash-per-paragraph cadence reads as
+  machine-written, and it was not how any of this was meant to sound. The
+  TL;DR label is now `**TL;DR:**`, project page titles are `"Client: Subtitle"`,
+  and page-title separators are the house `·` throughout.
+
 ## [1.8.0] - 2026-09-05
 
 ### Added
@@ -453,7 +477,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.5.1...v1.6.0

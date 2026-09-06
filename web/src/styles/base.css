@@ -57,9 +57,17 @@ html, body {
     --sz-mobile-titlebar-h: 28px;
     --sz-mobile-statusbar-h: 24px;
     --sz-mobile-tmuxbar-h: 40px;
+    /* iOS Safari retracts its bottom toolbar as you scroll, and
+       safe-area-inset-bottom flips between 0 and the home-indicator height
+       while it does. Feeding that into a height resizes the bottom chrome
+       mid-scroll, so the dynamic inset only ever positions; space is reserved
+       from safe-area-max-inset-bottom, which is constant by definition. The
+       nested fallback keeps Safari without the max variant on today's values. */
+    --sz-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --sz-safe-bottom-max: env(safe-area-max-inset-bottom, env(safe-area-inset-bottom, 0px));
     --sz-mobile-chrome-top: calc(var(--sz-mobile-titlebar-h) + env(safe-area-inset-top));
     --sz-mobile-chrome-bottom: calc(
-      var(--sz-mobile-statusbar-h) + var(--sz-mobile-tmuxbar-h) + env(safe-area-inset-bottom)
+      var(--sz-mobile-statusbar-h) + var(--sz-mobile-tmuxbar-h) + var(--sz-safe-bottom-max)
     );
   }
 
@@ -500,7 +508,10 @@ html[data-view="reading"] .code-gutter span { display: block; }
 /* ── Tables ──
    Vertical borders via border-left/right on cells.
    Horizontal lines via border-top/bottom so verticals connect cleanly.
-   Padding centers text between the horizontal borders. */
+   Padding centers text between the horizontal borders.
+   vertical-align: top instead of the default middle, because a cell that
+   wraps to several lines would otherwise float its text in the middle of the
+   row and stop lining up with its one-line neighbours. */
 .sz-prose table {
   width: 100%;
   border-collapse: separate;
@@ -512,6 +523,7 @@ html[data-view="reading"] .code-gutter span { display: block; }
   padding: 0 12px;
   text-align: left;
   line-height: var(--sz-line-height);
+  vertical-align: top;
   border: none;
   border-left: 1px solid var(--sz-surface1, #45475a);
 }
@@ -947,8 +959,33 @@ html[data-view="reading"] .sz-md-series { display: none; }
   .sz-series { margin: 20px 14px; }
   .sz-article__body.sz-prose { padding: 16px 16px 32px; }
   .sz-article__title { font-size: calc(var(--sz-font-size) * 1.3); }
-  /* Wide tables scroll instead of pushing the page width. */
-  .sz-prose table { display: block; overflow-x: auto; max-width: 100%; }
+  /* A four-column table needs ~380px of monospace at the body size, so at
+     phone width it used to scroll with no cue and simply hid its last column.
+     One step down in size and tighter cell padding put both tables in the
+     corpus at exactly the 330px column width, with every column on screen;
+     overflow-x stays as the safety net for anything wider still.
+     Only inline code may break mid-token: `anywhere` is the value that lowers
+     a cell's min-content width, and granting it to whole cells makes the auto
+     layout shrink prose columns far past what it needs (`secretfiles` came out
+     as "secret files"). Long identifiers like `credential_process` are the
+     cells that genuinely cannot wrap any other way. */
+  .sz-prose table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    font-size: 0.85em;
+  }
+  .sz-prose th, .sz-prose td { padding: 0 6px; }
+  .sz-prose th code, .sz-prose td code { overflow-wrap: anywhere; }
+  /* Cells wrap to three or four lines each at this width, so the rows need a
+     line between them to be readable at all. This stays under the specificity
+     of `tbody tr:last-child td`, so the table's outer --sz-surface1 edge still
+     wins over the lighter per-row separator. */
+  .sz-prose tbody td {
+    border-bottom: 1px solid var(--sz-surface0, #313244);
+    padding-top: calc(var(--sz-line-px) / 2);
+    padding-bottom: calc(var(--sz-line-px) / 2);
+  }
 }
 
 /* ═══════════════════════════════════════════════════
