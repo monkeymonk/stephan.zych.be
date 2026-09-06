@@ -181,16 +181,16 @@
   ],
   "community": [
     {
-      "label": "Internal tech talks — CBTW",
+      "label": "Internal tech talks · CBTW",
       "detail": "“Terminal utilities & advanced use cases”, “Conventions & patterns in production”"
     },
     {
-      "label": "Member — Réseau Entreprendre Bruxelles",
+      "label": "Member, Réseau Entreprendre Bruxelles",
       "detail": "2019 – 2023"
     }
   ],
   "education": [
-    { "school": "Académie Royale des Beaux-Arts de Bruxelles", "detail": "Bachelor — Plastic, Visual & Spatial Arts" },
+    { "school": "Académie Royale des Beaux-Arts de Bruxelles", "detail": "Bachelor: Plastic, Visual & Spatial Arts" },
     { "school": "Université Libre de Bruxelles", "detail": "Computer Science studies" },
     { "school": "École de Recherche Graphique (ERG)", "detail": "Visual Narration studies" },
     { "school": "CEPEGRA", "detail": "Graphic production training" }

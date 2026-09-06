@@ -1,6 +1,6 @@
 ---
 layout: page.njk
-title: whoami — Stéphan Zych
+title: whoami · Stéphan Zych
 heading: whoami
 description: man page for one (1) developer.
 permalink: /whoami/
@@ -23,15 +23,15 @@ STEPHAN(1)                   User Commands                   STEPHAN(1)
 
 ## DESCRIPTION
 
-Fifteen years of building web platforms, evolving from "the frontend guy" into the person who decides why your build is slow — and then fixes it. Co-founded **Cherry Pulp** (Brussels, 2013–2024): grew it 4 → 20 people, shipped 200+ platforms, exited to **CBTW** in 2023, where `stephan` now runs as Lead Developer.
+Fifteen years of building web platforms, evolving from "the frontend guy" into the person who decides why your build is slow, and then fixes it. Co-founded **Cherry Pulp** (Brussels, 2013–2024): grew it 4 → 20 people, shipped 200+ platforms, exited to **CBTW** in 2023, where `stephan` now runs as Lead Developer.
 
 Specialises in the foundations: architecture, tooling, conventions, and developer experience. Full-stack across the JavaScript and PHP ecosystems, with a frontend bias and an art-school backstory.
 
 ## OPTIONS
 
-- `--architecture` — define technical direction, stack choices, and the shape of the thing before a line is written.
-- `--tooling` — boilerplates, CLIs, and conventions, so projects boot the same way every time.
-- `--strong-opinions` — supplied by default. Cannot be disabled.
+- `--architecture`: define technical direction, stack choices, and the shape of the thing before a line is written.
+- `--tooling`: boilerplates, CLIs, and conventions, so projects boot the same way every time.
+- `--strong-opinions`: supplied by default. Cannot be disabled.
 
 ## ENVIRONMENT
 
@@ -39,15 +39,15 @@ Brussels, Belgium. `LANG=fr_BE` (native), `LC_MESSAGES=en` (professional). Runs 
 
 ## FILES
 
-- `~/.config/clients/` — Unicef, Oxfam, Engie, Delhaize, Telenet, KBC Brussels, RTL, RTBF, Monizze, …
-- `~/projects/` — 200+ entries, most still standing.
-- `~/cv` — the formal write-up, if you need the paper trail: [/cv/](/cv/) (or [print it to PDF](/cv/print/)).
+- `~/.config/clients/`: Unicef, Oxfam, Engie, Delhaize, Telenet, KBC Brussels, RTL, RTBF, Monizze, …
+- `~/projects/`: 200+ entries, most still standing.
+- `~/cv`: the formal write-up, if you need the paper trail. [/cv/](/cv/) (or [print it to PDF](/cv/print/)).
 
 ## BUGS
 
 - Will refactor your boilerplate uninvited.
 - Physically incapable of leaving a slow build alone.
-- Talks about the terminal at parties. Built an entire website inside one — you're in it.
+- Talks about the terminal at parties. Built an entire website inside one. You're in it.
 
 ## SEE ALSO
 

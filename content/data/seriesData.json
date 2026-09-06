@@ -1,11 +1,11 @@
 {
   "developer-ownership": {
     "name": "Developer ownership",
-    "description": "Why developers should own their working environment — and how to build one that travels: containerized editors, remote development, and a homelab that actually earns its keep."
+    "description": "Why developers should own their working environment, and how to build one that travels: containerized editors, remote development, and a homelab that actually earns its keep."
   },
   "ai-assisted-development": {
     "name": "AI-assisted development",
-    "description": "What coding agents need before they become useful — sandboxing them with Docker, weighing local models against hosted assistants, and designing a development environment that's safe to hand to an agent."
+    "description": "What coding agents need before they become useful: sandboxing them with Docker, weighing local models against hosted assistants, and designing a development environment that's safe to hand to an agent."
   },
   "game-dev-systems": {
     "name": "Game development systems",

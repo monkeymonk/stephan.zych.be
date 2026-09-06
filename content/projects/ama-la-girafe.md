@@ -1,6 +1,6 @@
 ---
 layout: project.njk
-title: AMA La Girafe — A digital classroom-correspondence platform
+title: "AMA La Girafe: A digital classroom-correspondence platform"
 description: A web platform connecting 12,000+ young students across 600+ Francophone schools for modern, pedagogical pen-pal exchanges.
 tags: [wordpress, platform, nonprofit, frontend]
 poster: /assets/content/ama-la-girafe.webp
@@ -14,7 +14,7 @@ role: Frontend architecture & platform foundations
 
 ## The challenge
 
-More than a website — a product. AMA pairs a physical "Set AMA" (comic book, plush mascot, adventure bag) with an online platform where classrooms exchange adventures, all wrapped in a curriculum and a solidarity model that donates sets to child-focused associations.
+More than a website: a product. AMA pairs a physical "Set AMA" (comic book, plush mascot, adventure bag) with an online platform where classrooms exchange adventures, all wrapped in a curriculum and a solidarity model that donates sets to child-focused associations.
 
 ## What we built
 
@@ -30,7 +30,7 @@ Frontend architecture and the technical foundations bridging the marketing site 
 
 ## The interesting part
 
-Bridging two very different surfaces — a public **WordPress** marketing site and a dedicated classroom application at a separate subdomain — meant designing a frontend architecture that held them together without coupling them. The deeper challenge was building for two audiences — teachers and 3–11 year-olds — sharing the same system.
+Bridging two very different surfaces, a public **WordPress** marketing site and a dedicated classroom application at a separate subdomain, meant designing a frontend architecture that held them together without coupling them. The deeper challenge was building for two audiences (teachers and 3–11 year-olds) sharing the same system.
 
 ## Outcome
 

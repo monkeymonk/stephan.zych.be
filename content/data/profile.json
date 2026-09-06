@@ -16,10 +16,10 @@
     ]
   },
   "timeline": [
-    { "hash": "a1b2c3d", "ref": "HEAD → main", "message": "Lead Developer @ CBTW (via STEPHANZYCH)", "date": "2023—now" },
-    { "hash": "d4e5f6a", "message": "Co-founder / CTO @ Cherry Pulp  (acquired)", "date": "2013—2024" },
-    { "hash": "9a8b7c1", "message": "Freelance full-stack developer", "date": "2011—2016" },
-    { "hash": "11f2e3d", "message": "Rich-media dev @ TBWA · Agency.com", "date": "2009—2013" }
+    { "hash": "a1b2c3d", "ref": "HEAD → main", "message": "Lead Developer @ CBTW (via STEPHANZYCH)", "date": "2023–now" },
+    { "hash": "d4e5f6a", "message": "Co-founder / CTO @ Cherry Pulp  (acquired)", "date": "2013–2024" },
+    { "hash": "9a8b7c1", "message": "Freelance full-stack developer", "date": "2011–2016" },
+    { "hash": "11f2e3d", "message": "Rich-media dev @ TBWA · Agency.com", "date": "2009–2013" }
   ],
   "stats": [
     { "value": 15, "suffix": "", "label": "years in" },
