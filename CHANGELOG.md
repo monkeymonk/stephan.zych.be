@@ -9,6 +9,17 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.9.1] - 2026-09-11
+
+### Fixed
+- The dashboard counted the site's own test runs as visitors. The tracker had
+  no `data-domains`, so it reported from any hostname that served the page:
+  `npm run dev` on localhost, and the headless browser runs behind
+  `verify:keys` and `check:a11y`. That is how `/styleguide/` and `/404.html`
+  arrived in the live figures from `127.0.0.1`. The tracker is now pinned to
+  the canonical host, and both harnesses answer the analytics host with an
+  empty script so a dropped attribute cannot quietly reopen it.
+
 ## [1.9.0] - 2026-09-11
 
 ### Fixed
@@ -552,7 +563,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.1...HEAD
+[1.9.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.7.0...v1.8.0

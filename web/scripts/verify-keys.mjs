@@ -20,7 +20,7 @@
 // come from audit.mjs and a11y-journey.mjs rather than being duplicated here.
 
 import { chromium } from 'playwright';
-import { serve, siteDir, requireSite, STATE_KEY } from '../audit.mjs';
+import { serve, siteDir, requireSite, STATE_KEY, blockAnalytics } from '../audit.mjs';
 import { createRun } from '../a11y-journey.mjs';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -142,6 +142,10 @@ async function open(base, browser, route, { keyShortcuts = true, viewport = DESK
     },
     [STATE_KEY, { keyShortcuts }],
   );
+  // These cases load real pages, and this runs in CI on every push. The
+  // tracker's data-domains guard already stops a 127.0.0.1 run reporting; this
+  // is the second lock. See blockAnalytics in ../audit.mjs.
+  await blockAnalytics(context);
   const page = await context.newPage();
   const errors = [];
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });

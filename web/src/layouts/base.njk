@@ -83,8 +83,16 @@
   {# Self-hosted, cookieless Umami — no cookies, nothing written to storage, so
      no consent banner. data-do-not-track is required to make the tracker honour
      the browser's DNT signal: its DNT check is gated behind this attribute, so
-     without it the signal is read and ignored. #}
-  <script defer src="https://analytics.zych.be/script.js" data-website-id="{{ site.analyticsId }}" data-tag="web" data-do-not-track="true"></script>
+     without it the signal is read and ignored.
+
+     data-domains is the guard that keeps the dashboard honest. The tracker's
+     own trackingDisabled() bails when the list is set and location.hostname is
+     not in it, and without it every context that serves this HTML reports as
+     real traffic: `npm run dev` on localhost, and the headless browser runs in
+     `verify:keys` and `check:a11y` on every push. That is how /styleguide/ and
+     /404.html arrived in the live dashboard from 127.0.0.1. The Pages path uses
+     the same custom domain (web/src/CNAME), so one host covers both. #}
+  <script defer src="https://analytics.zych.be/script.js" data-website-id="{{ site.analyticsId }}" data-domains="{{ site.url | hostname }}" data-tag="web" data-do-not-track="true"></script>
   {%- endif %}
 </head>
 <body>

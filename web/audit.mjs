@@ -155,7 +155,26 @@ export async function themedContext(browser, theme, extra = {}) {
     },
     [STATE_KEY, { theme }],
   );
+  await blockAnalytics(context);
   return context;
+}
+
+/**
+ * Every harness that opens a page routes through here. base.njk's tracker
+ * carries `data-domains`, so a run against 127.0.0.1 reports nothing anyway —
+ * this is the second lock, because the first one is a template attribute that
+ * someone could drop, and these runs now happen in CI on every push. Before
+ * either existed, verification traffic landed in the live dashboard.
+ *
+ * Fulfilled with an empty script rather than aborted: an aborted request is a
+ * failed resource load, which shows up as a console error and fails the
+ * harness's own "no console errors" cases (18 of them on `/` alone). An empty
+ * 200 is a no-op tracker with nothing to report and nothing to log.
+ */
+export async function blockAnalytics(context) {
+  await context.route('**://analytics.zych.be/**', route =>
+    route.fulfill({ status: 200, contentType: 'application/javascript', body: '' }),
+  );
 }
 
 /** True once every stylesheet <link> in <head> has resolved. */

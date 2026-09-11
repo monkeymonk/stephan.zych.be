@@ -126,6 +126,19 @@ module.exports = function(eleventyConfig) {
     return (content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   });
 
+  // Host of the canonical site URL, for the analytics tracker's `data-domains`
+  // guard. Without it the tracker reports from every hostname it is served on:
+  // a local `npm run dev`, a headless CI run against the built site, anything.
+  // That is not hypothetical — it put /styleguide/ and /404.html into the real
+  // dashboard, from verification runs on 127.0.0.1.
+  eleventyConfig.addFilter('hostname', url => {
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return String(url || '').replace(/^https?:\/\//, '').replace(/[/:].*$/, '');
+    }
+  });
+
   // Read a local WebP's intrinsic dimensions (no dependency, CI-safe) so poster
   // <img>s can carry width/height and reserve layout space — no content shift
   // as the image loads. Returns "" on any failure so it never breaks a build.
