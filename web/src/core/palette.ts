@@ -2,6 +2,13 @@ export interface PaletteSource {
   id: string;
   prefix: string;
   placeholder: string;
+  /**
+   * The surface's accessible name, announced when the dialog opens. It lives
+   * here rather than in the component because one element serves every source:
+   * deriving a label from the id produced "commands palette", and hardcoding
+   * one would have named search after commands. A source describes itself.
+   */
+  title: string;
   getItems(query: string): PaletteItem[] | Promise<PaletteItem[]>;
   execute(item: PaletteItem, args?: string[]): void;
 }

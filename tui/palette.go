@@ -25,7 +25,7 @@ func (m *Model) navItems() []paletteItem {
 		icon := iconGlyph(tab.Icon)
 		switch tab.Name {
 		case "home":
-			out = append(out, paletteItem{icon, "home", "go to start", func(m *Model) tea.Cmd { m.screen = screenHome; m.cursor = 0; return nil }})
+			out = append(out, paletteItem{icon, "home", "go to start", func(m *Model) tea.Cmd { m.goHome(); return nil }})
 		case "projects":
 			out = append(out, paletteItem{icon, "projects", "section", func(m *Model) tea.Cmd { m.enterList("projects", "projects", m.content.Projects); return nil }})
 		case "blog":
@@ -34,7 +34,7 @@ func (m *Model) navItems() []paletteItem {
 			name := tab.Name
 			out = append(out, paletteItem{icon, name, "page", func(m *Model) tea.Cmd {
 				if a, ok := m.content.Pages[name]; ok {
-					m.openReader(a, screenHome)
+					m.openReader(a)
 				}
 				return nil
 			}})
@@ -47,7 +47,7 @@ func (m *Model) navItems() []paletteItem {
 	out = append(out,
 		paletteItem{"󰈙", "whoami", "man page for one (1) developer", func(m *Model) tea.Cmd {
 			if a, ok := m.content.Pages["whoami"]; ok {
-				m.openReader(a, screenHome)
+				m.openReader(a)
 			}
 			return nil
 		}},
@@ -56,7 +56,7 @@ func (m *Model) navItems() []paletteItem {
 		paletteItem{"󰊕", "42", "the answer", func(m *Model) tea.Cmd { m.message = "The answer to life, the universe, and everything."; return nil }},
 		paletteItem{"󰊠", "matrix", "enter the Matrix", func(m *Model) tea.Cmd { return m.startEffect("matrix") }},
 		paletteItem{"󰈸", "party", "celebrate!", func(m *Model) tea.Cmd { return m.startEffect("party") }},
-		paletteItem{"󰋽", "help", "keys & commands", func(m *Model) tea.Cmd { m.returnTo = screenHome; m.screen = screenHelp; return nil }},
+		paletteItem{"󰋽", "help", "keys & commands", func(m *Model) tea.Cmd { m.openHelp(); return nil }},
 		paletteItem{"󰍃", "quit", "disconnect", func(m *Model) tea.Cmd { return tea.Quit }},
 	)
 	return out
@@ -66,7 +66,7 @@ func (m *Model) articleItems() []paletteItem {
 	out := []paletteItem{}
 	for _, a := range m.allArticles() {
 		a := a
-		out = append(out, paletteItem{"󰈙", a.Title, a.Section, func(m *Model) tea.Cmd { m.openReader(a, screenHome); return nil }})
+		out = append(out, paletteItem{"󰈙", a.Title, a.Section, func(m *Model) tea.Cmd { m.openReader(a); return nil }})
 	}
 	return out
 }
@@ -95,8 +95,10 @@ func (m Model) paletteFiltered() []paletteItem {
 }
 
 // openPalette enters the palette overlay with the given prefix (":" or "/").
+// Claiming the slot is how the palette displaces whatever held it: `:` over an
+// open link picker closes the picker, exactly as on the web.
 func (m Model) openPalette(prefix string) (tea.Model, tea.Cmd) {
-	m.paletteOpen = true
+	m.overlay = overlayPalette
 	m.palettePrefix = prefix
 	m.message = ""
 	m.input.Prompt = prefix
@@ -112,38 +114,11 @@ func (m Model) openPalette(prefix string) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m Model) updatePalette(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	items := m.paletteFiltered()
-	switch msg.String() {
-	case "esc", "ctrl+c":
-		m.paletteOpen = false
-		m.input.Blur()
-		return m, nil
-	case "enter":
-		if len(items) > 0 && m.cursor < len(items) {
-			m.paletteOpen = false
-			m.input.Blur()
-			return m, items[m.cursor].action(&m)
-		}
-		return m, nil
-	case "tab":
-		// autocomplete the input to the highlighted item
-		if len(items) > 0 && m.cursor < len(items) {
-			m.input.SetValue(items[m.cursor].label)
-			m.input.CursorEnd()
-		}
-		return m, nil
-	case "up", "ctrl+p", "ctrl+k":
-		if m.cursor > 0 {
-			m.cursor--
-		}
-		return m, nil
-	case "down", "ctrl+n", "ctrl+j":
-		if m.cursor < len(items)-1 {
-			m.cursor++
-		}
-		return m, nil
-	}
+// paletteInput hands a keystroke the keymap left unclaimed to the text input,
+// then re-clamps the selection because filtering can shrink the list under it.
+// This is the palette's own widget mechanics — what the web leaves out of the
+// registry — and the only reason an unresolved key still reaches the palette.
+func (m Model) paletteInput(msg tea.KeyMsg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
 	if f := m.paletteFiltered(); m.cursor >= len(f) {

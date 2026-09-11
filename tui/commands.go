@@ -13,18 +13,6 @@ type commandSpec struct {
 	desc  string
 }
 
-var keySpecs = []commandSpec{
-	{"j / k  ·  ↑ / ↓", "move"},
-	{"g / G", "jump to top / bottom"},
-	{"enter / l", "open"},
-	{"[ / ]", "prev / next article"},
-	{"esc / h / q", "back"},
-	{":", "command palette"},
-	{"/", "search all content"},
-	{"tab", "autocomplete the selection"},
-	{"?", "toggle this help"},
-}
-
 var paletteSpecs = []commandSpec{
 	{": home / projects / blog", "jump around"},
 	{": about / contact / whoami", "open a page"},
@@ -57,8 +45,13 @@ func (m Model) renderHelp() string {
 
 	var b strings.Builder
 	b.WriteString(head.Render("Keys") + "\n\n")
-	for _, k := range keySpecs {
-		b.WriteString("  " + key.Render(padRight(k.usage, 22)) + desc.Render(k.desc) + "\n")
+	// Straight off the keymap. The hand-written table that used to sit above
+	// this said "esc / h / q → back" while `q` on the home screen
+	// disconnected without asking. A row can now only describe the binding it
+	// names, or vanish.
+	for _, kb := range helpBindings() {
+		h := kb.keys.Help()
+		b.WriteString("  " + key.Render(padRight(h.Key, 22)) + desc.Render(h.Desc) + "\n")
 	}
 	b.WriteString("\n" + head.Render("Command palette  (:)") + "\n\n")
 	for _, c := range paletteSpecs {

@@ -102,11 +102,10 @@ func (m Model) followLink(l pageLink) (tea.Model, tea.Cmd) {
 	if l.internal {
 		switch l.kind {
 		case "home":
-			m.screen = screenHome
-			m.cursor = 0
+			m.goHome()
 		case "page":
 			if a, ok := m.content.Pages[l.target]; ok {
-				m.openReader(a, m.screen)
+				m.openReader(a)
 			}
 		case "list":
 			if l.target == "blog" {
@@ -121,7 +120,7 @@ func (m Model) followLink(l pageLink) (tea.Model, tea.Cmd) {
 			}
 			for _, a := range items {
 				if a.Slug == l.target {
-					m.openReader(a, m.screen)
+					m.openReader(a)
 					break
 				}
 			}
@@ -163,34 +162,6 @@ func linkifyOSC8(s string) string {
 	return reAbsURL.ReplaceAllStringFunc(s, func(u string) string {
 		return "\x1b]8;;" + u + "\x1b\\" + u + "\x1b]8;;\x1b\\"
 	})
-}
-
-// updateLinks drives the link-picker overlay.
-func (m Model) updateLinks(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.String() {
-	case "esc", "q", "l":
-		m.linksOpen = false
-		return m, nil
-	case "up", "k":
-		if m.linkCursor > 0 {
-			m.linkCursor--
-		}
-	case "down", "j":
-		if m.linkCursor < len(m.readerLinks)-1 {
-			m.linkCursor++
-		}
-	case "g":
-		m.linkCursor = 0
-	case "G":
-		m.linkCursor = len(m.readerLinks) - 1
-	case "enter":
-		if m.linkCursor >= 0 && m.linkCursor < len(m.readerLinks) {
-			l := m.readerLinks[m.linkCursor]
-			m.linksOpen = false
-			return m.followLink(l)
-		}
-	}
-	return m, nil
 }
 
 // viewLinks renders the centered link-picker over a dotted backdrop.

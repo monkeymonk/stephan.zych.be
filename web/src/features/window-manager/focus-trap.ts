@@ -1,4 +1,5 @@
 import { deepActiveElement } from '../../core/keyboard.js';
+import { overlayRegistry } from '../../core/overlays.js';
 
 // Generic focus trap — keeps Tab/Shift+Tab cycling within a container.
 // Works across shadow DOM boundaries by walking the composed tree.
@@ -80,7 +81,12 @@ export interface FocusTrapOptions {
    * focused at activate() time — the thing that opened the modal.
    */
   returnFocusTo?: HTMLElement | null;
-  /** Invoked when Escape releases the trap, so the owner can close its UI. */
+  /**
+   * Invoked when Escape releases the trap, so the owner can close its UI.
+   * Defaults to closing the current overlay through the registry — Escape
+   * means one thing site-wide, and a trapped surface that is already a
+   * registered overlay has nothing of its own to add.
+   */
   onEscape?: () => void;
 }
 
@@ -99,7 +105,9 @@ export class FocusTrap {
       if (!this.active) return;
 
       // A trap without an exit is itself the 2.1.2 failure. Escape always
-      // releases and hands focus back to whatever opened the modal.
+      // releases and hands focus back to whatever opened the modal. The
+      // capture-phase preventDefault below is what keeps the keymap's own
+      // `overlay.escape` from closing a second surface behind this one.
       if (e.key === 'Escape') {
         e.preventDefault();
         const onEscape = this.onEscape;
@@ -156,7 +164,7 @@ export class FocusTrap {
     this.cachedFocusable = null;
     const previous = options.returnFocusTo ?? deepActiveElement();
     this.returnFocusTo = previous instanceof HTMLElement ? previous : null;
-    this.onEscape = options.onEscape ?? null;
+    this.onEscape = options.onEscape ?? (() => overlayRegistry.closeCurrent('user'));
     document.addEventListener('keydown', this.handleKeydown, true);
     this.observer = new MutationObserver(this.invalidateCache);
     this.observer.observe(this.root, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'tabindex'] });

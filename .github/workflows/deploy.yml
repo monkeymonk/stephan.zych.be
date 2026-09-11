@@ -82,6 +82,81 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - run: node web/scripts/check-content-assets.mjs
 
+  # A key's meaning is declared in the web keymap, the TUI table and the copy
+  # both runtimes render, and nothing but this script makes the three agree.
+  # Whole-repo, like check-cv and for the same reason: the web image's context
+  # excludes tui/, so it cannot live in `npm run build`.
+  # Pure node, no dependencies, so no npm install is needed.
+  check-keybindings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - run: node scripts/check-keybindings.mjs
+
+  # The architecture gate: global keydown listeners only in the four sanctioned
+  # files, no DOM probes of overlay state, no `open`-state component without an
+  # OverlayController, every feature and component group documented, no custom
+  # element in the wiring layer. The keyboard and overlay layers were
+  # centralized precisely because those rules had decayed once already.
+  # Pure node, no dependencies, so no npm install is needed.
+  check-structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - run: node web/scripts/check-structure.mjs
+
+  # /styleguide/ generates its component roster from the source tree, so it can
+  # never miss a row — this guards the other half, that every row is either
+  # demonstrated live or in the chrome reference table.
+  # Pure node, no dependencies, so no npm install is needed.
+  check-styleguide:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - run: node web/scripts/check-styleguide.mjs
+
+  # The web keyboard harness: 99 cases driven against the built site in both
+  # `keyShortcuts` states. Unlike the checks above it needs node modules, a
+  # browser and a build — it reads web/_site/, so `npm run build` has to have
+  # run first. Node setup mirrors the Pages job at the bottom of this file.
+  verify-keys:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+        env:
+          WAKAPI_API_URL: ${{ secrets.WAKAPI_API_URL }}
+          WAKAPI_API_KEY: ${{ secrets.WAKAPI_API_KEY }}
+      - run: npm run verify:keys
+
+  # The SSH TUI keyboard harness: 29 cases driven over a pseudo-terminal. It
+  # builds the Go binary itself, so it needs the toolchain govulncheck already
+  # sets up here; node is preinstalled on the runner and the harness has no npm
+  # dependencies.
+  verify-tui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.26.6"
+          cache-dependency-path: tui/go.sum
+      # The analytics sender swallows every error by design, so a broken
+      # collector config cannot be seen at runtime — only these tests catch it.
+      - run: go test ./...
+        working-directory: tui
+      - run: node scripts/verify-tui.mjs
+
   # Scan the Go module for known vulnerabilities. Reports independently — does
   # not gate deploy (add it to `deploy.needs` if you want it to block).
   govulncheck:
@@ -97,7 +172,15 @@ jobs:
         working-directory: tui
 
   deploy:
-    needs: [images, check-cv, check-content-assets]
+    needs:
+      - images
+      - check-cv
+      - check-content-assets
+      - check-keybindings
+      - check-structure
+      - check-styleguide
+      - verify-keys
+      - verify-tui
     runs-on: ubuntu-latest
     steps:
       - name: Pull images and restart the stack

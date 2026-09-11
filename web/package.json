@@ -1,13 +1,18 @@
 {
   "name": "stephan.zych.be",
-  "version": "1.8.1",
+  "version": "1.9.0",
   "description": "",
   "scripts": {
     "dev": "concurrently \"npx @11ty/eleventy --serve\" \"node esbuild.config.mjs --watch\"",
     "build": "npx @11ty/eleventy && node esbuild.config.mjs",
     "check:cv": "node scripts/check-cv-drift.mjs",
     "check:assets": "node scripts/check-content-assets.mjs",
+    "check:keybindings": "node ../scripts/check-keybindings.mjs",
+    "check:structure": "node scripts/check-structure.mjs",
+    "check:styleguide": "node scripts/check-styleguide.mjs",
     "check:a11y": "node scripts/check-a11y.mjs",
+    "verify:keys": "node scripts/verify-keys.mjs",
+    "check:all": "npm run check:cv && npm run check:assets && npm run check:keybindings && npm run check:structure && npm run check:styleguide && npm run check:a11y && npm run verify:keys",
     "screenshot": "node screenshot.mjs",
     "audit": "node audit.mjs",
     "clean": "rm -rf _site dist"

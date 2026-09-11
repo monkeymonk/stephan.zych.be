@@ -27,7 +27,13 @@ export class SzBackground extends LitElement {
         radial-gradient(ellipse at 80% 20%, rgba(137, 180, 250, 0.08) 0%, transparent 50%),
         radial-gradient(ellipse at 50% 80%, rgba(203, 166, 247, 0.06) 0%, transparent 50%),
         linear-gradient(160deg, #0a0a12 0%, #0d0d1a 40%, #0a0a12 100%);
-      animation: bg-drift 30s ease-in-out infinite alternate;
+      /* Stepped, not eased. This animates the filter property on a
+         viewport-sized fixed layer, so every distinct value is a full-viewport
+         repaint — measured at one per frame, forever, on every page. The drift
+         is 15deg over 30s: half a degree a second, which no eye resolves frame
+         to frame. Fifteen steps keep the same slow wander for one repaint
+         every two seconds. */
+      animation: bg-drift 30s steps(15, end) infinite alternate;
       z-index: 0;
     }
 

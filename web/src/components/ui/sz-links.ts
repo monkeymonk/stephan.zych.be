@@ -1,6 +1,9 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
-import { deepActiveElement, singleKeyAllowed } from '../../core/keyboard.js';
+import { deepActiveElement } from '../../core/keyboard.js';
+import { KeymapController } from '../../core/keymap-controller.js';
+import { OverlayController } from '../../core/overlay-controller.js';
+import type { CloseReason } from '../../core/overlays.js';
 import { scrollbarStyles, mobileQuery } from '../../core/styles.js';
 
 interface LinkItem {
@@ -24,6 +27,47 @@ export class SzLinks extends LitElement {
 
   /** What to hand focus back to when the picker closes. */
   private invoker: HTMLElement | null = null;
+
+  private overlayCtrl = new OverlayController(this, {
+    id: 'links',
+    kind: 'modal',
+    onClose: (reason) => this.hide(reason),
+  });
+
+  // The panel keys are `overlay:links`: they resolve only while the picker is
+  // the current modal, which is also the WCAG 2.1.4 exemption that leaves them
+  // ungated — the surface owns focus, so they cannot swallow anything the user
+  // is typing. `keys` is a sequence and never an alternation, so `j`/ArrowDown
+  // is two registrations of one id; the description rides the character key
+  // only, so help generation dedupes by id without special-casing.
+  private keysCtrl = new KeymapController(this, [
+    { id: 'links.open', keys: ['l'], scope: 'page', chars: true,
+      description: 'List links in the current article',
+      // Desktop-only on purpose: there is no `l` key to press on a phone, and
+      // the overlay would cover the article it lists.
+      when: () => !mobileQuery.matches,
+      run: () => this.show() },
+    { id: 'links.move.down', keys: ['j'], scope: 'overlay:links', chars: false,
+      run: () => { this.move(1); return true; } },
+    { id: 'links.move.down', keys: ['ArrowDown'], scope: 'overlay:links', chars: false,
+      run: () => { this.move(1); return true; } },
+    { id: 'links.move.up', keys: ['k'], scope: 'overlay:links', chars: false,
+      run: () => { this.move(-1); return true; } },
+    { id: 'links.move.up', keys: ['ArrowUp'], scope: 'overlay:links', chars: false,
+      run: () => { this.move(-1); return true; } },
+    { id: 'links.first', keys: ['g'], scope: 'overlay:links', chars: false,
+      run: () => { this.selected = 0; return true; } },
+    { id: 'links.last', keys: ['G'], scope: 'overlay:links', chars: false,
+      run: () => { this.selected = this.items.length - 1; return true; } },
+    { id: 'links.follow', keys: ['Enter'], scope: 'overlay:links', chars: false,
+      run: () => { this.follow(); return true; } },
+    { id: 'links.follow', keys: [' '], scope: 'overlay:links', chars: false,
+      run: () => { this.follow(); return true; } },
+    { id: 'links.close', keys: ['q'], scope: 'overlay:links', chars: false,
+      run: () => { this.close(); return true; } },
+    { id: 'links.close', keys: ['l'], scope: 'overlay:links', chars: false,
+      run: () => { this.close(); return true; } },
+  ]);
 
   static styles = [
     scrollbarStyles,
@@ -119,21 +163,6 @@ export class SzLinks extends LitElement {
     `,
   ];
 
-  connectedCallback() {
-    super.connectedCallback();
-    document.addEventListener('keydown', this.onKey);
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    document.removeEventListener('keydown', this.onKey);
-  }
-
-  // Reflect open state to the host so global wiring (e.g. [ / ] article nav)
-  // can yield while the picker owns the keyboard. Written synchronously in
-  // setOpen(), not here: Lit's update runs a microtask later, and a document
-  // keydown dispatch reaches its other listeners in between.
-  //
   // The panel declares aria-modal, which tells assistive tech to hide the rest
   // of the document — so focus has to actually be in here, or the AT user gets
   // an unreachable dialog and a hidden page. The listbox itself takes focus and
@@ -149,9 +178,29 @@ export class SzLinks extends LitElement {
     }
   }
 
-  private setOpen(open: boolean) {
-    this.open = open;
-    this.toggleAttribute('open', open);
+  /**
+   * Open the picker and take the keyboard. Returns false when the page has no
+   * prose links to list, which leaves the `l` keystroke entirely alone.
+   */
+  private show(): boolean {
+    const items = this.collect();
+    if (items.length === 0) return false;
+    const invoker = deepActiveElement();
+    this.invoker = invoker instanceof HTMLElement ? invoker : null;
+    this.items = items;
+    this.selected = 0;
+    this.open = true;
+    this.overlayCtrl.claim();
+    return true;
+  }
+
+  /** The registry's close callback — it decides when the picker goes away. */
+  private hide(reason: CloseReason) {
+    // A superseded picker must not take focus back: the overlay that displaced
+    // it already holds it. `updated` hands focus to whatever invoker is still
+    // recorded, so drop it.
+    if (reason === 'superseded') this.invoker = null;
+    this.open = false;
   }
 
   // Gather the article-body links at open time, deduped by destination.
@@ -176,36 +225,14 @@ export class SzLinks extends LitElement {
     return items;
   }
 
-  private onKey = (e: KeyboardEvent) => {
-    if (this.open) {
-      switch (e.key) {
-        case 'Escape': case 'l': case 'q': e.preventDefault(); this.close(); return;
-        case 'ArrowDown': case 'j': e.preventDefault(); this.move(1); return;
-        case 'ArrowUp': case 'k': e.preventDefault(); this.move(-1); return;
-        case 'g': e.preventDefault(); this.selected = 0; return;
-        case 'G': e.preventDefault(); this.selected = this.items.length - 1; return;
-        case 'Enter': case ' ': e.preventDefault(); this.follow(); return;
-        // aria-modal hides the document behind us, so Tab must not walk into
-        // it. The listbox is the dialog's only focusable, so holding still is
-        // the whole trap.
-        case 'Tab': e.preventDefault(); this.listEl?.focus(); return;
-      }
-      return;
-    }
-
-    if (e.key !== 'l' || e.ctrlKey || e.metaKey || e.altKey) return;
-    if (!singleKeyAllowed()) return;
-    // Desktop-only on purpose: there is no `l` key to press on a phone, and
-    // the overlay would cover the article it lists.
-    if (mobileQuery.matches) return;
-    const items = this.collect();
-    if (items.length === 0) return;
+  // aria-modal hides the document behind us, so Tab must not walk into it. The
+  // listbox is the dialog's only focusable, so holding still is the whole trap.
+  // Intrinsic widget mechanics: bound to the dialog itself, never registered,
+  // so it holds with no keymap mounted at all.
+  private onDialogKey = (e: KeyboardEvent) => {
+    if (e.key !== 'Tab') return;
     e.preventDefault();
-    const invoker = deepActiveElement();
-    this.invoker = invoker instanceof HTMLElement ? invoker : null;
-    this.items = items;
-    this.selected = 0;
-    this.setOpen(true);
+    this.listEl?.focus();
   };
 
   private move(delta: number) {
@@ -218,7 +245,7 @@ export class SzLinks extends LitElement {
   }
 
   private close() {
-    this.setOpen(false);
+    this.overlayCtrl.release();
   }
 
   private follow() {
@@ -230,7 +257,13 @@ export class SzLinks extends LitElement {
   render() {
     if (!this.open) return nothing;
     return html`
-      <div class="overlay" role="dialog" aria-modal="true" aria-label="Links in this article">
+      <div
+        class="overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Links in this article"
+        @keydown=${this.onDialogKey}
+      >
         <div class="panel">
           <div class="head">
             <span class="title">🔗 links in this article</span>

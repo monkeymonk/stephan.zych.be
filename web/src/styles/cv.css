@@ -236,9 +236,18 @@
 
 /* ── Work experience — a timeline rail, one marker per role ── */
 
+/* The rail hangs on the gutter the rest of the CV already uses: one character
+   in from the section's edge, which is where the `##` heading marker is
+   centred (its two mono glyphs span 0..2ch, centre 1ch) and where the plain
+   lists put their bullets. It used to sit at the section's left edge instead,
+   half a pixel outside the content box, so the whole timeline read as shifted
+   away from every other section's text. Text stays at 23px: the margin is
+   taken back out of the padding. */
 .sz-cv__job {
+  --sz-cv-rail: 1ch;
   position: relative;
-  padding: 0 0 calc(var(--sz-line-px) * 1.5) 22px;
+  margin-left: calc(var(--sz-cv-rail) - 0.5px);
+  padding: 0 0 calc(var(--sz-line-px) * 1.5) calc(23px - var(--sz-cv-rail) + 0.5px);
   border-left: 1px solid color-mix(in srgb, var(--sz-accent, #89b4fa) 28%, transparent);
 }
 .sz-cv__job:last-child {
@@ -274,9 +283,12 @@
   margin: 0;
   color: var(--sz-subtext0, #a6adc8);
 }
+/* 1.2em, matching the `left: -1.2em` below, so each bullet hangs exactly on
+   the entry title's column instead of 0.3em to the right of it. cv-print.css
+   already uses 1.2em here for the same reason. */
 .sz-cv__job-list {
   margin: var(--sz-line-px) 0 0;
-  padding-left: 1.5em;
+  padding-left: 1.2em;
   list-style: none;
 }
 .sz-cv__job-list li {

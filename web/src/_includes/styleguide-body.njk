@@ -1,4 +1,7 @@
-Internal documentation. A complete, living showcase of every markdown element and style the site renders. Hidden from navigation, sitemap, and search (and `noindex`). Keep it in sync when styles change.
+{% import "share-links.njk" as share %}
+Internal documentation: every markdown element, every content widget, every component and every design token the site ships. Hidden from navigation, sitemap and search (and `noindex`).
+
+The component roster and the token swatches at the foot of the page are generated from the source tree at build time, so they cannot go stale. `web/scripts/check-styleguide.mjs` fails the build when a component is documented in neither a live demo nor the chrome reference table, which is what makes the claim to completeness checkable rather than aspirational.
 
 ## Article header
 
@@ -174,6 +177,39 @@ This site is built with:
 <dd>Encapsulated DOM tree attached to an element, hidden from the main document.</dd>
 </dl>
 
+## Prose patterns
+
+Markup the build transforms on its way out, and the one style rule that shows itself only at phone width.
+
+### External links
+
+Every absolute link to another host gets `target="_blank"` and `rel="noopener noreferrer"` added by the `externalLinks` transform in `.eleventy.js`: [the Lit docs](https://lit.dev) leaves the site in a new tab, [the blog index](/blog/) does not. Links that already declare a `target`, and links back to this host, are left untouched.
+
+Pair an external link with the `external` glyph where the destination deserves a visual cue: <a href="https://lit.dev">lit.dev <sz-icon name="external" size="12"></sz-icon></a>
+
+### Keyboard hints
+
+`<kbd>` is the element for a key the reader is meant to press. A chord joins keys with `+`, a sequence separates them with a space, exactly as the command palette's own help page prints them.
+
+<kbd>Alt</kbd> + <kbd>1</kbd> switches to the first tab, <kbd>g</kbd> <kbd>g</kbd> jumps to the top of the document, and <kbd>?</kbd> opens the man page.
+
+### Video embeds
+
+A bare `<iframe>` in the source is wrapped in a `.embed-container` by `sz-markdown`, which snaps it to the nearest line-height multiple so the embed keeps the page's baseline grid. Only `youtube-nocookie.com` is reachable: the CSP declares it as the single permitted `frame-src`.
+
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/0xssf2x0whg" title="Cherry Pulp" allowfullscreen></iframe>
+
+### Wide tables on narrow screens
+
+Below 768px a prose table drops one font step, tightens its cell padding and becomes a horizontally scrollable block. The table below is deliberately wider than a phone column, so it is the one that demonstrates the scroll rather than the fit.
+
+| Binding | Scope | WCAG 2.1.4 gate | Source | Notes |
+|---|---|---|---|---|
+| `:` `/` `?` | `global` | not gated | `sz-palette.ts` | The switch's own control surface |
+| `l` | `page` | gated | `sz-links.ts` | Desktop only |
+| `Alt`+`1`–`9` | `page` | not gated | `sz-tmux-bar.ts` | Modified, so exempt |
+| `Escape` | `always` | not gated | `core/keymap.ts` | Acts above every other question |
+
 ## Components
 
 Interactive widgets, droppable into any markdown page or article via custom tags (all data shown here is dummy). Toggle **markdown / html** above to see how the panels — and the article header/footer — adapt to each view.
@@ -231,11 +267,137 @@ A sticky outline (scroll-spy: highlights the current section, click to jump) plu
 
 <sz-toc></sz-toc>
 
+### Liquid glass — `sz-glass`
+
+A material, not a widget: it renders a refractive, tinted, specular-lit surface behind its slot and knows nothing about what it wraps. The refraction reads the wallpaper through the terminal window, so it looks its best over an image and merely frosted over flat colour. Touch devices and reduced-motion users keep the blur and lose the displacement, which is the expensive half.
+
+<sz-glass style="--glass-radius: 10px">
+<div style="padding: 14px 16px">Anything can go under glass: this is a plain <code>div</code>.</div>
+</sz-glass>
+
+### Icon set — `sz-icon`
+
+Inline SVG from a fixed set declared in `sz-icon.ts`: no sprite request, no icon font, no arbitrary names. `size` is a px square, and the stroke is `currentColor`, so an icon inherits the colour of the text around it. All fifteen:
+
+<div style="display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center">
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="folder" size="18"></sz-icon> <code>folder</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="folder-open" size="18"></sz-icon> <code>folder-open</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="file" size="18"></sz-icon> <code>file</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="git-branch" size="18"></sz-icon> <code>git-branch</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="github" size="18"></sz-icon> <code>github</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="linkedin" size="18"></sz-icon> <code>linkedin</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="mail" size="18"></sz-icon> <code>mail</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="music" size="18"></sz-icon> <code>music</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="sun" size="18"></sz-icon> <code>sun</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="moon" size="18"></sz-icon> <code>moon</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="terminal" size="18"></sz-icon> <code>terminal</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="search" size="18"></sz-icon> <code>search</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="x" size="18"></sz-icon> <code>x</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="coffee" size="18"></sz-icon> <code>coffee</code></span>
+<span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="external" size="18"></sz-icon> <code>external</code></span>
+</div>
+
+### View toggle — `sz-view-toggle`
+
+The control in the toolbar at the top of this page, which is where every page that renders through `page.njk` gets one. It writes the persisted `appState.viewMode`, applied globally as `<html data-view>`, so this second instance and the toolbar's move together: flip either, or run `:set view code`. Both carry `class="sz-page__view"`, which is what hides them below 768px, where the reading view is forced.
+
+<sz-view-toggle class="sz-page__view"></sz-view-toggle>
+
 ## Article footer
 
 <div class="sz-md-footer"><div class="md-hr">---</div><div class="md-foot">written by <strong>Author Name</strong> · <a href="/about/">~/about</a></div><div class="md-foot">share: <a href="#">linkedin</a> · <a href="#">x</a> · <a href="#">bluesky</a> · <a href="#">email</a></div></div>
 <footer class="sz-article__footer"><div class="sz-article__author"><div class="sz-article__author-name">Author Name</div><p class="sz-article__author-bio">A short author bio line. <a href="/about/">More →</a></p></div><div class="sz-article__share"><span class="sz-article__share-label">Share</span><a href="#">LinkedIn</a><a href="#">X</a><a href="#">Bluesky</a><a href="#">Email</a></div></footer>
 
+## Article furniture
+
+Blocks the article layout assembles around the body rather than anything markdown produces. Each has a code-view twin, so both are rendered here and the view toggle above swaps between them.
+
+### Series navigation
+
+`_includes/series-nav.njk` in the reading view, `_includes/series-source.njk` in the code view. Both read the article's `series` key and the sibling posts from the blog collection, so neither can be included on a page that is not part of a series: the markup below is a hand-built copy of what they emit.
+
+<div class="sz-md-series"><div class="md-series-lead"><span class="md-series-key">series:</span> part 2 of <strong>An Example Series</strong></div><ol class="md-series-list"><li class="md-series-item"><span class="md-series-num">01.</span> <a href="/styleguide/">The first part</a></li><li class="md-series-item is-current"><span class="md-series-num">02.</span> <strong>The part you are reading</strong> <span class="md-series-here">← you're reading it</span></li><li class="md-series-item"><span class="md-series-num">03.</span> <a href="/styleguide/">The third part</a></li></ol></div>
+<nav class="sz-series" aria-label="Example article series"><p class="sz-series__label"><span class="sz-series__kicker">Series</span> Part 2 of <strong>An Example Series</strong></p><p class="sz-series__desc">A one-line description of what the series covers.</p><ol class="sz-series__list"><li class="sz-series__item"><a class="sz-series__row" href="/styleguide/"><span class="sz-series__num">01</span><span class="sz-series__title">The first part</span><span class="sz-series__arrow">→</span></a></li><li class="sz-series__item is-current"><span class="sz-series__row" aria-current="page"><span class="sz-series__num">02</span><span class="sz-series__title">The part you are reading</span><span class="sz-series__here">Reading</span></span></li><li class="sz-series__item"><a class="sz-series__row" href="/styleguide/"><span class="sz-series__num">03</span><span class="sz-series__title">The third part</span><span class="sz-series__arrow">→</span></a></li></ol></nav>
+
+### Share links
+
+`_includes/share-links.njk` is a macro, so this is the real thing, called with this page's own canonical URL. Each destination carries its own `utm_source`; the copy control is an `<a>` holding the bare URL, so "copy link address" and the `y` key both work on it and it degrades without JavaScript.
+
+{% set shareBase = site.url + page.url %}{% set shareText = "Styleguide" | urlencode %}
+Lower-case labels, the code-view footer's call: {{ share.shareLinks(shareBase, shareText) }}
+
+Capitalised labels, the reading-view footer's call: {{ share.shareLinks(shareBase, shareText, true) }}
+
+### Prev / next pager
+
+`.sz-pager` sits at the foot of every blog post and project, and `[` and `]` follow it by clicking the first matching anchor on the page. That is why the demo below is built from spans: a live anchor here would make the bracket keys navigate away from the styleguide.
+
+<div class="sz-article__pager"><span class="sz-pager__link sz-pager__link--prev"><span class="sz-pager__dir">← Prev</span><span class="sz-pager__title">The previous article's title</span></span><span class="sz-pager__link sz-pager__link--next"><span class="sz-pager__dir">Next →</span><span class="sz-pager__title">The next article's title</span></span></div>
+
+## Chrome — documented, never duplicated
+
+{% set chrome = {
+  "sz-background": "Always there, behind everything, at `z-index: 0`. No keys.",
+  "sz-copyright-footer": "Pinned bottom-left over the desktop, under the terminal window. No keys.",
+  "sz-effect-confetti": "`:party`.",
+  "sz-effect-matrix": "`:matrix`, then `q` or `Escape` to end the run.",
+  "sz-links": "`l` opens the link picker; `j`/`k` move, `Enter` follows, `q` or `l` closes. Desktop only.",
+  "sz-neovim": "Wraps the page body you are reading. `j`/`k`, `g` `g`, `G`, the arrows and `Home`/`End` scroll it.",
+  "sz-notifications": "Any `notify:show` action. `:sudo` and `:coffee` are the cheapest way to see one.",
+  "sz-palette": "`:` for commands, `/` for search, `?` for the man page.",
+  "sz-screen-shader": "`:set shader` with `off`, `css` or `webgl`.",
+  "sz-slideshow": "`Alt`+`N` for the next wallpaper, or its own hover controls.",
+  "sz-start-screen": "Close the terminal window: the launcher is behind it.",
+  "sz-statusbar": "Foot of the terminal window, tracking the current route. No keys.",
+  "sz-tmux-bar": "`Alt`+`1`–`9`, or a nav tab's first letter.",
+  "sz-tmux-panes": "`Alt`+`h`/`j`/`k`/`l` moves between panes.",
+  "sz-window": "`Alt`+`W` toggles windowed / full-page, `Alt`+`F` fullscreen; the titlebar drags.",
+  "sz-window-manager": "No keys of its own. It observes `sz-window` children and owns drag, resize, tiling and the z-stack."
+} -%}
+{% set hosts = {
+  "sz-dashboard": "The home screen at `/`.",
+  "sz-markdown": "This page's body. The toolbar toggle and `:set view code` switch its two views.",
+  "sz-portfolio": "The `/blog/` and `/projects/` listings. Arrow keys rove its grid while focus is inside it."
+} -%}
+Everything below is already running around this page, and a second instance would break the first. A second `sz-tmux-bar` re-binds `Alt`+`1`–`9`; a second `sz-palette` re-binds `:` `/` `?`; a second `sz-links` re-binds `l`. `sz-window` is `position: fixed`, so a copy would not sit in the prose column at all, and `sz-window-manager` binds document `mousemove`/`mouseup` to drive drags. So these are documented here and demonstrated by the page itself: run the trigger and watch the live instance.
+
+No screenshots either. A screenshot of a component drifts the moment the component changes, silently, and no check can see it.
+
+### Chrome
+
+| element | attributes | how you reach it |
+|---|---|---|
+{% for el in components.elements %}{% if chrome[el.tag] %}| `{{ el.tag }}` | {% if el.attributes | length %}{% for a in el.attributes %}`{{ a }}`{% if not loop.last %}, {% endif %}{% endfor %}{% else %}—{% endif %} | {{ chrome[el.tag] }} |
+{% endif %}{% endfor %}
+### Layout hosts
+
+Three elements host a whole route rather than a block of content. Nesting one inside this page would nest the page inside itself.
+
+| element | attributes | what it hosts |
+|---|---|---|
+{% for el in components.elements %}{% if hosts[el.tag] %}| `{{ el.tag }}` | {% if el.attributes | length %}{% for a in el.attributes %}`{{ a }}`{% if not loop.last %}, {% endif %}{% endfor %}{% else %}—{% endif %} | {{ hosts[el.tag] }} |
+{% endif %}{% endfor %}
+## Component roster
+
+Generated from the `@customElement` and `@property` declarations in `web/src/`, so it lists what ships and nothing else. {{ components.elements | length }} elements. Every one of them is either demonstrated live above or accounted for in the two reference tables. `web/scripts/check-styleguide.mjs` is what proves that, and it is the reason this page can claim to be complete.
+
+| element | attributes | source |
+|---|---|---|
+{% for el in components.elements %}| `{{ el.tag }}` | {% if el.attributes | length %}{% for a in el.attributes %}`{{ a }}`{% if not loop.last %}, {% endif %}{% endfor %}{% else %}—{% endif %} | `{{ el.path }}` |
+{% endfor %}
+## Design tokens
+
+Parsed from `web/src/assets/themes/*.css` at build time: all {{ tokens.themes | length }} themes the site ships. The page you are reading renders in whichever one is active, so only that theme's grid below paints true colour; the others are reference values, and the tokens whose value is a `var()` alias resolve against the active theme whatever grid they sit in. `:colorscheme` switches.
+
+{% for theme in tokens.themes %}
+### `{{ theme.slug }}` — {{ theme.tokens | length }} tokens
+
+<div style="display: flex; flex-wrap: wrap; gap: 6px 16px">
+{% for token in theme.tokens %}<div style="display: flex; align-items: center; gap: 8px; min-width: 250px"><span style="width: 20px; height: 20px; flex: none; border-radius: 4px; border: 1px solid var(--sz-surface1, #45475a); background: {{ token.value }}"></span><code>{{ token.name }}</code> {{ token.value }}</div>
+{% endfor %}</div>
+
+{% endfor %}
+
 ---
 
-That covers every supported element and component, styled to match the **Catppuccin Mocha** theme with **render-markdown.nvim** inspired highlights.
+That is every markdown element, every widget and every component the site ships, with **render-markdown.nvim** inspired highlights over whichever of the three themes is active. When a component is added, this page fails the build until it is documented here.

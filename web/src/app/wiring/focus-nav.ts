@@ -1,4 +1,5 @@
-import { deepActiveElement, isInputFocused, singleKeyAllowed } from '../../core/keyboard.js';
+import { deepActiveElement } from '../../core/keyboard.js';
+import { keymap } from '../../core/keymap.js';
 import { router } from '../../core/router.js';
 
 // Blog posts and project detail pages have an archive to back out to
@@ -9,62 +10,74 @@ function archiveFor(path: string): string | null {
   return m ? `/${m[1]}/` : null;
 }
 
-// Global keyboard wiring for focus movement that doesn't belong to a single
-// component: Space follows a focused anchor (anchors don't natively activate on
-// Space, buttons do), and q/Escape either back out to the current
-// article/project's archive or — with nothing to back out of — blur focus back
-// to #main-content, mirroring the TUI's leave-focus behaviour. (Tab itself is
-// left to the browser: from #main-content it lands on the first content
-// focusable — e.g. the home dashboard links — and then keeps going out of the
-// terminal window into the wallpaper controls and the footer. Nothing traps it
-// unless a genuinely modal surface is open.)
+// Back out one level: to the current article/project's archive, or — with
+// nothing to back out of — blur focus back to #main-content, mirroring the
+// TUI's leave-focus behaviour. Returns false when neither applies, so the key
+// stays unconsumed.
+function backOut(): boolean {
+  const archive = archiveFor(window.location.pathname);
+  if (archive) {
+    void router.navigate(archive);
+    return true;
+  }
+
+  const el = deepActiveElement();
+  if (
+    el &&
+    (el.tagName === 'A' || el.tagName === 'BUTTON') &&
+    el !== document.body &&
+    el.id !== 'main-content'
+  ) {
+    (el as HTMLElement).blur();
+    const main = document.getElementById('main-content');
+    (main as HTMLElement | null)?.focus({ preventScroll: true } as FocusOptions);
+    return true;
+  }
+
+  return false;
+}
+
+// Focus movement that belongs to no single component: Space follows a focused
+// anchor (anchors don't natively activate on Space, buttons do), and q/Escape
+// back out. (Tab itself is left to the browser: from #main-content it lands on
+// the first content focusable — e.g. the home dashboard links — and then keeps
+// going out of the terminal window into the wallpaper controls and the footer.
+// Nothing traps it unless a genuinely modal surface is open.)
+//
+// All `page` scope: while a modal owns the keyboard these are suppressed
+// outright, so Escape closes the overlay and stops there instead of also
+// backing out of the article behind it.
 export function wireFocusNav(): () => void {
-  const handler = (e: KeyboardEvent) => {
-    // An overlay that handled the key already called preventDefault. Checking
-    // the reflected `[open]` attributes below is not enough on its own: Lit
-    // flushes its update between two document listeners, so by the time this
-    // runs the closing overlay may already have dropped the attribute — which
-    // is how Escape used to both close the link picker / diagram lightbox and
-    // back out to the archive behind it.
-    if (e.defaultPrevented) return;
-    if (isInputFocused()) return;
-    if (document.querySelector('sz-links[open]')) return;
-    if (document.querySelector('sz-palette[open]')) return;
-    if (document.querySelector('sz-palette[help-open]')) return;
-
-    const el = deepActiveElement();
-
-    if (e.key === ' ') {
-      if (el?.tagName === 'A') {
-        e.preventDefault();
+  return keymap.register(
+    {
+      id: 'focus.activate',
+      keys: [' '],
+      scope: 'page',
+      chars: false,
+      when: () => deepActiveElement()?.tagName === 'A',
+      run: () => {
+        const el = deepActiveElement();
+        if (el?.tagName !== 'A') return false;
         (el as HTMLElement).click();
-      }
-      return;
-    }
-
-    // `q` is a bare letter and answers to the WCAG 2.1.4 switch; Escape does
-    // the same job and is outside the criterion, so it always works.
-    if (e.key === 'Escape' || (e.key === 'q' && singleKeyAllowed())) {
-      const archive = archiveFor(window.location.pathname);
-      if (archive) {
-        e.preventDefault();
-        void router.navigate(archive);
-        return;
-      }
-
-      if (
-        el &&
-        (el.tagName === 'A' || el.tagName === 'BUTTON') &&
-        el !== document.body &&
-        el.id !== 'main-content'
-      ) {
-        e.preventDefault();
-        (el as HTMLElement).blur();
-        const main = document.getElementById('main-content');
-        (main as HTMLElement | null)?.focus({ preventScroll: true } as FocusOptions);
-      }
-    }
-  };
-  document.addEventListener('keydown', handler);
-  return () => document.removeEventListener('keydown', handler);
+        return true;
+      },
+    },
+    {
+      // A bare letter, so it answers to the WCAG 2.1.4 switch; Escape below
+      // does the same job and is outside the criterion, so it always works.
+      id: 'nav.back',
+      keys: ['q'],
+      scope: 'page',
+      chars: true,
+      description: 'Back out to the archive',
+      run: () => backOut(),
+    },
+    {
+      id: 'nav.back.escape',
+      keys: ['Escape'],
+      scope: 'page',
+      chars: false,
+      run: () => backOut(),
+    },
+  );
 }

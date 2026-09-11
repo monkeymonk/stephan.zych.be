@@ -1,8 +1,9 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { actions } from '../../core/actions.js';
-import { isInputFocused } from '../../core/keyboard.js';
 import { mobileQuery, scrollbarStyles } from '../../core/styles.js';
+import { KeymapController } from '../../core/keymap-controller.js';
+import type { KeyBinding } from '../../core/keymap.js';
 import { TMUX_ACTION } from './actions.js';
 
 interface PaneConfig {
@@ -22,6 +23,13 @@ export class SzTmuxPanes extends LitElement {
   @state() private draggedDividerIndex: number | null = null;
   @state() private paneSizes: number[] = [];
   @state() private isMobile = mobileQuery.matches;
+  // Alt+h/j/k/l steps the active pane. Two keystrokes per id means two
+  // bindings: `keys` is a sequence, so ['l', 'j'] would mean Alt+l *then*
+  // Alt+j rather than either of them.
+  private keysCtrl = new KeymapController(this, [
+    ...this.paneBindings('panes.next', ['l', 'j'], 1),
+    ...this.paneBindings('panes.prev', ['h', 'k'], -1),
+  ]);
 
   static styles = [scrollbarStyles, css`
     :host {
@@ -145,13 +153,11 @@ export class SzTmuxPanes extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    document.addEventListener('keydown', this.handlePaneNav);
     mobileQuery.addEventListener('change', this.handleMobileChange);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    document.removeEventListener('keydown', this.handlePaneNav);
     mobileQuery.removeEventListener('change', this.handleMobileChange);
     window.removeEventListener('mousemove', this.handleDividerDrag);
     window.removeEventListener('mouseup', this.stopDividerDrag);
@@ -168,20 +174,29 @@ export class SzTmuxPanes extends LitElement {
     }
   }
 
-  private handlePaneNav = (e: KeyboardEvent) => {
-    if (isInputFocused()) return;
-    if (!e.altKey || !this.config) return;
+  private paneBindings(id: string, keys: string[], step: number): KeyBinding[] {
+    return keys.map((key): KeyBinding => ({
+      id,
+      keys: [key],
+      alt: true,
+      scope: 'page',
+      chars: false,
+      // The old listener's `!this.config` bail: with no split config there is
+      // no pane to step to, and the keystroke has to stay unconsumed.
+      when: () => Boolean(this.config),
+      run: () => this.movePane(step),
+    }));
+  }
+
+  // Clamped, and dispatched even when the index does not move — the focused
+  // pane is re-announced at either end, which is what the old listener did.
+  private movePane(step: number): boolean {
+    if (!this.config) return false;
     const paneCount = this.config.panes.length;
-    if (e.key === 'l' || e.key === 'j') {
-      e.preventDefault();
-      this.activePane = Math.min(this.activePane + 1, paneCount - 1);
-      actions.dispatch(TMUX_ACTION.PANE_FOCUS, { index: this.activePane });
-    } else if (e.key === 'h' || e.key === 'k') {
-      e.preventDefault();
-      this.activePane = Math.max(this.activePane - 1, 0);
-      actions.dispatch(TMUX_ACTION.PANE_FOCUS, { index: this.activePane });
-    }
-  };
+    this.activePane = Math.min(Math.max(this.activePane + step, 0), paneCount - 1);
+    actions.dispatch(TMUX_ACTION.PANE_FOCUS, { index: this.activePane });
+    return true;
+  }
 
   private getNormalizedPaneSizes() {
     if (!this.config?.panes.length) return [];

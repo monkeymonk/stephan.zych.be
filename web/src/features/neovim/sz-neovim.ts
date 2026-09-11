@@ -1,11 +1,8 @@
 import { LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { isInputFocused, singleKeyAllowed } from '../../core/keyboard.js';
+import { KeymapController } from '../../core/keymap-controller.js';
 import { mobileQuery } from '../../core/styles.js';
 import { scrollByLines, scrollRoot, scrollToBottom, scrollToTop } from '../../core/scroll.js';
-
-/** How long a lone `g` stays pending before it stops completing a `gg`. */
-const GG_WINDOW_MS = 600;
 
 type ScrollIntent = 'down' | 'up' | 'top' | 'bottom';
 
@@ -13,8 +10,50 @@ type ScrollIntent = 'down' | 'up' | 'top' | 'bottom';
 export class SzNeovim extends LitElement {
   @property({ type: Boolean, attribute: 'show-gutter' }) showGutter = false;
 
-  /** Timestamp of a pending first `g`, 0 when no `gg` is in flight. */
-  private lastG = 0;
+  /**
+   * The reader's scroll keys, all `page` scope: while a modal owns the
+   * keyboard its own j/k move its list, not the article behind it.
+   *
+   * `gg` is a real sequence now. The keymap holds a lone `g` as a pending
+   * prefix and leaves it unconsumed, which is what the timestamp state machine
+   * that used to live here did by hand — and only for this one component.
+   * Arrow/Home/End are not character keys, so the WCAG 2.1.4 switch never
+   * disables them; only j/k/gg/G go through it.
+   */
+  private keysCtrl = new KeymapController(this, [
+    {
+      id: 'scroll.down.j', keys: ['j'], scope: 'page', chars: true,
+      description: 'Scroll down', run: () => this.moveScroller('down'),
+    },
+    {
+      id: 'scroll.up.k', keys: ['k'], scope: 'page', chars: true,
+      description: 'Scroll up', run: () => this.moveScroller('up'),
+    },
+    {
+      id: 'scroll.top.gg', keys: ['g', 'g'], scope: 'page', chars: true,
+      description: 'Scroll to top', run: () => this.moveScroller('top'),
+    },
+    {
+      id: 'scroll.bottom.G', keys: ['G'], scope: 'page', chars: true,
+      description: 'Scroll to bottom', run: () => this.moveScroller('bottom'),
+    },
+    {
+      id: 'scroll.down', keys: ['ArrowDown'], scope: 'page', chars: false,
+      run: () => this.moveScroller('down'),
+    },
+    {
+      id: 'scroll.up', keys: ['ArrowUp'], scope: 'page', chars: false,
+      run: () => this.moveScroller('up'),
+    },
+    {
+      id: 'scroll.top', keys: ['Home'], scope: 'page', chars: false,
+      description: 'Jump to top', run: () => this.moveScroller('top'),
+    },
+    {
+      id: 'scroll.bottom', keys: ['End'], scope: 'page', chars: false,
+      description: 'Jump to bottom', run: () => this.moveScroller('bottom'),
+    },
+  ]);
 
   // Light DOM for SEO — content is slotted from Eleventy templates
   createRenderRoot() { return this; }
@@ -31,14 +70,11 @@ export class SzNeovim extends LitElement {
     requestAnimationFrame(this.applyLayout);
 
     mobileQuery.addEventListener('change', this.applyLayout);
-    // j/k scroll the page like ArrowDown/ArrowUp
-    document.addEventListener('keydown', this.handleScrollKeys);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     mobileQuery.removeEventListener('change', this.applyLayout);
-    document.removeEventListener('keydown', this.handleScrollKeys);
   }
 
   /**
@@ -72,61 +108,26 @@ export class SzNeovim extends LitElement {
     }
   };
 
-  private handleScrollKeys = (e: KeyboardEvent) => {
-    if (e.altKey || e.ctrlKey || e.metaKey) return;
-    if (e.defaultPrevented || isInputFocused()) return;
-    // Resolve what the key means before touching the scroller, so unrelated
-    // keystrokes cost nothing. Arrow/Home/End are not character keys, so the
-    // WCAG 2.1.4 switch never disables them — only j/k/g/G go through it.
-    const chars = singleKeyAllowed();
-    let intent: ScrollIntent | null = null;
-
-    if (e.key === 'g' && !e.shiftKey && chars) {
-      const now = Date.now();
-      const completesGg = this.lastG !== 0 && now - this.lastG <= GG_WINDOW_MS;
-      this.lastG = completesGg ? 0 : now;
-      // A lone `g` is a pending prefix, not a consumed key — never swallow it,
-      // so other `g`-prefixed handlers still see it.
-      if (!completesGg) return;
-      intent = 'top';
-    } else {
-      this.lastG = 0;
-      switch (e.key) {
-        case 'j':
-          if (!e.shiftKey && chars) intent = 'down';
-          break;
-        case 'ArrowDown':
-          if (!e.shiftKey) intent = 'down';
-          break;
-        case 'k':
-          if (!e.shiftKey && chars) intent = 'up';
-          break;
-        case 'ArrowUp':
-          if (!e.shiftKey) intent = 'up';
-          break;
-        case 'Home':
-          intent = 'top';
-          break;
-        case 'G':
-          if (chars) intent = 'bottom';
-          break;
-        case 'End':
-          intent = 'bottom';
-          break;
-      }
-      if (intent === null) return;
-    }
-
+  /**
+   * Move the active scroller, and report whether it actually went anywhere.
+   * Only a real movement consumes the key: at either end of the document the
+   * arrows must fall through to caret browsing and to any widget that handles
+   * them after us.
+   *
+   * Not named `scroll`: that is a public method on HTMLElement, and
+   * redeclaring it private breaks this class's assignability to HTMLElement
+   * (which takes `@customElement` and `createRenderRoot` down with it) while
+   * shadowing a real DOM method at runtime.
+   */
+  private moveScroller(intent: ScrollIntent): boolean {
     const root = scrollRoot();
     const before = root.scrollTop;
+
     if (intent === 'down') scrollByLines(1);
     else if (intent === 'up') scrollByLines(-1);
     else if (intent === 'top') scrollToTop();
     else scrollToBottom();
 
-    // Only swallow the key when it actually moved the page: at either end of
-    // the document, arrows must fall through to caret browsing and to any
-    // widget that handles them after us.
-    if (root.scrollTop !== before) e.preventDefault();
-  };
+    return root.scrollTop !== before;
+  }
 }

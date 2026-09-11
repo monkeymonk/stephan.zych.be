@@ -3,7 +3,11 @@ import { customElement, state, query, property } from 'lit/decorators.js';
 import { paletteRegistry, type PaletteSource, type PaletteItem } from '../../core/palette.js';
 import { actions } from '../../core/actions.js';
 import { NEOVIM_ACTION } from './actions.js';
-import { deepActiveElement, singleKeyAllowed } from '../../core/keyboard.js';
+import { deepActiveElement } from '../../core/keyboard.js';
+import { KeymapController } from '../../core/keymap-controller.js';
+import type { KeyBinding } from '../../core/keymap.js';
+import { OverlayController } from '../../core/overlay-controller.js';
+import type { CloseReason } from '../../core/overlays.js';
 import { scrollbarStyles, focusRing, mobileQuery, reducedMotion } from '../../core/styles.js';
 import type { Shortcut } from '../../core/registry.js';
 import { jsonArrayAttribute } from '../../core/data.js';
@@ -24,9 +28,67 @@ export class SzPalette extends LitElement {
   /** Keyboard-shortcut help rows, injected by the template (shortcuts='[...]'). */
   @property({ attribute: 'shortcuts', converter: jsonArrayAttribute }) shortcuts: Shortcut[] = [];
 
-  private sources: PaletteSource[] = [];
   private unsubPaletteOpen?: () => void;
   private unsubPaletteHelp?: () => void;
+
+  private overlayCtrl = new OverlayController(this, {
+    id: 'palette',
+    kind: 'modal',
+    onClose: (reason) => this.closePalette(reason),
+  });
+
+  /**
+   * The man page is a modal in its own right, not a mode of the palette: `?`
+   * over an open palette displaces it, and Escape then closes exactly the one
+   * surface on screen. `reflect: false` because both controllers share this
+   * host element, and a second one writing `[open]` would fight the first over
+   * an attribute that means "the palette is open".
+   */
+  private helpOverlayCtrl = new OverlayController(this, {
+    id: 'palette-help',
+    kind: 'modal',
+    reflect: false,
+    onClose: (reason) => this.closeHelp(reason),
+  });
+
+  private keysCtrl = new KeymapController(this, [
+    this.prefixBinding('palette.command', ':', 'Open command palette'),
+    this.prefixBinding('palette.search', '/', 'Search pages and content'),
+    {
+      id: 'palette.help',
+      keys: ['?'],
+      scope: 'global',
+      chars: false,
+      description: 'Show help',
+      when: () => !mobileQuery.matches,
+      run: () => {
+        // A source is free to claim `?` as its own prefix; the man page is
+        // only the fallback for when none has.
+        const source = paletteRegistry.getByPrefix('?');
+        if (source) this.openWithSource(source);
+        else this.showHelp();
+        return true;
+      },
+    },
+    {
+      id: 'help.close',
+      keys: ['q'],
+      scope: 'overlay:palette-help',
+      chars: false,
+      run: () => { this.hideHelp(); return true; },
+    },
+    { id: 'help.scroll.down', keys: ['j'], scope: 'overlay:palette-help', chars: false, run: () => this.scrollHelp(40) },
+    { id: 'help.scroll.down', keys: ['ArrowDown'], scope: 'overlay:palette-help', chars: false, run: () => this.scrollHelp(40) },
+    { id: 'help.scroll.up', keys: ['k'], scope: 'overlay:palette-help', chars: false, run: () => this.scrollHelp(-40) },
+    { id: 'help.scroll.up', keys: ['ArrowUp'], scope: 'overlay:palette-help', chars: false, run: () => this.scrollHelp(-40) },
+    { id: 'help.page.down', keys: ['PageDown'], scope: 'overlay:palette-help', chars: false, run: () => this.scrollHelp(200) },
+    { id: 'help.page.down', keys: [' '], scope: 'overlay:palette-help', chars: false, run: () => this.scrollHelp(200) },
+    { id: 'help.page.up', keys: ['PageUp'], scope: 'overlay:palette-help', chars: false, run: () => this.scrollHelp(-200) },
+  ]);
+
+  // `palette.refocus` answers whichever prefix opened the palette, so the set
+  // is rebuilt on every open instead of declared once.
+  private paletteKeysCtrl = new KeymapController(this, []);
 
   static styles = [scrollbarStyles, focusRing, css`
     :host { display: contents; }
@@ -138,6 +200,10 @@ export class SzPalette extends LitElement {
       color: var(--sz-text, #cdd6f4);
       line-height: 1.6;
     }
+    /* The pane takes focus on open, and it is pinned to the viewport edges —
+       the shared ring's +2px offset would draw outside the clip on three
+       sides, leaving a focused dialog with no visible indicator. Inside. */
+    .help-overlay:focus-visible { outline-offset: -2px; }
     .help-header {
       color: var(--sz-accent, #89b4fa);
       font-weight: 700;
@@ -220,11 +286,12 @@ export class SzPalette extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.sources = paletteRegistry.getAll();
-    document.addEventListener('keydown', this.handleGlobalKey);
     window.addEventListener('keydown', this.handleCaptureTab, true);
     this.unsubPaletteOpen = actions.on(NEOVIM_ACTION.PALETTE_OPEN, (a) => {
-      const prefix = (a.payload as { prefix?: string })?.prefix;
+      // The bus hands every payload over as `unknown`; PALETTE_OPEN's shape is
+      // this feature's own contract with the mobile search button.
+      const payload = a.payload as { prefix?: string } | undefined;
+      const prefix = payload?.prefix;
       if (prefix) {
         const source = paletteRegistry.getByPrefix(prefix);
         if (source) this.openWithSource(source);
@@ -232,36 +299,58 @@ export class SzPalette extends LitElement {
     });
     this.unsubPaletteHelp = actions.on(NEOVIM_ACTION.PALETTE_HELP, () => {
       // Dispatched from within the command's execute(), which is immediately
-      // followed by hide() (resetting helpOpen). Defer so we win the race.
+      // followed by hide() (releasing the palette). Defer so we win the race.
       queueMicrotask(() => this.showHelp());
     });
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    document.removeEventListener('keydown', this.handleGlobalKey);
     window.removeEventListener('keydown', this.handleCaptureTab, true);
     document.removeEventListener('click', this.handleOutsideClick, true);
     this.unsubPaletteOpen?.();
     this.unsubPaletteHelp?.();
   }
 
-  // Reflect open/help state to the host so global wiring (e.g. Space-activate,
-  // q/Escape "leave focus") can yield while the palette owns the keyboard.
-  protected updated() {
-    this.toggleAttribute('open', this.open);
+  // `[open]` is written by the overlay controller from the registry, which is
+  // now the only thing that knows whether this surface owns the keyboard.
+  // `[help-open]` is still written here: the man page's own controller cannot
+  // reflect it without clobbering `[open]` on the shared host.
+  protected updated(changed: Map<PropertyKey, unknown>) {
     this.toggleAttribute('help-open', this.helpOpen);
+    // The man page declares aria-modal, which tells assistive tech to hide the
+    // rest of the document — so focus has to actually land in here, or the AT
+    // user gets an unreachable dialog behind a hidden page. It never moved
+    // focus before it had dialog semantics, and it could not be given them
+    // before it did. The pane itself is the target: it is the scroller the
+    // `overlay:palette-help` bindings drive, and a focused div is not a text
+    // field, so the keymap does not suppress them.
+    if (changed.has('helpOpen') && this.helpOpen) this.helpEl?.focus();
   }
 
+  // The aria-modal Tab contract for both surfaces on this host: capture phase
+  // on purpose, so Tab never reaches the document hidden behind the dialog.
+  // Extended rather than doubled: this is already the last of the four global
+  // listener sites `check-structure.mjs` sanctions, and a fifth fails the build.
   private handleCaptureTab = (e: KeyboardEvent) => {
-    if (this.open && e.key === 'Tab') {
+    if (e.key !== 'Tab') return;
+    if (this.helpOpen) {
+      // The pane is the man page's only focusable, so there is nothing to
+      // cycle to and the whole trap is refusing to leave. Refocus rather than
+      // merely preventDefault: a click on the page behind can still have moved
+      // focus out from under us, and Tab is where that becomes visible.
       e.preventDefault();
       e.stopImmediatePropagation();
-      if (!this.isCommandInputFocused()) {
-        this.inputEl?.focus();
-      }
-      this.handleTabInPalette(e.shiftKey);
+      this.helpEl?.focus();
+      return;
     }
+    if (!this.open) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (!this.isCommandInputFocused()) {
+      this.inputEl?.focus();
+    }
+    this.handleTabInPalette(e.shiftKey);
   };
 
   private isCommandInputFocused(): boolean {
@@ -287,75 +376,70 @@ export class SzPalette extends LitElement {
     }
   }
 
-  private handleGlobalKey = (e: KeyboardEvent) => {
-    if (this.helpOpen) {
-      // base.css's reduced-motion scroll override cannot reach this shadow
-      // root, so the behaviour has to be decided here.
-      const behavior: ScrollBehavior = reducedMotion.matches ? 'auto' : 'smooth';
-      if (e.key === 'Escape' || e.key === 'q') { e.preventDefault(); this.hideHelp(); return; }
-      if (e.key === 'ArrowDown' || e.key === 'j') { e.preventDefault(); this.helpEl?.scrollBy({ top: 40, behavior }); return; }
-      if (e.key === 'ArrowUp' || e.key === 'k') { e.preventDefault(); this.helpEl?.scrollBy({ top: -40, behavior }); return; }
-      if (e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); this.helpEl?.scrollBy({ top: 200, behavior }); return; }
-      if (e.key === 'PageUp') { e.preventDefault(); this.helpEl?.scrollBy({ top: -200, behavior }); return; }
-      return;
-    }
+  /**
+   * The prefixes are `global` so they fire over another overlay — claiming the
+   * slot is how `:` displaces the link picker. Nothing here has to stand down
+   * while the palette itself owns the keyboard: the keymap walks scope tiers
+   * narrowest-first, so `palette.refocus` at `overlay:palette` outranks these.
+   *
+   * The only guard left is the one the hand-rolled listener already had: on a
+   * phone the palette is opened by the search button, never by a keystroke.
+   */
+  private prefixBinding(id: string, prefix: string, description: string): KeyBinding {
+    return {
+      id,
+      keys: [prefix],
+      scope: 'global',
+      chars: false,
+      description,
+      when: () => !mobileQuery.matches,
+      run: () => {
+        // Sources are registered by wiring, which can finish after this element
+        // connects, so the lookup happens per keystroke rather than once.
+        const source = paletteRegistry.getByPrefix(prefix);
+        if (!source) return false;
+        this.openWithSource(source);
+        return true;
+      },
+    };
+  }
 
-    if (this.open) {
-      if (e.key === 'Escape') { e.preventDefault(); this.hide(); return; }
-      // Refocus input if prefix key pressed again while open
-      if (this.activeSource && e.key === this.activeSource.prefix) {
-        e.preventDefault();
-        this.inputEl?.focus();
-        return;
-      }
-      if (e.key === 'Tab') return; // handled by capture
-    }
-
-    // The prefix keys are bare characters, so they answer to the WCAG 2.1.4
-    // switch; Escape and Tab above are outside it and stay live.
-    if (!singleKeyAllowed()) return;
-    if (mobileQuery.matches) return;
-
-    // Open palette for matching prefix key
-    if (!this.open) {
-      // Refresh sources in case new ones were registered since connectedCallback
-      this.sources = paletteRegistry.getAll();
-
-      for (const source of this.sources) {
-        if (e.key === source.prefix) {
-          e.preventDefault();
-          this.openWithSource(source);
-          return;
-        }
-      }
-
-      // Help overlay — special case if no source registered with '?'
-      const helpSource = paletteRegistry.getByPrefix('?');
-      if (!helpSource && e.key === '?') {
-        e.preventDefault();
-        this.showHelp();
-        return;
-      }
-    }
-  };
+  private scrollHelp(top: number): boolean {
+    // base.css's reduced-motion scroll override cannot reach this shadow
+    // root, so the behaviour has to be decided here.
+    const behavior: ScrollBehavior = reducedMotion.matches ? 'auto' : 'smooth';
+    this.helpEl?.scrollBy({ top, behavior });
+    return true;
+  }
 
   private openWithSource(source: PaletteSource) {
     // Toggle if same source already open
-    if (this.open && this.activeSource?.id === source.id) {
+    if (this.overlayCtrl.isOpen && this.activeSource?.id === source.id) {
       this.hide();
       return;
     }
     this.rememberInvoker();
     this.open = true;
     this.activeSource = source;
-    this.helpOpen = false;
     this.input = '';
     this.selectedIndex = -1;
     this.items = [];
     this.loadItems('');
     this.updateComplete.then(() => this.inputEl?.focus());
     document.addEventListener('click', this.handleOutsideClick, true);
-    actions.dispatch(NEOVIM_ACTION.PALETTE_STATE, { open: true });
+    this.paletteKeysCtrl.setBindings([{
+      id: 'palette.refocus',
+      keys: [source.prefix],
+      scope: 'overlay:palette',
+      chars: false,
+      run: () => {
+        this.inputEl?.focus();
+        return true;
+      },
+    }]);
+    // Claim last: claiming closes the incumbent modal, and this surface has to
+    // be the one that is ready when that teardown runs.
+    this.overlayCtrl.claim();
   }
 
   /**
@@ -380,15 +464,26 @@ export class SzPalette extends LitElement {
   }
 
   private hide() {
+    // The registry does the closing, so there is one path out of this surface
+    // whatever triggered it: releasing reports `'user'`, which lands in
+    // closePalette below. A release from an already-superseded palette is
+    // inert, so an execute() that opened another modal cannot close this one
+    // twice and steal focus back out of the surface it just opened.
+    this.overlayCtrl.release();
+  }
+
+  private closePalette(reason: CloseReason) {
     this.open = false;
     this.input = '';
-    this.helpOpen = false;
     this.selectedIndex = -1;
     this.items = [];
     this.activeSource = null;
+    this.paletteKeysCtrl.setBindings([]);
     document.removeEventListener('click', this.handleOutsideClick, true);
-    actions.dispatch(NEOVIM_ACTION.PALETTE_STATE, { open: false });
-    this.restoreInvokerFocus();
+    // A superseded palette must not restore focus: the surface that displaced
+    // it already holds focus, and pulling it back would yank the user out of
+    // what they just opened.
+    if (reason === 'user') this.restoreInvokerFocus();
   }
 
   // A control that toggles the palette marks itself `data-palette-toggle`. It
@@ -408,12 +503,18 @@ export class SzPalette extends LitElement {
   private showHelp() {
     this.rememberInvoker();
     this.helpOpen = true;
-    this.open = false;
+    // Claiming supersedes the palette, which is what clears `open` and the
+    // command line behind the man page.
+    this.helpOverlayCtrl.claim();
   }
 
   private hideHelp() {
+    this.helpOverlayCtrl.release();
+  }
+
+  private closeHelp(reason: CloseReason) {
     this.helpOpen = false;
-    this.restoreInvokerFocus();
+    if (reason === 'user') this.restoreInvokerFocus();
   }
 
   private async loadItems(query: string) {
@@ -593,7 +694,9 @@ export class SzPalette extends LitElement {
   }
 
   private handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') { this.hide(); return; }
+    // No Escape here: `overlay.escape` closes the current modal centrally.
+    // This handler used to call hide() without preventDefault, so the key went
+    // on to focus-nav and backed out of the article as well.
     if (e.key === 'Backspace' && this.input === '') { this.hide(); return; }
 
     if (e.key === 'ArrowDown') {
@@ -668,9 +771,18 @@ export class SzPalette extends LitElement {
   private renderHelp() {
     const allSources = paletteRegistry.getAll();
 
+    // tabindex="-1" so the scroller can be focused programmatically without
+    // joining the Tab order; see updated() for why it has to be. The name
+    // comes from the visible man-page title rather than a second copy of it.
     return html`
-      <div class="help-overlay">
-        <div class="help-header">STEPHAN.ZYCH(1) — User Commands Manual</div>
+      <div
+        class="help-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sz-palette-help-title"
+        tabindex="-1"
+      >
+        <div class="help-header" id="sz-palette-help-title">STEPHAN.ZYCH(1) — User Commands Manual</div>
         ${allSources.map(source => {
           const sourceItems = source.getItems('');
           const isPromise = sourceItems instanceof Promise;
@@ -714,8 +826,18 @@ export class SzPalette extends LitElement {
 
     const ghost = this.ghostHint;
 
+    // One surface, two identities: the command palette at `:` and search at
+    // `/`. A hardcoded name would announce the wrong one half the time, so it
+    // comes off the active source — whose id is already the vocabulary the man
+    // page prints. The dialog wraps a combobox, which is the shape the ARIA
+    // practices describe; the inner roles are untouched.
     return html`
-      <div class="overlay">
+      <div
+        class="overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label=${this.activeSource.title}
+      >
         ${this.items.length > 0 ? html`
           <div class="suggestions" role="listbox" id="sz-palette-listbox" aria-label="Suggestions">
             ${this.items.map((item, i) => html`
@@ -742,7 +864,7 @@ export class SzPalette extends LitElement {
           <input
             type="text"
             role="combobox"
-            aria-label="Command palette"
+            aria-label="Palette input"
             aria-expanded=${this.items.length > 0}
             aria-controls="sz-palette-listbox"
             aria-autocomplete="list"

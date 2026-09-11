@@ -20,6 +20,12 @@ module.exports = function(eleventyConfig) {
   // is the shared content/data, which holds content only — never build code.
   eleventyConfig.addGlobalData('wakapi', require('./lib/wakapi.js'));
 
+  // Styleguide source of truth: the component roster and the theme tokens are
+  // read from the source tree at build time, so /styleguide/ cannot drift from
+  // what ships. Same reason wakapi lives in lib/ rather than the data dir.
+  eleventyConfig.addGlobalData('components', require('./lib/components.js'));
+  eleventyConfig.addGlobalData('tokens', require('./lib/tokens.js'));
+
   eleventyConfig.addPlugin(syntaxHighlight);
 
   // Emit ```mermaid fences as raw <pre class="mermaid"> so the client-side

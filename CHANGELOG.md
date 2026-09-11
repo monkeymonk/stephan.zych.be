@@ -9,6 +9,81 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-09-11
+
+### Fixed
+- Turning single-key shortcuts off no longer locks you out of turning them back
+  on. `:set keys off` used to disable `:`, `/` and `?` along with everything
+  else, so a keyboard-only visitor had no way left to type `:set keys on`. Those
+  three are the switch's own control surface and now stay live in both states;
+  every other bare-key shortcut still answers to it.
+- The SSH terminal's analytics recorded nothing at all. Umami runs a bot check
+  on the User-Agent and answers a flagged request with `200 {"beep":"boop"}`
+  while storing no hit, so the sender — which discards every error on purpose,
+  because analytics must never be audible in a terminal — could not tell
+  success from silent rejection. The honest string it sent, `szych-tui (SSH)`,
+  is flagged by every version of that check: since isbot v5 the library rejects
+  anything that does not look like a browser rather than matching a list of
+  known bots. The header is now browser-shaped while still naming itself, and
+  a test pins the two rules so the next reword cannot quietly turn tracking
+  off again.
+- The work-experience timeline on `/cv/` lines up with the rest of the page.
+  Its rail and role markers sat half a pixel outside the content box, in a
+  column nothing else used, while the role bullets hung a few pixels right of
+  the text above them. The rail now sits on the gutter the CV already has (the
+  centre of a section's `##` marker, where the plain lists put their bullets
+  too) and each bullet hangs exactly on its entry's text column. The résumé
+  print sheet is unaffected: it rules off each role instead of drawing a rail.
+- Opening one panel closes the other. Pressing `l` for the link picker and then
+  `/` for search used to leave both on screen, two modal surfaces at once. Any
+  panel now takes the keyboard from whichever had it.
+- Escape stops leaking. Closing a panel with Escape used to also back you out of
+  the article behind it, because two independent listeners both handled the key.
+- In the SSH terminal, `q` and Escape now go back from everywhere. Following a
+  link inside an article left `q` doing nothing at all (it "returned" to the
+  article you were already reading), and pressing `?` while the help screen was
+  open trapped you there with no way out. Both came from remembering one
+  previous screen instead of a history; there is a real back stack now.
+- In the terminal, `q` at the top level asks before disconnecting instead of
+  ending the session on one keystroke. `Ctrl+C` still disconnects immediately,
+  deliberately.
+- The link picker no longer swallows `:`, `/` and `?`, so the palette, search
+  and help are reachable from inside it.
+- French reads "Native" rather than "Mother tongue" on the CV.
+- The two-second stall on the first visit to `/cv/` from another page. Its
+  stylesheet is inlined with the rest, so the page arrives styled instead of
+  waiting, timing out, and then restyling in front of you.
+- The desktop background stopped repainting the entire viewport on every frame.
+  Its slow hue drift is a fifteen-degree wander over thirty seconds, which was
+  costing a full-screen filter repaint sixty times a second, on every page,
+  forever. It now steps once every two seconds and looks the same.
+- Content no longer jumps on load. The page shell is made of custom elements,
+  so before their script runs the raw document painted full-width in the corner
+  and then relayouted into the terminal window when they upgraded. The
+  pre-upgrade paint is now positioned where the window will be, which also
+  makes the no-JavaScript rendering look deliberate rather than broken.
+
+### Changed
+- Every site-wide keyboard shortcut is now declared in one place instead of
+  being handled by thirteen separate listeners that each decided for themselves
+  whether a key was allowed to act. A key's scope, and whether the accessibility
+  switch applies to it, are properties of the binding. Keys that belong to a
+  single widget — a Tab trap inside a dialog, arrow keys inside a grid — stay
+  with that widget, because those must keep working regardless.
+- The same treatment in the SSH terminal: one binding table, one back
+  implementation, and the help screen is generated from the bindings, so it can
+  no longer describe keys the program does not have.
+- The command palette, its man page, the link picker and the diagram lightbox
+  announce themselves as dialogs to screen readers, with real focus handling.
+  The man page now takes focus when it opens, which it needed before it could
+  honestly claim to be one.
+- `/styleguide/` documents every component and every design token the site
+  ships. The component roster and the colour swatches are read from the source
+  at build time, so they cannot fall behind, and a build now fails if a
+  component is added with no entry.
+- `/404` carries a real description, is marked `noindex`, and tells you about
+  `/` to search rather than only the command palette.
+
 ## [1.8.1] - 2026-09-06
 
 ### Fixed
@@ -477,7 +552,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.6.0...v1.7.0

@@ -74,7 +74,12 @@ type Styles struct {
 	PalIconSel lipgloss.Style
 	PalSection lipgloss.Style
 	PalHint    lipgloss.Style
-	Backdrop   lipgloss.Color
+	// quit confirmation
+	ConfBox   lipgloss.Style
+	ConfTitle lipgloss.Style
+	ConfBody  lipgloss.Style
+	ConfHint  lipgloss.Style
+	Backdrop  lipgloss.Color
 }
 
 // buildStyles constructs a Styles from the given Theme. buildStyles(catppuccinMocha)
@@ -149,7 +154,14 @@ func buildStyles(t Theme) Styles {
 		PalIconSel: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Crust)).Background(lipgloss.Color(t.Accent)),
 		PalSection: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
 		PalHint:    lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
-		Backdrop:   lipgloss.Color(t.Surface0),
+		// quit confirmation. Peach rather than the palette's accent: this is
+		// the one box where a single keystroke ends the session, and it should
+		// not read as just another picker.
+		ConfBox:   lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(t.Peach)).Padding(0, 1),
+		ConfTitle: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Peach)).Bold(true),
+		ConfBody:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Subtext0)),
+		ConfHint:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
+		Backdrop:  lipgloss.Color(t.Surface0),
 	}
 }
 

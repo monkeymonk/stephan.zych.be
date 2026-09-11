@@ -73,6 +73,13 @@ if (isDev) {
     // destination page's stylesheet is already in the document (core/router.ts).
     ['<link rel="stylesheet" id="page-css-prism" href="/styles/prism-catppuccin.css">',
       () => `<style id="page-css-prism">${cssText('styles/prism-catppuccin.css')}</style>`],
+    // cv.css was the last page-scoped sheet still shipped as a <link>, and it
+    // was the whole reason core/router.ts had to wait on a stylesheet load: an
+    // SPA hop to /cv/ stalled on it for up to 2s and then painted the CV
+    // unstyled anyway when the timeout fired. Inlined (5.4kB) it arrives with
+    // the document, and the router adopts a <style> node synchronously.
+    ['<link rel="stylesheet" id="page-css-cv" href="/styles/cv.css" media="screen">',
+      () => `<style id="page-css-cv" media="screen">${cssText('styles/cv.css')}</style>`],
     ['<link rel="stylesheet" id="theme-css-catppuccin-mocha" href="/assets/themes/catppuccin-mocha.css">',
       () => `<style id="theme-css-catppuccin-mocha">${cssText('assets/themes/catppuccin-mocha.css')}</style>`],
   ];

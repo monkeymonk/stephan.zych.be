@@ -2,18 +2,26 @@ import { LitElement, html, css, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { actions, ROUTER_ACTION } from "../../core/actions.js";
 import type { RouteChangedDetail } from "../../core/router.js";
-import { isInputFocused, singleKeyAllowed } from "../../core/keyboard.js";
 import type { NavTab } from "../../core/registry.js";
 import { jsonArrayAttribute } from "../../core/data.js";
 import { focusRing, clockStyles } from "../../core/styles.js";
 import { clock, type ClockTime } from "../../core/clock.js";
+import { ActionController } from "../../core/action-controller.js";
+import { KeymapController } from "../../core/keymap-controller.js";
+import type { KeyBinding } from "../../core/keymap.js";
 import { StateController } from "../../core/state-controller.js";
 import { TMUX_ACTION } from "./actions.js";
-import { NEOVIM_ACTION, type PaletteStateDetail } from "../neovim/actions.js";
+import { NEOVIM_ACTION } from "../neovim/actions.js";
+import { OVERLAY_ACTION, type OverlayStateDetail } from "../overlays/actions.js";
 
 // Text-size steps for the accessibility "aA" control. Multipliers feed
 // --sz-font-scale, which rescales the whole site (see base.css :root).
 const FONT_SCALES = [1, 1.15, 1.3, 1.5];
+
+// The id sz-palette registers its overlay under. The button is a palette
+// toggle, so it may only claim to be expanded while the palette itself owns
+// the keyboard — not while the link picker or the help overlay does.
+const PALETTE_OVERLAY_ID = "palette";
 
 @customElement("sz-tmux-bar")
 export class SzTmuxBar extends LitElement {
@@ -23,13 +31,27 @@ export class SzTmuxBar extends LitElement {
   @state() private time: ClockTime = clock.time;
   /** Text for the polite live region: text-size and shortcut-toggle changes. */
   @state() private announcement = "";
-  /** Mirrors the palette so the toggle can announce whether it is expanded. */
+  /**
+   * True while the palette is the current modal overlay, so the toggle can
+   * announce whether it is expanded. Sourced from the overlay registry rather
+   * than from the palette directly: the button's own click is not the only
+   * thing that opens or closes it, and another overlay claiming the slot
+   * closes the palette without telling the bar anything.
+   */
   @state() private searchOpen = false;
   private fontCtrl = new StateController(this, ["fontScale", "keyShortcuts"]);
+  private actionCtrl = new ActionController(this, [
+    [ROUTER_ACTION.ROUTE_CHANGED, (action) => {
+      this.activePath = (action.payload as RouteChangedDetail).path;
+    }],
+    [OVERLAY_ACTION.STATE, (action) => {
+      this.searchOpen =
+        (action.payload as OverlayStateDetail).current === PALETTE_OVERLAY_ID;
+    }],
+  ]);
+  private keysCtrl = new KeymapController(this, this.tabBindings());
 
   private clockUnsub?: () => void;
-  private routeUnsub?: () => void;
-  private paletteUnsub?: () => void;
 
   static styles = css`
     ${focusRing}${clockStyles}
@@ -280,46 +302,54 @@ export class SzTmuxBar extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.clockUnsub = clock.subscribe((t) => { this.time = t; });
-    document.addEventListener("keydown", this.handleKeydown);
-    this.routeUnsub = actions.on(ROUTER_ACTION.ROUTE_CHANGED, (a) => {
-      this.activePath = (a.payload as RouteChangedDetail).path;
-    });
-    this.paletteUnsub = actions.on(NEOVIM_ACTION.PALETTE_STATE, (a) => {
-      this.searchOpen = (a.payload as PaletteStateDetail).open;
-    });
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this.clockUnsub?.();
-    document.removeEventListener("keydown", this.handleKeydown);
-    this.routeUnsub?.();
-    this.paletteUnsub?.();
   }
 
-  private handleKeydown = (e: KeyboardEvent) => {
-    if (isInputFocused()) return;
-    if (e.altKey && e.key >= "1" && e.key <= "9") {
-      const index = parseInt(e.key) - 1;
-      const tab = this.nav[index];
-      if (tab) {
-        e.preventDefault();
-        actions.dispatch(TMUX_ACTION.TAB_SWITCH, { path: tab.path });
-      }
-      return;
+  protected willUpdate(changedProperties: Map<PropertyKey, unknown>) {
+    // The nav letters are keyed by tab name, so the set cannot be static: a
+    // nav that arrives after construction (it comes in as an attribute) would
+    // otherwise leave the keymap answering for tabs that are not there.
+    if (changedProperties.has("nav")) {
+      this.keysCtrl.setBindings(this.tabBindings());
     }
-    // Single-letter shortcut: first char of tab name (no modifiers). Alt+N
-    // above is a modified binding and stays live regardless of the setting.
-    if (!singleKeyAllowed()) return;
-    if (!e.altKey && !e.ctrlKey && !e.metaKey && e.key.length === 1) {
-      const key = e.key.toLowerCase();
-      const tab = this.nav.find((t) => t.name.charAt(0).toLowerCase() === key);
-      if (tab) {
-        e.preventDefault();
-        actions.dispatch(TMUX_ACTION.TAB_SWITCH, { path: tab.path });
-      }
-    }
-  };
+  }
+
+  private tabBindings(): KeyBinding[] {
+    const switchTo = (path: string): boolean => {
+      actions.dispatch(TMUX_ACTION.TAB_SWITCH, { path });
+      return true;
+    };
+    // Alt+digit is positional, so all nine are registered once and read `nav`
+    // when they fire. A digit past the end of the nav is left unconsumed, the
+    // way the old listener's `if (tab)` left it: Alt+9 on a five-tab nav is
+    // the browser's key, not ours.
+    const byIndex = Array.from({ length: 9 }, (_, index): KeyBinding => ({
+      id: `tabs.switch.${index + 1}`,
+      keys: [String(index + 1)],
+      alt: true,
+      scope: "page",
+      chars: false,
+      run: () => {
+        const tab = this.nav[index];
+        return tab ? switchTo(tab.path) : false;
+      },
+    }));
+    // First letter of the tab name, unmodified: a bare character shortcut, so
+    // `chars: true` hands it to the WCAG 2.1.4 switch. The Alt+digit set above
+    // is modified and stays live regardless of the setting.
+    const byLetter = this.nav.map((tab): KeyBinding => ({
+      id: `nav.tab.${tab.name}`,
+      keys: [tab.name.charAt(0).toLowerCase()],
+      scope: "page",
+      chars: true,
+      run: () => switchTo(tab.path),
+    }));
+    return [...byIndex, ...byLetter];
+  }
 
   // Toggle, not open. sz-palette already toggles when re-asked for the source
   // it is showing; the button just has to declare itself a palette toggle so
@@ -341,14 +371,15 @@ export class SzTmuxBar extends LitElement {
   };
 
   // WCAG 2.1.4's "mechanism to turn the shortcut off", as a control rather
-  // than only a command: `:set keys off` would otherwise be a one-way door,
-  // since `:` is itself one of the single-character shortcuts it disables.
+  // than only a command. It is no longer the only way back: `:` is exempt from
+  // the switch precisely so `:set keys off` is not a one-way door. This stays
+  // because a pointer user should not have to learn a command to find it.
   private toggleKeyShortcuts = () => {
     const next = !this.fontCtrl.get("keyShortcuts");
     this.fontCtrl.set("keyShortcuts", next);
     this.announcement = next
       ? "Single-key shortcuts on"
-      : "Single-key shortcuts off. Alt shortcuts still work.";
+      : "Single-key shortcuts off. Palette, search, help and the Alt shortcuts still work.";
   };
 
   render() {
@@ -400,11 +431,11 @@ export class SzTmuxBar extends LitElement {
           @click=${this.toggleKeyShortcuts}
           aria-pressed=${this.fontCtrl.get("keyShortcuts")}
           aria-label=${this.fontCtrl.get("keyShortcuts")
-            ? "Single-key shortcuts are on. Activate to turn them off."
+            ? "Single-key shortcuts are on. Activate to turn them off; the palette, search and help keys stay on either way."
             : "Single-key shortcuts are off. Activate to turn them on."}
           title=${this.fontCtrl.get("keyShortcuts")
-            ? "Single-key shortcuts: on — click to disable (also :set keys off)"
-            : "Single-key shortcuts: off — click to enable (also :set keys on)"}
+            ? "Single-key shortcuts: on. Click to disable (also :set keys off); : / ? stay on"
+            : "Single-key shortcuts: off. Click to enable (also :set keys on); : / ? still work"}
         >
           <span aria-hidden="true">⌨</span>
         </button>

@@ -19,10 +19,20 @@ const (
 	// analyticsTag lands every TUI hit in the same Umami website as the web
 	// traffic while staying filterable — one dashboard, two surfaces.
 	analyticsTag = "tui"
-	// analyticsUA must be present and must not look like a bot: Umami runs an
-	// isbot check and answers a flagged request with 200 {"beep":"boop"} without
-	// recording anything, so a missing UA looks like success and measures nothing.
-	analyticsUA    = "szych-tui (SSH)"
+	// analyticsUA has to be browser-SHAPED, not merely present. Umami runs the
+	// `isbot` check on it and answers a flagged request with 200 {"beep":"boop"}
+	// while recording nothing, so every failure looks like success.
+	//
+	// `szych-tui (SSH)` was the honest string and it measured nothing for a
+	// release: isbot 3, 4 and 5 all flag it, because from v5 the library stopped
+	// matching a deny-list of bot names and started rejecting anything that does
+	// not look like a browser UA. Two rules, both verified against all three
+	// majors: start with `Mozilla/5.0`, and never include the token
+	// `compatible` — that one is itself a bot marker, so
+	// `Mozilla/5.0 (compatible; szych-tui/1.0)` is flagged too. The parenthesis
+	// still says what this is, so nothing here impersonates a real browser.
+	// analytics_test.go pins both rules.
+	analyticsUA    = "Mozilla/5.0 (SSH; szych-tui/1.0)"
 	analyticsQueue = 64
 	analyticsWait  = 3 * time.Second
 )

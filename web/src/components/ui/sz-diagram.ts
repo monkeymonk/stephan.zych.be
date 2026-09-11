@@ -2,6 +2,9 @@ import { LitElement, html, css, nothing } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
 import { focusRing } from '../../core/styles.js';
 import { deepActiveElement } from '../../core/keyboard.js';
+import { KeymapController } from '../../core/keymap-controller.js';
+import { OverlayController } from '../../core/overlay-controller.js';
+import type { CloseReason } from '../../core/overlays.js';
 import { FocusTrap } from '../../features/window-manager/focus-trap.js';
 
 // sz-diagram wraps a ```mermaid block (emitted as <sz-diagram><pre class="mermaid">…).
@@ -24,6 +27,52 @@ export class SzDiagram extends LitElement {
   private trap?: FocusTrap;
   /** Element that opened the lightbox; focus goes back to it on close. */
   private invoker: HTMLElement | null = null;
+
+  // The lightbox is a modal: claiming the slot closes whatever else owns the
+  // keyboard, and the registry — not this component — decides when it has to
+  // go away again, so Escape and a competing overlay take the same path out.
+  private overlayCtrl = new OverlayController(this, {
+    id: 'diagram',
+    kind: 'modal',
+    onClose: (reason: CloseReason) => this.teardown(reason),
+  });
+
+  // Scoped to the open lightbox, so `0` and `-` stay the browser's own keys
+  // everywhere else — the scope is the guard the old listener spelled out as
+  // `if (!this.open) return`. No descriptions: these are not in
+  // content/data/shortcuts.json and are not advertised in the help overlay.
+  private keysCtrl = new KeymapController(this, [
+    {
+      id: 'diagram.zoom.in',
+      keys: ['+'],
+      scope: 'overlay:diagram',
+      chars: false,
+      run: () => { this.zoom(1.25); return true; },
+    },
+    // `=` is the same physical key without Shift, and the one most people
+    // press. Same binding, so the same id.
+    {
+      id: 'diagram.zoom.in',
+      keys: ['='],
+      scope: 'overlay:diagram',
+      chars: false,
+      run: () => { this.zoom(1.25); return true; },
+    },
+    {
+      id: 'diagram.zoom.out',
+      keys: ['-'],
+      scope: 'overlay:diagram',
+      chars: false,
+      run: () => { this.zoom(1 / 1.25); return true; },
+    },
+    {
+      id: 'diagram.reset',
+      keys: ['0'],
+      scope: 'overlay:diagram',
+      chars: false,
+      run: () => { this.reset(); return true; },
+    },
+  ]);
 
   static styles = css`
     ${focusRing}
@@ -155,25 +204,13 @@ export class SzDiagram extends LitElement {
       });
       this.observer.observe(this, { childList: true, subtree: true });
     }
-    document.addEventListener('keydown', this.onKey);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this.observer?.disconnect();
-    document.removeEventListener('keydown', this.onKey);
     this.trap?.destroy();
   }
-
-  private onKey = (e: KeyboardEvent) => {
-    if (!this.open) return;
-    switch (e.key) {
-      case 'Escape': e.preventDefault(); this.close(); break;
-      case '+': case '=': e.preventDefault(); this.zoom(1.25); break;
-      case '-': e.preventDefault(); this.zoom(1 / 1.25); break;
-      case '0': e.preventDefault(); this.reset(); break;
-    }
-  };
 
   private enlarge() {
     if (!this.querySelector('svg')) return;
@@ -181,18 +218,28 @@ export class SzDiagram extends LitElement {
     const active = deepActiveElement();
     this.invoker = active instanceof HTMLElement ? active : null;
     this.open = true;
+    this.overlayCtrl.claim();
+  }
+
+  /** Toolbar button, backdrop click and the trap's own Escape all land here. */
+  private close() {
+    this.overlayCtrl.release();
   }
 
   // The lightbox covers the page, so it is a modal in every sense except the
   // semantics it used to carry: without a trap, Tab walked out of it into the
   // article behind, and closing left focus nowhere.
-  private close() {
+  //
+  // Focus is restored here and only here: the trap is deactivated rather than
+  // released, so the invoker is focused exactly once. A superseded lightbox
+  // restores nothing — the overlay that displaced it already holds focus.
+  private teardown(reason: CloseReason) {
     if (!this.open) return;
     this.open = false;
     if (this.trap?.isActive) this.trap.deactivate();
     const target = this.invoker;
     this.invoker = null;
-    if (target?.isConnected) target.focus();
+    if (reason === 'user' && target?.isConnected) target.focus();
   }
 
   private reset() { this.scale = 1; this.tx = 0; this.ty = 0; }

@@ -16,6 +16,7 @@ export function wireNeovimPalette() {
     id: 'commands',
     prefix: ':',
     placeholder: 'Type a command...',
+    title: 'Command palette',
     getItems(query: string): PaletteItem[] {
       const commands: PaletteItem[] = [
         ...registry.nav.map(tab => ({
@@ -98,6 +99,7 @@ export function wireNeovimPalette() {
     id: 'search',
     prefix: '/',
     placeholder: 'Search pages...',
+    title: 'Search',
     async getItems(query: string): Promise<PaletteItem[]> {
       const index = await registry.getSearchIndex();
       const q = query.trim().toLowerCase();

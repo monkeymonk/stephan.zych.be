@@ -35,6 +35,46 @@ html, body {
   color: var(--sz-text, #cdd6f4);
 }
 
+/* ── Before the shell upgrades ──
+   The page shell is custom elements (base.njk nests sz-window-manager >
+   sz-window > sz-tmux-panes > sz-neovim > #main-content), upgraded by a module
+   script. Until it runs, the raw document is what paints: measured at 6x CPU
+   and 1Mbps, first paint was full-bleed text at the top-left corner for ~2.5s,
+   then everything relayouted into the terminal when the chrome appeared.
+
+   These rules put that paint roughly where the window will be, so the upgrade
+   is a repaint instead of a relayout. Nothing is hidden on purpose: there is
+   no <noscript> anywhere in this site, so this paint is also the entire no-JS
+   rendering, and hiding it would trade a flash for a blank page.
+
+   Desktop only. Under 768px the window is full-page and the document scrolls,
+   which is already what the raw layout does.
+
+   The offsets mirror sz-window's own geometry (70vw wide, 12.5vh from the top,
+   plus 32px of titlebar and tab bar above the content). They do not have to be
+   exact — close enough that no line of text moves far is the whole goal. */
+@media (min-width: 769px) {
+  sz-window-manager:not(:defined),
+  sz-window:not(:defined),
+  sz-tmux-panes:not(:defined),
+  sz-neovim:not(:defined) {
+    display: block;
+  }
+
+  sz-window:not(:defined) {
+    width: 70vw;
+    margin: calc(12.5vh + 32px) auto 0;
+  }
+
+  /* Same three declarations sz-neovim sets on itself at connect time, so the
+     type does not change metrics when it upgrades. */
+  sz-neovim:not(:defined) {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--sz-font-size, 13px);
+    line-height: 1.5;
+  }
+}
+
 /* ── Mobile: hand the scroller back to the document ──
    Under 768px the whole UI stops being a fixed window and flows in the
    document, because iOS Safari routes the status-bar scroll-to-top tap to the
@@ -1290,6 +1330,13 @@ html[data-view="reading"] .sz-article__breadcrumb {
     min-height: calc(100dvh - var(--sz-mobile-chrome-top) - var(--sz-mobile-chrome-bottom));
   }
   .sz-404__art { font-size: clamp(5px, 2.6vw, 10px); }
+}
+
+/* The section links under the hint. Needs its own rule because .sz-404__hint
+   is margin-free by design (it sits directly under the heading). */
+.sz-404__links {
+  margin: 16px 0 0;
+  color: var(--sz-muted, #989caf);
 }
 
 /* ═══════════════════════════════════════════════════

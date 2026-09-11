@@ -118,15 +118,21 @@ class SpaRouter {
       const newTitle = doc.querySelector('title')?.textContent || document.title;
       const attributes = this.collectAttributes(newContent);
 
-      // Page-scoped stylesheets live in <head> (base.njk emits cv.css for /cv/,
-      // prism for articles), and the swap below only moves #main-content — so
-      // without this the CV arrives unstyled whenever it is reached by in-page
-      // navigation instead of a fresh load. Adopt whichever page-css-* node this
-      // document is missing, and wait for a linked sheet so the new content is
-      // never painted unstyled. Adopted sheets are kept when leaving the page:
-      // there are only a couple, and keeping them avoids a refetch on the way
-      // back.
-      await this.adoptPageStyles(doc);
+      // Page-scoped stylesheets live in <head> (base.njk emits prism for
+      // articles, cv.css for the CV), and the swap below only moves
+      // #main-content — so without this the CV arrives unstyled whenever it is
+      // reached by in-page navigation instead of a fresh load. Adopted sheets
+      // are kept when leaving the page: there are only a couple, and keeping
+      // them avoids a refetch on the way back.
+      //
+      // Synchronous on purpose. The build inlines every page-scoped sheet as a
+      // <style> node (esbuild.config.mjs), so the rules apply the moment the
+      // node is in the document and there is nothing to wait for. This used to
+      // await a <link>'s load event with a 2000ms escape hatch, which was the
+      // worst of both: an SPA hop to /cv/ stalled for the full two seconds on
+      // a slow sheet and then painted the CV unstyled anyway when the timeout
+      // fired, so the page visibly restyled a second later.
+      this.adoptPageStyles(doc);
 
       // Remove old children (triggers disconnectedCallback on web components)
       while (currentContent.firstChild) {
@@ -170,29 +176,15 @@ class SpaRouter {
   }
 
   // Copy the destination page's page-css-* <head> nodes into this document if
-  // they aren't already here. Handles both shapes the build can produce: an
-  // external <link> (cv.css) and a <style> that esbuild inlined (prism).
-  private async adoptPageStyles(doc: Document): Promise<void> {
-    const pending: Promise<void>[] = [];
-
+  // they aren't already here. Every page-scoped sheet is inlined as a <style>
+  // by the build, so adoption is a DOM insert and the rules are live at once.
+  // A <link> would need a load wait, which is why the build inlines them
+  // instead: the wait is what used to stall navigation and then paint unstyled.
+  private adoptPageStyles(doc: Document): void {
     for (const node of Array.from(doc.head.querySelectorAll('[id^="page-css-"]'))) {
       if (!node.id || document.getElementById(node.id)) continue;
-      const adopted = document.importNode(node, true) as HTMLElement;
-
-      if (adopted instanceof HTMLLinkElement) {
-        pending.push(new Promise<void>(resolve => {
-          const done = () => resolve();
-          adopted.addEventListener('load', done, { once: true });
-          adopted.addEventListener('error', done, { once: true });
-          // A stalled stylesheet must never hold navigation hostage.
-          window.setTimeout(done, 2000);
-        }));
-      }
-
-      document.head.appendChild(adopted);
+      document.head.appendChild(document.importNode(node, true));
     }
-
-    await Promise.all(pending);
   }
 
   private collectAttributes(content: HTMLElement): RouteChangedAttributes {

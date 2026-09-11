@@ -2,12 +2,33 @@ import { LitElement, css, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { reducedMotion } from '../../core/styles.js';
 import { ActionController } from '../../core/action-controller.js';
+import { KeymapController } from '../../core/keymap-controller.js';
+import { OverlayController } from '../../core/overlay-controller.js';
 import { EFFECT_ACTION } from './actions.js';
 
 @customElement('sz-effect-matrix')
 export class SzEffectMatrix extends LitElement {
   private cleanupEffect?: () => void;
   private actionCtrl = new ActionController(this, [[EFFECT_ACTION.MATRIX, () => this.startMatrix()]]);
+
+  /**
+   * A `layer`: the canvas paints over everything but displaces no modal and
+   * traps no focus. It is registered so the dismiss keys can be scoped to the
+   * run — the keymap gives a live layer its own tier — instead of the fresh
+   * document listener this component used to add per run, which stayed armed
+   * for any run whose cleanup had already replaced it.
+   */
+  private overlayCtrl = new OverlayController(this, {
+    id: 'effect',
+    kind: 'layer',
+    // Nothing is styled off `[open]` here: the host is display:none and the
+    // canvas lives on <body>.
+    reflect: false,
+    onClose: () => this.cleanupEffect?.(),
+  });
+
+  /** Empty between runs: `q` and Escape only mean "dismiss" while one is up. */
+  private keysCtrl = new KeymapController(this, []);
 
   static styles = css`
     :host {
@@ -75,19 +96,43 @@ export class SzEffectMatrix extends LitElement {
       window.clearInterval(interval);
       window.clearTimeout(timeout);
       window.removeEventListener('resize', onResize);
-      document.removeEventListener('keydown', onKey);
+      this.keysCtrl.setBindings([]);
+      this.overlayCtrl.release();
       canvas.remove();
       if (this.cleanupEffect === cleanup) this.cleanupEffect = undefined;
     };
 
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' || event.key === 'q') cleanup();
-    };
-
     window.addEventListener('resize', onResize);
-    document.addEventListener('keydown', onKey);
     const timeout = window.setTimeout(cleanup, 8000);
     this.cleanupEffect = cleanup;
+
+    this.overlayCtrl.claim();
+    this.keysCtrl.setBindings([
+      {
+        id: 'effect.dismiss',
+        keys: ['q'],
+        scope: 'overlay:effect',
+        chars: false,
+        run: () => {
+          cleanup();
+          return true;
+        },
+      },
+      {
+        // Escape's twin. The central `overlay.escape` only closes modals, and
+        // this is a layer, so without this binding Escape would fall through
+        // to `nav.back.escape` and leave the article the effect is painted
+        // over.
+        id: 'effect.dismiss',
+        keys: ['Escape'],
+        scope: 'overlay:effect',
+        chars: false,
+        run: () => {
+          cleanup();
+          return true;
+        },
+      },
+    ]);
   }
 
   private createDrops(width: number): number[] {

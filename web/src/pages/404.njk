@@ -1,8 +1,9 @@
 ---
 layout: base.njk
-title: "404 · Not Found"
-description: "Page not found"
+title: "404 · Page not found · Stéphan Zych"
+description: "That path is not on the site. Head back to the blog, the projects, or press / to search everything."
 permalink: /404.html
+noindex: true
 ---
 {#
   Plain light DOM on purpose. This screen used to be written as children of
@@ -30,7 +31,13 @@ permalink: /404.html
   </pre>
   <h1 class="sz-404__title">404 · Page not found</h1>
   <p class="sz-404__hint">
-    Type <code>:home</code> or press <kbd>Alt</kbd>+<kbd>1</kbd> to go back
+    Press <kbd>/</kbd> to search, or <kbd>Alt</kbd>+<kbd>1</kbd> to go home.
+    Every command is behind <code>:</code>, and both keys work even with
+    single-key shortcuts switched off.
+  </p>
+  <p class="sz-404__links">
+    <a href="/blog/">Blog</a> · <a href="/projects/">Projects</a> ·
+    <a href="/cv/">CV</a>
   </p>
   <a class="sz-404__home" href="/">&larr; Go home</a>
 </div>

@@ -196,7 +196,7 @@
     { "school": "CEPEGRA", "detail": "Graphic production training" }
   ],
   "languages": [
-    { "name": "French", "level": "C2", "note": "Mother tongue" },
+    { "name": "French", "level": "C2", "note": "Native" },
     { "name": "English", "level": "B2" }
   ]
 }

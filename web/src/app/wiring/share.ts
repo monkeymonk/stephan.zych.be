@@ -1,5 +1,5 @@
 import { copyText } from '../../core/clipboard.js';
-import { singleKeyAllowed } from '../../core/keyboard.js';
+import { keymap } from '../../core/keymap.js';
 
 declare global {
   interface Window {
@@ -19,9 +19,10 @@ function copyShareUrl(anchor: HTMLAnchorElement) {
   window.umami?.track('share', { network: 'copy' });
 }
 
-// Copy-link control in the article share rows. Both listeners sit on document
-// and stay valid across SPA navigation — the router swaps only #main-content,
-// so there is nothing to re-wire on route change.
+// Copy-link control in the article share rows. The click listener sits on
+// document and stays valid across SPA navigation — the router swaps only
+// #main-content, so there is nothing to re-wire on route change; the keymap
+// binding resolves its anchor per keystroke for the same reason.
 export function wireShare(): () => void {
   const onClick = (e: MouseEvent) => {
     // The share row renders both inside <sz-markdown> and in the plain-DOM
@@ -39,21 +40,26 @@ export function wireShare(): () => void {
     copyShareUrl(anchor);
   };
 
-  const onKeydown = (e: KeyboardEvent) => {
-    if (e.key !== 'y' || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-    if (!singleKeyAllowed()) return;
-    // Scoped by presence, not by page type: no copy control, no shortcut.
-    const anchor = document.querySelector<HTMLAnchorElement>('.js-share-copy');
-    if (!anchor) return;
-
-    e.preventDefault();
-    copyShareUrl(anchor);
-  };
-
   document.addEventListener('click', onClick);
-  document.addEventListener('keydown', onKeydown);
+  const unregister = keymap.register({
+    id: 'share.copy',
+    keys: ['y'],
+    scope: 'page',
+    chars: true,
+    description: "Copy this article's URL",
+    // Scoped by presence, not by page type: no copy control, no shortcut, and
+    // the key stays unconsumed.
+    when: () => document.querySelector('.js-share-copy') !== null,
+    run: () => {
+      const anchor = document.querySelector<HTMLAnchorElement>('.js-share-copy');
+      if (!anchor) return false;
+      copyShareUrl(anchor);
+      return true;
+    },
+  });
+
   return () => {
     document.removeEventListener('click', onClick);
-    document.removeEventListener('keydown', onKeydown);
+    unregister();
   };
 }

@@ -49,8 +49,7 @@ type Model struct {
 
 	width, height int
 	screen        screen
-	prev          screen // reader's back target
-	returnTo      screen // help back target
+	hist          history // back stack: `q`/esc pop it, see navigation.go
 	clock         string
 
 	input   textinput.Model
@@ -72,13 +71,12 @@ type Model struct {
 	effectFrame   int
 	effectPrev    screen
 	activeTab     string
-	paletteOpen   bool
+	overlay       Overlay // the one surface that owns the keyboard, see overlay.go
 	palettePrefix string
 	palItems      []paletteItem
 	palFrame      int
 
 	readerLinks []pageLink
-	linksOpen   bool
 	linkCursor  int
 
 	themeName     string
@@ -177,7 +175,15 @@ func (m Model) canonicalPath() (path, title string) {
 }
 
 func (m Model) needsAnim() bool {
-	return m.screen == screenHome || (m.paletteOpen && m.palFrame < paletteRevealLen) || m.screen == screenEffect
+	// The quit prompt is a single static box over a dotted backdrop, and it
+	// covers everything: nothing under it is visible, so a frame ticker here
+	// would repaint an unchanged screen 24 times a second — over SSH, for as
+	// long as the question goes unanswered. Checked before the home clause,
+	// because the prompt is usually raised from home.
+	if m.overlay == overlayConfirmQuit {
+		return false
+	}
+	return m.screen == screenHome || (m.overlay == overlayPalette && m.palFrame < paletteRevealLen) || m.screen == screenEffect
 }
 
 // --- layout ---------------------------------------------------------------
@@ -558,7 +564,12 @@ func (m *Model) startEffect(kind string) tea.Cmd {
 	return nil
 }
 
-func (m *Model) openReader(a Article, from screen) {
+func (m *Model) openReader(a Article) {
+	// Every route into an article records the place it was reached from — a
+	// list, the article that linked here, the palette — so `q` has somewhere
+	// to go. It used to take that place as a parameter and keep it in a single
+	// field, which is the bug navigation.go's header describes.
+	m.leave()
 	a.Body = m.resolveSiteVars(a.Body)
 	a.Body = m.resolveConditionals(a.Body)
 	if nav := m.seriesNavMarkdown(a); nav != "" {
@@ -572,11 +583,9 @@ func (m *Model) openReader(a Article, from screen) {
 	m.readerTitle = a.Title
 	m.listTitle = a.Section
 	m.readerLinks = m.extractLinks(a.Body)
-	m.linksOpen = false
 	m.linkCursor = 0
 	m.reader.SetContent(m.renderMarkdown(a))
 	m.reader.GotoTop()
-	m.prev = from
 	m.activeTab = a.Section
 	if a.Section == "pages" {
 		m.activeTab = a.Slug
@@ -774,7 +783,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.screen == screenHome {
 			m.homeFrame++
 		}
-		if m.paletteOpen && m.palFrame < paletteRevealLen {
+		if m.overlay == overlayPalette && m.palFrame < paletteRevealLen {
 			m.palFrame++
 		}
 		if m.screen == screenEffect {
@@ -787,99 +796,89 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
-		if m.paletteOpen {
-			// The command palette (`:blog`, `/search`) is a primary navigation
-			// path and never reaches afterKey below — route it through so
-			// palette-driven reading is not invisible.
-			return m.afterKey(m.updatePalette(msg))
+		if !m.overlay.open() && m.screen != screenEffect {
+			// A transient status message survives until the next keystroke in
+			// normal mode, as it always has: an overlay's own keys leave it up.
+			m.message = ""
 		}
-		if m.linksOpen {
-			// Same for in-article link following.
-			return m.afterKey(m.updateLinks(msg))
+		if b, ok := resolve(m, msg); ok {
+			mm, cmd := b.run(m)
+			return mm.afterKey(cmd)
 		}
-		if m.screen == screenEffect {
-			m.screen = m.effectPrev
-			m.effect = ""
-			return m, nil
+		// A key the table does not claim belongs to the widget on screen: the
+		// palette's text input while it owns the keyboard, the reader's
+		// viewport otherwise. Those are the intrinsic mechanics the keymap
+		// deliberately does not register, and dropping the key here would
+		// break typing and scrolling.
+		switch {
+		case m.overlay == overlayPalette:
+			mm, cmd := m.paletteInput(msg)
+			return mm.afterKey(cmd)
+		case m.overlay == overlayNone && m.screen == screenReader:
+			var cmd tea.Cmd
+			m.reader, cmd = m.reader.Update(msg)
+			return m.afterKey(cmd)
 		}
-		// normal mode
-		m.message = ""
-		switch msg.String() {
-		case "ctrl+c":
-			return m, tea.Quit
-		case ":":
-			return m.openPalette(":")
-		case "/":
-			return m.openPalette("/")
-		case "?":
-			m.returnTo = m.screen
-			m.screen = screenHelp
-			return m.afterKey(m, nil)
-		}
-		// global tab shortcuts — every nav key (a/p/b/c…) works from any screen
-		for _, lk := range m.homeLinks() {
-			if msg.String() == lk.key {
-				return m.afterKey(m.gotoTab(lk.name))
-			}
-		}
-		switch m.screen {
-		case screenHome:
-			return m.afterKey(m.updateHome(msg))
-		case screenList:
-			return m.afterKey(m.updateList(msg))
-		case screenReader:
-			return m.afterKey(m.updateReader(msg))
-		case screenHelp:
-			if k := msg.String(); k == "esc" || k == "q" || k == "h" {
-				m.screen = m.returnTo
-			}
-			return m.afterKey(m, nil)
-		}
+		return m, nil
 	}
 	return m, nil
 }
 
 // afterKey ensures the animation loop is running when the resulting screen needs
 // it (e.g. returning to the home screen, whose tagline cycles), and reports the
-// resulting screen as a pageview. It is the funnel for every navigation path;
-// the tracker's own lastPath dedupe is what makes the overlapping callers
-// idempotent, so no dedupe state belongs on Model (which is copied by value).
-func (m Model) afterKey(model tea.Model, cmd tea.Cmd) (tea.Model, tea.Cmd) {
-	mm, ok := model.(Model)
-	if !ok {
-		return model, cmd
+// resulting screen as a pageview. Every keystroke leaves through it; the
+// tracker's own lastPath dedupe is what makes the repeats harmless, so no
+// dedupe state belongs on Model (which is copied by value).
+func (m Model) afterKey(cmd tea.Cmd) (tea.Model, tea.Cmd) {
+	m.trackPath()
+	if m.needsAnim() && !m.animating {
+		m.animating = true
+		return m, tea.Batch(cmd, animTick())
 	}
-	mm.trackPath()
-	if mm.needsAnim() && !mm.animating {
-		mm.animating = true
-		return mm, tea.Batch(cmd, animTick())
-	}
-	return mm, cmd
+	return m, cmd
 }
 
-func (m Model) updateHome(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	links := m.homeLinks()
-	switch msg.String() {
-	case "up", "k":
-		if m.cursor > 0 {
-			m.cursor--
-		}
-	case "down", "j":
-		if m.cursor < len(links)-1 {
-			m.cursor++
-		}
-	case "g":
-		m.cursor = 0
-	case "G":
-		m.cursor = len(links) - 1
-	case "q":
-		return m, tea.Quit
-	case "enter", "l", "right":
-		if m.cursor >= 0 && m.cursor < len(links) {
-			return m.gotoTab(links[m.cursor].name)
-		}
+// back is the one resolution order `q` and esc share: close the overlay that
+// owns the keyboard, else pop the history stack, else — at the root, with
+// nowhere left to go — ask before disconnecting. Every back key runs this, so
+// there is no second order for a screen to get wrong.
+func (m Model) back() (Model, tea.Cmd) {
+	if m.overlay.open() {
+		return m.closeOverlay(), nil
 	}
+	loc, ok := m.hist.pop()
+	if !ok {
+		m.overlay = overlayConfirmQuit
+		return m, nil
+	}
+	rest := m.hist
+	m.restore(loc)
+	// Going back is not itself a navigation. restore replays through
+	// enterList/openReader, which record history, so the stack as it stood
+	// just after the pop is the one that survives.
+	m.hist = rest
 	return m, nil
+}
+
+// closeOverlay hands the keyboard back to the screen underneath. The palette
+// is the only overlay holding focus of its own, so it is the only one with
+// anything to give up.
+func (m Model) closeOverlay() Model {
+	if m.overlay == overlayPalette {
+		m.input.Blur()
+	}
+	m.overlay = overlayNone
+	return m
+}
+
+// leave is what every navigation does before it goes anywhere: record the
+// place being left so `q` can return to it, and hand the keyboard back, so an
+// overlay cannot outlive the screen it was opened over. The four entry points
+// (goHome, enterList, openReader, openHelp) call it, which is why the palette
+// and an in-article link record history the same way a nav key does.
+func (m *Model) leave() {
+	m.hist.push(m.capture())
+	*m = m.closeOverlay()
 }
 
 type homeLink struct {
@@ -899,20 +898,39 @@ func (m Model) homeLinks() []homeLink {
 	return out
 }
 
+// goHome navigates to the start screen. Three callers reach it (a nav tab, the
+// palette's `:home`, an in-article link to /), and each is a navigation, so the
+// step away from the current place is recorded exactly once, here.
+func (m *Model) goHome() {
+	m.leave()
+	m.screen = screenHome
+	m.cursor = 0
+}
+
+// openHelp enters the help screen, recording the place it was opened from.
+// Both callers (`?` and the palette's `:help`) go through here; the help
+// screen used to keep its own one-slot back target, which a second `?` then
+// pointed at help itself.
+func (m *Model) openHelp() {
+	m.leave()
+	m.screen = screenHelp
+}
+
 // gotoTab navigates to a nav tab by name.
 func (m Model) gotoTab(name string) (tea.Model, tea.Cmd) {
 	switch name {
 	case "home":
-		m.screen = screenHome
-		m.cursor = 0
+		m.goHome()
 	case "projects":
 		m.enterList("projects", "projects", m.content.Projects)
 	case "blog":
 		m.enterList("blog", "blog", m.content.Blog)
 	default: // about, contact, whoami, cv, … → page
 		if a, ok := m.content.Pages[name]; ok {
-			m.openReader(a, screenHome)
+			m.openReader(a)
 		}
+		// An unknown name navigates nowhere, so it records nothing: each
+		// branch above pushes, rather than this function pushing up front.
 	}
 	return m, nil
 }
@@ -934,66 +952,13 @@ func (m Model) homeHint() string {
 }
 
 func (m *Model) enterList(kind, title string, items []Article) {
+	m.leave()
 	m.listKind = kind
 	m.listTitle = title
 	m.listItems = items
 	m.cursor = 0
 	m.activeTab = kind
 	m.screen = screenList
-}
-
-func (m Model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.String() {
-	case "up", "k":
-		if m.cursor > 0 {
-			m.cursor--
-		}
-	case "down", "j":
-		if m.cursor < len(m.listItems)-1 {
-			m.cursor++
-		}
-	case "g":
-		m.cursor = 0
-	case "G":
-		m.cursor = len(m.listItems) - 1
-	case "esc", "backspace", "h", "left", "q":
-		m.screen = screenHome
-		m.cursor = 0
-	case "enter", "l", "right":
-		if len(m.listItems) > 0 {
-			m.openReader(m.listItems[m.cursor], screenList)
-		}
-	}
-	return m, nil
-}
-
-func (m Model) updateReader(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.String() {
-	case "esc", "backspace", "h", "left", "q":
-		m.screen = m.prev
-		return m, nil
-	case "l":
-		if len(m.readerLinks) > 0 {
-			m.linksOpen = true
-			m.linkCursor = 0
-			return m, nil
-		}
-	case "]":
-		if _, next := m.readerNeighbors(); next != nil {
-			m.openReader(*next, m.prev)
-		}
-		return m, nil
-	case "[":
-		if prev, _ := m.readerNeighbors(); prev != nil {
-			m.openReader(*prev, m.prev)
-		}
-		return m, nil
-	case "y":
-		return m.copyURL(m.data.Site.URL + articlePath(m.readerArticle))
-	}
-	var cmd tea.Cmd
-	m.reader, cmd = m.reader.Update(msg)
-	return m, cmd
 }
 
 // --- view -----------------------------------------------------------------
@@ -1009,11 +974,13 @@ func (m Model) View() string {
 		return m.viewEffect()
 	}
 	var out string
-	switch {
-	case m.paletteOpen:
+	switch m.overlay {
+	case overlayPalette:
 		out = m.viewPalette()
-	case m.linksOpen:
+	case overlayLinks:
 		out = m.viewLinks()
+	case overlayConfirmQuit:
+		out = m.viewConfirmQuit()
 	default:
 		switch m.screen {
 		case screenList:
@@ -1206,6 +1173,33 @@ func (m Model) viewHelp() string {
 	body := lipgloss.NewStyle().Padding(0, 0, 0, 2).Render(m.renderHelp())
 	status := m.statusline(crumb, "esc to close")
 	return m.shell(body, m.bottomBar(status))
+}
+
+// viewConfirmQuit renders the disconnect prompt, in the same shape as the
+// palette and the link picker: one centred box over the dotted backdrop. It is
+// what back() reaches at the root, where the session is the only thing left to
+// leave. "Disconnect" rather than "quit" because that is what happens — the
+// SSH connection closes and the site is still there.
+func (m Model) viewConfirmQuit() string {
+	boxW := 44
+	if mx := m.iw() - 8; boxW > mx {
+		boxW = mx
+	}
+	if boxW < 24 {
+		boxW = 24
+	}
+	innerW := boxW - 4 // border + padding, as the palette measures it
+
+	var b strings.Builder
+	b.WriteString(m.st.ConfTitle.Render("disconnect?") + "\n")
+	b.WriteString(m.st.FrameBorder.Render(strings.Repeat("─", innerW)) + "\n")
+	b.WriteString(m.st.ConfBody.Render("This ends the SSH session.") + "\n")
+	b.WriteString(m.st.FrameBorder.Render(strings.Repeat("─", innerW)) + "\n")
+	b.WriteString(m.st.ConfHint.Render("y / ⏎ disconnect · n / esc / q stay"))
+
+	box := m.st.ConfBox.Width(boxW - 2).Render(b.String())
+	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, box,
+		lipgloss.WithWhitespaceForeground(m.st.Backdrop), lipgloss.WithWhitespaceChars("·"))
 }
 
 // fitLine truncates/pads a (possibly styled) line to exactly n columns.
