@@ -34,9 +34,15 @@ export class SzStatusbar extends LitElement {
   static styles = css`
     ${focusRing}
     :host {
-      display: flex;
+      /* Grid, not space-between flex: with three unequal segments
+         space-between centers the middle one in the *leftover* space, so
+         "main" drifted by half the difference between the side segments
+         (~80px) and moved again with the theme name. Equal fr side tracks
+         pin it to the bar's true centre; minmax(0,…) lets the route
+         ellipsis instead of forcing the track wider. */
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       align-items: center;
-      justify-content: space-between;
       height: 24px;
       background: var(--sz-mantle, #181825);
       color: var(--sz-statusbar-text, #a6adc8);
@@ -51,6 +57,12 @@ export class SzStatusbar extends LitElement {
       align-items: center;
       gap: 8px;
       min-width: 0;
+    }
+    .center {
+      justify-content: center;
+    }
+    .right {
+      justify-content: flex-end;
     }
     .mode {
       flex: none;
@@ -122,6 +134,9 @@ export class SzStatusbar extends LitElement {
         z-index: 25;
         box-sizing: border-box;
         height: var(--sz-mobile-statusbar-h);
+        /* .center is hidden below, but an explicit third track would still
+           reserve a gutter and hold the right segment off the edge. */
+        grid-template-columns: minmax(0, 1fr) auto;
       }
       .center {
         display: none;
@@ -154,7 +169,7 @@ export class SzStatusbar extends LitElement {
           ><sz-icon name="git-branch" size="12"></sz-icon> main</a
         >
       </div>
-      <div class="segment">
+      <div class="segment right">
         <span class="info">${theme}</span>
         <span class="separator">|</span>
         <span class="info">utf-8</span>

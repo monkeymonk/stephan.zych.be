@@ -9,6 +9,39 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-09-11
+
+### Added
+- The CV's earlier roles now carry the client list from that rich-media era:
+  IKEA, L'Oréal, Nespresso, Sony Pictures, bpost and the European Parliament.
+  The company site's brand wall had been claiming those names for a while and
+  nothing on the CV backed them, so the one document a reader would check for
+  evidence listed four employers and no work. The names sit at the section
+  level rather than against a single employer, because the assignments ran
+  across those years and pinning each one to a row would state a precision the
+  record does not have. All three renderers show it: the web page, the
+  Markdown export at `/cv.md`, and the terminal.
+
+### Fixed
+- The printed CV went to four pages when the earlier-roles client list above
+  was added, the fourth holding a single line. The extra line was not the
+  cause: the two "Selected engineering work" entries were each held together
+  as one unbreakable block, and the taller of the two could not fit in the
+  76pt left at the foot of page 2, so it moved whole to page 3 and pushed the
+  tail of the document over the edge. That is the same trap 1.5.0 removed from
+  the role bullet groups. Those entries now split across a page break, with at
+  least two lines kept either side of it and the source URL pinned to its
+  prose. The sheet is three pages again, no page is left a third empty, and
+  font size, line-height and page margins are untouched.
+- The `main` branch label in the terminal statusbar was never actually
+  centred. The bar was a three-child `space-between` flex row, which centres
+  the middle child in the space the two side segments leave over, not in the
+  bar. With `NORMAL ~/route` on the left and theme · encoding · socials on the
+  right, that put the label about 80px left of centre, and moved it again
+  whenever the theme name or the route changed length. The bar is a grid with
+  equal side tracks now, so the label is pinned to the bar's true centre and a
+  long route ellipsises instead of pushing it aside.
+
 ## [1.9.3] - 2026-09-11
 
 ### Changed
@@ -601,7 +634,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.3...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.3...v1.10.0
 [1.9.3]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.2...v1.9.3
 [1.9.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.0...v1.9.1
