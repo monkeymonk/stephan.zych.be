@@ -68,17 +68,18 @@ type trackerCtxKey struct{}
 func trackSession(t *tracker) wish.Middleware {
 	return func(next ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
-			w, h := 80, 24
+			info := sessionInfo{Width: 80, Height: 24}
 			if pty, _, active := s.Pty(); active {
-				w, h = pty.Window.Width, pty.Window.Height
+				info.Width, info.Height = pty.Window.Width, pty.Window.Height
+				info.Term = pty.Term
 			}
-			// The real address never leaves this function: session() hashes it
-			// immediately and keeps only the derived stand-in. See pseudoIP.
-			addr := ""
+			// The real address never leaves this function: session() reduces it
+			// to a network prefix and keeps only that. See anonymizeIP.
 			if s.RemoteAddr() != nil {
-				addr = s.RemoteAddr().String()
+				info.Addr = s.RemoteAddr().String()
 			}
-			ts := t.session(w, h, addr)
+			info.ClientVersion = s.Context().ClientVersion()
+			ts := t.session(info)
 			s.Context().SetValue(trackerCtxKey{}, ts)
 			ts.start()
 			next(s)

@@ -2,12 +2,9 @@ package main
 
 import (
 	"bytes"
-	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -36,9 +33,13 @@ const (
 	// `Mozilla/5.0 (compatible; szych-tui/1.0)` is flagged too. The parenthesis
 	// still says what this is, so nothing here impersonates a real browser.
 	// analytics_test.go pins both rules.
-	analyticsUA    = "Mozilla/5.0 (SSH; szych-tui/1.0)"
-	analyticsQueue = 64
-	analyticsWait  = 3 * time.Second
+	analyticsUA = "Mozilla/5.0 (SSH; szych-tui/1.0)"
+	// analyticsDevice is sent verbatim so Umami does not guess. Its own guess
+	// reads `screen` as pixels, and 120x40 columns of terminal looks like a
+	// small laptop.
+	analyticsDevice = "terminal"
+	analyticsQueue  = 64
+	analyticsWait   = 3 * time.Second
 )
 
 // analyticsPayload is Umami's /api/send payload. Everything but website/hostname
@@ -48,16 +49,23 @@ type analyticsPayload struct {
 	Hostname string `json:"hostname"`
 	Tag      string `json:"tag"`
 	ID       string `json:"id,omitempty"`
-	// IP is a pseudonymous stand-in, never the visitor's address. Umami hashes
-	// website+ip+userAgent into its session id, so without something that
-	// varies per client every SSH visitor collapses into one session. See
-	// pseudoIP.
-	IP     string         `json:"ip,omitempty"`
-	URL    string         `json:"url,omitempty"`
-	Title  string         `json:"title,omitempty"`
-	Screen string         `json:"screen,omitempty"`
-	Name   string         `json:"name,omitempty"`
-	Data   map[string]any `json:"data,omitempty"`
+	// IP carries only a network prefix, never the visitor's full address: Umami
+	// hashes website+ip+userAgent into its session id AND geolocates that same
+	// address, so it has to vary per visitor and still resolve. See anonymizeIP.
+	IP string `json:"ip,omitempty"`
+	// Browser, OS and Device are sent rather than parsed. Umami takes all three
+	// from the payload when present and otherwise guesses from the User-Agent,
+	// which for a terminal produces nonsense: getDevice() reads our `screen`
+	// (columns x rows, e.g. 120x40), sees a width under 1920 and files every
+	// SSH session as a laptop.
+	Browser string         `json:"browser,omitempty"`
+	OS      string         `json:"os,omitempty"`
+	Device  string         `json:"device,omitempty"`
+	URL     string         `json:"url,omitempty"`
+	Title   string         `json:"title,omitempty"`
+	Screen  string         `json:"screen,omitempty"`
+	Name    string         `json:"name,omitempty"`
+	Data    map[string]any `json:"data,omitempty"`
 }
 
 type analyticsEvent struct {
@@ -152,7 +160,9 @@ func (t *tracker) post(ev analyticsEvent) {
 type trackerSession struct {
 	t       *tracker
 	id      string
-	ip      string // pseudonymous, see pseudoIP
+	ip      string // network prefix only, see anonymizeIP
+	browser string // terminal emulator, from $TERM
+	os      string // only when the SSH client string reveals it
 	screen  string
 	started time.Time
 
@@ -160,18 +170,34 @@ type trackerSession struct {
 	lastPath string
 }
 
-// session mints a session identifier, records the real pty size, and derives a
-// pseudonymous stand-in for the client address. `addr` is a host:port string
-// and is consumed here: only the derived value is retained.
-func (t *tracker) session(w, h int, addr string) *trackerSession {
+// sessionInfo is what one SSH connection can honestly say about its client.
+// Every field is optional: Umami shows "Unknown" for anything missing, which
+// is the correct answer when the protocol does not carry it.
+type sessionInfo struct {
+	Width, Height int
+	// Addr is the client's host:port. Consumed here: only the network prefix
+	// derived from it is retained.
+	Addr string
+	// Term is $TERM as the client requested it (xterm-256color, alacritty,
+	// tmux-256color). The emulator is the surface the reader actually looks at,
+	// so it goes in the field a browser would occupy.
+	Term string
+	// ClientVersion is the SSH identification string (SSH-2.0-OpenSSH_9.6).
+	// Only useful for the OS it sometimes names.
+	ClientVersion string
+}
+
+func (t *tracker) session(info sessionInfo) *trackerSession {
 	if t == nil {
 		return nil
 	}
 	return &trackerSession{
 		t:       t,
 		id:      newUUID(),
-		ip:      pseudoIP(addr),
-		screen:  strconv.Itoa(w) + "x" + strconv.Itoa(h),
+		ip:      anonymizeIP(info.Addr),
+		browser: terminalName(info.Term),
+		os:      clientOS(info.ClientVersion),
+		screen:  strconv.Itoa(info.Width) + "x" + strconv.Itoa(info.Height),
 		started: time.Now(),
 	}
 }
@@ -188,6 +214,9 @@ func (s *trackerSession) enqueue(p analyticsPayload) {
 	p.ID = s.id
 	p.Screen = s.screen
 	p.IP = s.ip
+	p.Browser = s.browser
+	p.OS = s.os
+	p.Device = analyticsDevice
 	select {
 	case s.t.events <- analyticsEvent{Type: "event", Payload: p}:
 	default:
@@ -235,36 +264,26 @@ func (s *trackerSession) end() {
 	})
 }
 
-// pseudoSalt keys the address hash. Minted once per process, never persisted,
-// so the mapping from a real client to its stand-in cannot be reproduced after
-// a restart and nothing derived from an address outlives the container. That
-// also means a visitor returning after a redeploy counts as new, which is the
-// accepted cost of not keeping a stable identifier for anybody.
-var pseudoSalt = func() []byte {
-	b := make([]byte, 32)
-	_, _ = rand.Read(b)
-	return b
-}()
-
-// pseudoIP maps a client address onto RFC 6598 shared address space
-// (100.64.0.0/10) via a keyed hash.
+// anonymizeIP drops the identifying tail of a client address: the last octet of
+// an IPv4 address, everything below the /48 of an IPv6 one.
 //
-// Umami computes its session id as uuid(websiteId, ip, userAgent, salt). Every
-// SSH visitor arrives at the collector from the same container address and now
-// with an identical User-Agent, so without something that varies per client the
-// whole TUI reads as a single session: pageviews right, visitors wrong. Sending
-// the real address would fix the numbers and forward exactly what this codebase
-// has always refused to forward.
+// Two things have to be true at once. Umami computes its session id as
+// uuid(websiteId, ip, userAgent, salt) and takes country/region/city from a
+// MaxMind lookup on that same address — there is no way to send a country
+// directly. So an address that is useless for geolocation also costs the
+// location breakdown, and one that never varies collapses every SSH visitor
+// into a single session.
 //
-// So: HMAC the address with a per-process key and keep 22 bits, which is the
-// host space of a /10. The result is stable for one client inside one process
-// (sessions and visitors count correctly), is not reversible to an address, and
-// is deliberately unroutable — geolocation on 100.64/10 resolves to nothing, so
-// the dashboard shows no country for TUI traffic rather than a fictional one.
+// A network prefix satisfies both: it geolocates to the right country (and
+// usually region), and it differs between visitors on different networks, so
+// sessions split. What it gives up is precision about the person — a /24 is an
+// ISP and a rough area, not a subscriber — and it is the same reduction this
+// server already applies to its own access log before writing it, so the box
+// keeps one rule rather than two.
 //
-// The port is stripped first: it changes on every connection, and hashing it
-// would hand every reconnect a new identity.
-func pseudoIP(addr string) string {
+// The port goes first: it changes on every connection, and keeping it would
+// hand every reconnect a new identity.
+func anonymizeIP(addr string) string {
 	if addr == "" {
 		return ""
 	}
@@ -272,12 +291,21 @@ func pseudoIP(addr string) string {
 	if h, _, err := net.SplitHostPort(addr); err == nil {
 		host = h
 	}
-	sum := hmac.New(sha256.New, pseudoSalt)
-	_, _ = sum.Write([]byte(host))
-	d := sum.Sum(nil)
-	n := uint32(d[0])<<16 | uint32(d[1])<<8 | uint32(d[2])
-	n &= 0x3fffff // 22 host bits of 100.64.0.0/10
-	return fmt.Sprintf("100.%d.%d.%d", 64+(n>>16), (n>>8)&0xff, n&0xff)
+	// An IPv6 zone (fe80::1%eth0) is not part of the address and breaks ParseIP.
+	if i := strings.IndexByte(host, '%'); i >= 0 {
+		host = host[:i]
+	}
+	ip := net.ParseIP(host)
+	if ip == nil {
+		return ""
+	}
+	if v4 := ip.To4(); v4 != nil {
+		return net.IPv4(v4[0], v4[1], v4[2], 0).String()
+	}
+	// /48: the routable prefix a site is allocated. Keeps the country, drops
+	// the subnet and interface identifier, which is the part that is personal.
+	masked := ip.Mask(net.CIDRMask(48, 128))
+	return masked.String()
 }
 
 // newUUID formats 16 crypto/rand bytes as a canonical UUIDv4. Hand-rolled
@@ -299,4 +327,57 @@ func newUUID() string {
 	out[23] = '-'
 	hex.Encode(out[24:36], b[10:16])
 	return string(out[:])
+}
+
+// terminalName turns $TERM into something a dashboard row can say. TERM names
+// the terminfo entry, not the product, so the mapping is only as good as what
+// emulators choose to set: kitty and Alacritty identify themselves, everything
+// else says "xterm-256color" and stays generic rather than being guessed at.
+// A multiplexer wins on purpose — inside tmux that is what owns the screen.
+func terminalName(term string) string {
+	t := strings.ToLower(strings.TrimSpace(term))
+	switch {
+	case t == "":
+		return ""
+	case strings.HasPrefix(t, "tmux"):
+		return "tmux"
+	case strings.HasPrefix(t, "screen"):
+		return "screen"
+	case strings.Contains(t, "kitty"):
+		return "kitty"
+	case strings.Contains(t, "alacritty"):
+		return "Alacritty"
+	case strings.Contains(t, "ghostty"):
+		return "Ghostty"
+	case strings.Contains(t, "wezterm"):
+		return "WezTerm"
+	case strings.Contains(t, "foot"):
+		return "foot"
+	case strings.Contains(t, "rxvt"):
+		return "rxvt"
+	case strings.Contains(t, "linux"):
+		return "Linux console"
+	case strings.HasPrefix(t, "xterm"):
+		return "xterm"
+	default:
+		return term
+	}
+}
+
+// clientOS reports an operating system only when the SSH identification string
+// actually names one. OpenSSH on Linux and macOS says nothing about the host,
+// so most sessions report nothing and Umami shows "Unknown" — which is true,
+// and better than inferring a platform from a version number.
+func clientOS(clientVersion string) string {
+	v := strings.ToLower(clientVersion)
+	switch {
+	case strings.Contains(v, "for_windows"), strings.Contains(v, "putty"),
+		strings.Contains(v, "kitty_ssh"), strings.Contains(v, "winscp"):
+		return "Windows"
+	case strings.Contains(v, "termius"), strings.Contains(v, "juicessh"),
+		strings.Contains(v, "connectbot"):
+		return "mobile client"
+	default:
+		return ""
+	}
 }

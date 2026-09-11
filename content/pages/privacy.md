@@ -56,8 +56,8 @@ A self-hosted instance of **[Umami](https://umami.is/)**, an open-source analyti
 
 This site is also readable over SSH (`ssh stephan.zych.be`). Those sessions report into the same self-hosted Umami as the web front-end, so a page read in the terminal counts the same as one read in a browser.
 
-- **What's measured:** the pages you open, your terminal's size, and how long the session lasted (all aggregated).
-- **Your IP address:** **never sent, and never stored.** What is sent in its place is a stand-in address derived from yours by a keyed hash, because the analytics software counts a visit per address and every terminal session otherwise arrives from the server itself and reads as one visitor. The key is random, held only in memory, and thrown away when the process restarts, so the stand-in cannot be turned back into your address and cannot be recreated later to recognise you again. It deliberately sits in a range that is not routable on the internet, so no location is derived from it.
+- **What's measured:** the pages you open, your terminal's size, which terminal program you are using (from `TERM`), and how long the session lasted (all aggregated).
+- **Your IP address:** **never sent in full, and never stored in full.** It is reduced before it leaves the machine, the same way the access log above reduces it: the last block of an IPv4 address is zeroed, and everything below an IPv6 address's `/48` is dropped. What remains identifies a network, not a person. It is sent because the analytics software counts one visit per address and derives the country from it, so without it every terminal session would arrive from the server itself and read as a single visitor with no location.
 - **No identifier:** each connection also carries a random value generated for that connection alone, kept nowhere else.
 - **What it stores on your machine:** nothing. Nothing is written to your device at any point.
 

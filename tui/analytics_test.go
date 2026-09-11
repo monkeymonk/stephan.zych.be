@@ -9,7 +9,6 @@ package main
 import (
 	"encoding/json"
 	"io"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -86,7 +85,7 @@ func TestPageviewsReachTheCollector(t *testing.T) {
 		t.Fatal("tracker not configured")
 	}
 	const clientAddr = "203.0.113.7:54321"
-	s := tr.session(120, 40, clientAddr)
+	s := tr.session(sessionInfo{Width: 120, Height: 40, Addr: clientAddr, Term: "xterm-256color", ClientVersion: "SSH-2.0-OpenSSH_9.6"})
 	s.pageview("/blog/", "blog")
 	s.pageview("/blog/", "blog") // same path: must not be sent twice
 	s.pageview("/cv/", "cv")
@@ -123,11 +122,20 @@ func TestPageviewsReachTheCollector(t *testing.T) {
 			}
 			path, _ := payload["url"].(string)
 			paths = append(paths, path)
-			if ip, _ := payload["ip"].(string); !strings.HasPrefix(ip, "100.") {
-				t.Errorf("ip = %q, want a 100.64.0.0/10 stand-in — without one Umami hashes every SSH visitor into the same session", ip)
+			if ip, _ := payload["ip"].(string); ip != "203.0.113.0" {
+				t.Errorf("ip = %q, want the 203.0.113.0 prefix — it has to vary per network so sessions split, and still resolve so the country does", ip)
 			}
 			if strings.Contains(h.raw, "203.0.113.7") {
-				t.Errorf("the visitor's real address reached the collector: %s", h.raw)
+				t.Errorf("the visitor's full address reached the collector: %s", h.raw)
+			}
+			if payload["device"] != analyticsDevice {
+				t.Errorf("device = %v, want %q — left unset, Umami reads `screen` as pixels and calls 120x40 a laptop", payload["device"], analyticsDevice)
+			}
+			if payload["browser"] != "xterm" {
+				t.Errorf("browser = %v, want xterm (from $TERM)", payload["browser"])
+			}
+			if _, present := payload["os"]; present {
+				t.Errorf("os = %v, want it omitted: plain OpenSSH does not name the host OS", payload["os"])
 			}
 		case <-time.After(4 * time.Second):
 			t.Fatalf("only %d hits arrived, want 2", len(paths))
@@ -144,40 +152,70 @@ func TestPageviewsReachTheCollector(t *testing.T) {
 	}
 }
 
-// The whole point of the stand-in: distinct clients must land on distinct
-// addresses, the same client must land on the same one, and none of it may be
-// the real address. Reconnects change the source port, so the port must not
+// The prefix has to do two jobs at once: keep enough of the address that
+// MaxMind still resolves a country, and drop the part that identifies a
+// subscriber. Reconnects change the source port, so the port must not
 // participate — otherwise every reconnect would read as a new visitor.
-func TestPseudoIPIsStableUnroutableAndNotTheRealAddress(t *testing.T) {
-	const real = "203.0.113.7"
+func TestAnonymizeIPKeepsThePrefixAndDropsTheHost(t *testing.T) {
+	const full = "203.0.113.7"
 
-	a := pseudoIP(real + ":54321")
-	b := pseudoIP(real + ":9999")
-	if a != b {
-		t.Errorf("same client, different port gave %q then %q: the port must not be hashed", a, b)
+	got := anonymizeIP(full + ":54321")
+	if got != "203.0.113.0" {
+		t.Errorf("anonymizeIP(%q) = %q, want 203.0.113.0", full, got)
 	}
-	if a == "" {
-		t.Fatal("no stand-in derived")
+	if other := anonymizeIP(full + ":9999"); other != got {
+		t.Errorf("same client, different port gave %q then %q: the port must not survive", got, other)
 	}
-	if strings.Contains(a, real) {
-		t.Errorf("stand-in %q contains the real address", a)
-	}
-
-	ip := net.ParseIP(a)
-	if ip == nil {
-		t.Fatalf("stand-in %q is not an IP", a)
-	}
-	// RFC 6598 shared address space: not routable on the public internet, so a
-	// geo lookup yields nothing rather than a fictional country.
-	_, cgnat, _ := net.ParseCIDR("100.64.0.0/10")
-	if !cgnat.Contains(ip) {
-		t.Errorf("stand-in %q is outside 100.64.0.0/10", a)
+	if got == full {
+		t.Error("the full address was sent unchanged")
 	}
 
-	if other := pseudoIP("198.51.100.20:22"); other == a {
-		t.Errorf("two different clients collapsed onto %q", a)
+	// A different network must land on a different prefix, or sessions merge.
+	if other := anonymizeIP("198.51.100.20:22"); other == got {
+		t.Errorf("two different networks collapsed onto %q", got)
 	}
-	if pseudoIP("") != "" {
-		t.Error("an empty address must stay empty rather than hashing to a real-looking one")
+
+	// IPv6 keeps the /48 a site is allocated and loses the subnet plus the
+	// interface identifier, which is the personal half.
+	v6 := anonymizeIP("[2001:db8:1234:5678:9abc:def0:1234:5678]:22")
+	if v6 != "2001:db8:1234::" {
+		t.Errorf("anonymizeIP(v6) = %q, want 2001:db8:1234::", v6)
+	}
+	if zoned := anonymizeIP("[fe80::1%25eth0]:22"); zoned == "" {
+		t.Error("a zoned IPv6 address failed to parse; the zone must be stripped, not rejected")
+	}
+
+	if anonymizeIP("") != "" {
+		t.Error("an empty address must stay empty rather than becoming a real-looking one")
+	}
+	if anonymizeIP("not-an-address:22") != "" {
+		t.Error("an unparseable address must stay empty")
+	}
+}
+
+// Umami takes browser/OS/device from the payload when present and guesses
+// otherwise. Its guess reads `screen` as pixels, so 120x40 columns of terminal
+// becomes "laptop" — data that looks real and means nothing.
+func TestClientDescriptionIsSentRatherThanGuessed(t *testing.T) {
+	for term, want := range map[string]string{
+		"xterm-256color": "xterm",
+		"xterm-kitty":    "kitty",
+		"alacritty":      "Alacritty",
+		"tmux-256color":  "tmux",
+		"screen.xterm":   "screen",
+		"linux":          "Linux console",
+		"":               "",
+	} {
+		if got := terminalName(term); got != want {
+			t.Errorf("terminalName(%q) = %q, want %q", term, got, want)
+		}
+	}
+
+	// An OS is reported only when the client string actually names one.
+	if got := clientOS("SSH-2.0-OpenSSH_for_Windows_8.6"); got != "Windows" {
+		t.Errorf("clientOS(windows build) = %q, want Windows", got)
+	}
+	if got := clientOS("SSH-2.0-OpenSSH_9.6"); got != "" {
+		t.Errorf("clientOS(plain OpenSSH) = %q, want empty: the protocol does not carry the host OS, and a guess would be fiction", got)
 	}
 }

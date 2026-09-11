@@ -9,6 +9,30 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.9.3] - 2026-09-11
+
+### Changed
+- Terminal sessions now report a location, and the stand-in address introduced
+  in 1.9.2 is gone. Umami takes the country from the same address it hashes
+  into a session id, so an address chosen to be unroutable bought distinct
+  visitors at the cost of every location. Each session sends the client's
+  network prefix instead: the last block of an IPv4 address zeroed, everything
+  below an IPv6 `/48` dropped, which is the same reduction this server already
+  applies to its own access log. Sessions still split per network, the country
+  resolves, and the part of an address that identifies a person still never
+  leaves the machine. `/privacy/` describes exactly what is sent and why.
+
+### Fixed
+- Terminal sessions stopped being reported as laptops. Umami guesses the device
+  from the screen size when the payload does not say, and the TUI's screen is
+  columns by rows — 120x40 looked like a small laptop display. The device is
+  now stated outright, and the terminal program comes through from `TERM`
+  (kitty, Alacritty, Ghostty, WezTerm and foot identify themselves; a
+  multiplexer wins over the terminal under it; anything generic stays generic).
+  The client's operating system is reported only when the SSH identification
+  string actually names one, which is rarely, so most sessions say "Unknown"
+  rather than a guess.
+
 ## [1.9.2] - 2026-09-11
 
 ### Fixed
@@ -577,7 +601,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.2...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.3...HEAD
+[1.9.3]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.2...v1.9.3
 [1.9.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.8.1...v1.9.0
