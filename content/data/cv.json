@@ -140,6 +140,14 @@
     { "role": "Co-Founder / Rich Media Developer", "company": "La Cerise Numérique", "period": "2010 – 2013" },
     { "role": "Web Designer / Integrator", "company": "Com2B Networks", "period": "2009 – 2011" }
   ],
+  "earlierClients": [
+    "IKEA",
+    "L'Oréal",
+    "Nespresso",
+    "Sony Pictures",
+    "bpost",
+    "European Parliament"
+  ],
   "skills": [
     {
       "label": "Application & frontend",

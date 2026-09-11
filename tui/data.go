@@ -165,16 +165,17 @@ type CVData struct {
 		Photo    string `json:"photo"`
 		Pdf      string `json:"pdf"`
 	} `json:"basics"`
-	Summary    []string       `json:"summary"`
-	Expertise  []CVSkillGroup `json:"expertise"`
-	Experience []CVExperience `json:"experience"`
-	Evidence   []CVEvidence   `json:"evidence"`
-	Earlier    []CVEarlier    `json:"earlier"`
-	Skills     []CVSkillGroup `json:"skills"`
-	Interests  []string       `json:"interests"`
-	Community  []CVCommunity  `json:"community"`
-	Education  []CVEducation  `json:"education"`
-	Languages  []CVLanguage   `json:"languages"`
+	Summary        []string       `json:"summary"`
+	Expertise      []CVSkillGroup `json:"expertise"`
+	Experience     []CVExperience `json:"experience"`
+	Evidence       []CVEvidence   `json:"evidence"`
+	Earlier        []CVEarlier    `json:"earlier"`
+	EarlierClients []string       `json:"earlierClients"`
+	Skills         []CVSkillGroup `json:"skills"`
+	Interests      []string       `json:"interests"`
+	Community      []CVCommunity  `json:"community"`
+	Education      []CVEducation  `json:"education"`
+	Languages      []CVLanguage   `json:"languages"`
 }
 
 // SiteData is the centralized config shared with the web build (content/data/*.json).

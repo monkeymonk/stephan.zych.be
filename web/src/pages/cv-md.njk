@@ -90,7 +90,9 @@ eleventyExcludeFromCollections: true
 {%- if job.period -%}{%- set line = line + " · " + job.period -%}{%- endif -%}
 {%- set earlierLines = (earlierLines.push(line), earlierLines) -%}
 {%- endfor -%}
-{%- set blocks = (blocks.push("## Earlier roles\n\n" + (earlierLines | join("\n"))), blocks) -%}
+{%- set earlierBlock = "## Earlier roles\n\n" + (earlierLines | join("\n")) -%}
+{%- if cv.earlierClients -%}{%- set earlierBlock = earlierBlock + "\n\n**Representative clients:** " + (cv.earlierClients | join(" · ")) -%}{%- endif -%}
+{%- set blocks = (blocks.push(earlierBlock), blocks) -%}
 {%- endif -%}
 
 {%- if cv.skills -%}

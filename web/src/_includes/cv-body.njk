@@ -117,6 +117,9 @@
       <li>{{ job.role }}{% if job.company %} — {{ job.company }}{% endif %}{% if job.period %} · {{ job.period }}{% endif %}</li>
       {% endfor %}
     </ul>
+    {% if cv.earlierClients %}
+    <p class="sz-cv__job-clients">Representative clients: {{ cv.earlierClients | join(' · ') }}</p>
+    {% endif %}
   </section>
   {% endif %}
 

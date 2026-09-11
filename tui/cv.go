@@ -123,6 +123,9 @@ func (m Model) cvArticle() Article {
 			fmt.Fprintf(&b, "- **%s** — %s · %s\n", e.Role, e.Company, e.Period)
 		}
 		b.WriteString("\n")
+		if len(cv.EarlierClients) > 0 {
+			fmt.Fprintf(&b, "**Representative clients** %s\n\n", strings.Join(cv.EarlierClients, " · "))
+		}
 	}
 
 	if len(cv.Skills) > 0 {
