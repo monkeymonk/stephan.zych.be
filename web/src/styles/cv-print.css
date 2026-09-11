@@ -170,15 +170,23 @@ body {
 .sz-cv__list-plain strong { color: #1a1a1a; }
 
 /* ── Evidence entries (plain list items with a printed source URL) ── */
+/* Same lesson as the roles below: these are multi-line prose entries, not the
+   one-liners the other plain lists hold, so keeping one atomic pushed a ~90pt
+   block whole onto the next page and left that much of the previous one blank.
+   They split instead, with orphans/widows keeping at least two lines either
+   side of the break and the source URL pinned to the prose it belongs to. */
 .sz-cv__evidence li {
   margin: 0 0 6pt;
-  break-inside: avoid;
+  break-inside: auto;
+  orphans: 2;
+  widows: 2;
 }
 .sz-cv__evidence-link {
   display: block;
   color: #555;
   font-size: 8.5pt;
   text-decoration: none;
+  break-before: avoid;
 }
 
 /* ── Experience ── */
