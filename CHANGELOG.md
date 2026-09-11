@@ -9,6 +9,20 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.9.2] - 2026-09-11
+
+### Fixed
+- Terminal sessions are counted as separate visitors again. Umami derives a
+  session from the website, the User-Agent and the caller's address, and every
+  SSH session reaches the collector from the server itself — so with one shared
+  User-Agent the whole terminal read as a single visitor. Each session now
+  sends a stand-in address derived from the client's by a keyed hash, with the
+  key random, in-memory and discarded on restart, so it cannot be reversed or
+  recreated to recognise anyone later. The stand-in sits in RFC 6598 space,
+  which is not routable, so no location is inferred from it. The visitor's real
+  address is still never sent and never stored, and `/privacy/` now says
+  exactly that rather than the shorter claim it made before.
+
 ## [1.9.1] - 2026-09-11
 
 ### Fixed
@@ -563,7 +577,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.1...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.2...HEAD
+[1.9.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.1...v1.9.2
 [1.9.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.0...v1.9.1
 [1.9.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.8.0...v1.8.1

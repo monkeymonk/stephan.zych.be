@@ -9,6 +9,7 @@ package main
 import (
 	"encoding/json"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -61,6 +62,7 @@ func TestTrackerRequiresEndpointAndWebsiteID(t *testing.T) {
 func TestPageviewsReachTheCollector(t *testing.T) {
 	type hit struct {
 		ua   string
+		raw  string
 		body map[string]any
 	}
 	hits := make(chan hit, 8)
@@ -69,7 +71,7 @@ func TestPageviewsReachTheCollector(t *testing.T) {
 		raw, _ := io.ReadAll(r.Body)
 		var parsed map[string]any
 		_ = json.Unmarshal(raw, &parsed)
-		hits <- hit{ua: r.Header.Get("User-Agent"), body: parsed}
+		hits <- hit{ua: r.Header.Get("User-Agent"), raw: string(raw), body: parsed}
 		_, _ = w.Write([]byte(`{}`))
 	}))
 	defer srv.Close()
@@ -83,7 +85,8 @@ func TestPageviewsReachTheCollector(t *testing.T) {
 	if tr == nil {
 		t.Fatal("tracker not configured")
 	}
-	s := tr.session(120, 40)
+	const clientAddr = "203.0.113.7:54321"
+	s := tr.session(120, 40, clientAddr)
 	s.pageview("/blog/", "blog")
 	s.pageview("/blog/", "blog") // same path: must not be sent twice
 	s.pageview("/cv/", "cv")
@@ -120,6 +123,12 @@ func TestPageviewsReachTheCollector(t *testing.T) {
 			}
 			path, _ := payload["url"].(string)
 			paths = append(paths, path)
+			if ip, _ := payload["ip"].(string); !strings.HasPrefix(ip, "100.") {
+				t.Errorf("ip = %q, want a 100.64.0.0/10 stand-in — without one Umami hashes every SSH visitor into the same session", ip)
+			}
+			if strings.Contains(h.raw, "203.0.113.7") {
+				t.Errorf("the visitor's real address reached the collector: %s", h.raw)
+			}
 		case <-time.After(4 * time.Second):
 			t.Fatalf("only %d hits arrived, want 2", len(paths))
 		}
@@ -132,5 +141,43 @@ func TestPageviewsReachTheCollector(t *testing.T) {
 	case h := <-hits:
 		t.Errorf("a third hit arrived (%v): repeated paths must be deduped, or every keystroke would count as a view", h.body["payload"])
 	case <-time.After(300 * time.Millisecond):
+	}
+}
+
+// The whole point of the stand-in: distinct clients must land on distinct
+// addresses, the same client must land on the same one, and none of it may be
+// the real address. Reconnects change the source port, so the port must not
+// participate — otherwise every reconnect would read as a new visitor.
+func TestPseudoIPIsStableUnroutableAndNotTheRealAddress(t *testing.T) {
+	const real = "203.0.113.7"
+
+	a := pseudoIP(real + ":54321")
+	b := pseudoIP(real + ":9999")
+	if a != b {
+		t.Errorf("same client, different port gave %q then %q: the port must not be hashed", a, b)
+	}
+	if a == "" {
+		t.Fatal("no stand-in derived")
+	}
+	if strings.Contains(a, real) {
+		t.Errorf("stand-in %q contains the real address", a)
+	}
+
+	ip := net.ParseIP(a)
+	if ip == nil {
+		t.Fatalf("stand-in %q is not an IP", a)
+	}
+	// RFC 6598 shared address space: not routable on the public internet, so a
+	// geo lookup yields nothing rather than a fictional country.
+	_, cgnat, _ := net.ParseCIDR("100.64.0.0/10")
+	if !cgnat.Contains(ip) {
+		t.Errorf("stand-in %q is outside 100.64.0.0/10", a)
+	}
+
+	if other := pseudoIP("198.51.100.20:22"); other == a {
+		t.Errorf("two different clients collapsed onto %q", a)
+	}
+	if pseudoIP("") != "" {
+		t.Error("an empty address must stay empty rather than hashing to a real-looking one")
 	}
 }

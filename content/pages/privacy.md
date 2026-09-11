@@ -57,7 +57,8 @@ A self-hosted instance of **[Umami](https://umami.is/)**, an open-source analyti
 This site is also readable over SSH (`ssh stephan.zych.be`). Those sessions report into the same self-hosted Umami as the web front-end, so a page read in the terminal counts the same as one read in a browser.
 
 - **What's measured:** the pages you open, your terminal's size, and how long the session lasted (all aggregated).
-- **Your IP address:** **never sent.** Sessions are counted with a random identifier generated per connection and kept nowhere else.
+- **Your IP address:** **never sent, and never stored.** What is sent in its place is a stand-in address derived from yours by a keyed hash, because the analytics software counts a visit per address and every terminal session otherwise arrives from the server itself and reads as one visitor. The key is random, held only in memory, and thrown away when the process restarts, so the stand-in cannot be turned back into your address and cannot be recreated later to recognise you again. It deliberately sits in a range that is not routable on the internet, so no location is derived from it.
+- **No identifier:** each connection also carries a random value generated for that connection alone, kept nowhere else.
 - **What it stores on your machine:** nothing. Nothing is written to your device at any point.
 
 **Legal basis:** legitimate interest (art. 6(1)(f) GDPR) in measuring audience, with a minimal, privacy-preserving design. Because neither system stores anything on your device, there is nothing to consent to, hence no banner.

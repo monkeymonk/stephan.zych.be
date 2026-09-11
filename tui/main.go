@@ -57,8 +57,9 @@ func limitConcurrency(next ssh.Handler) ssh.Handler {
 // teaHandler. A distinct type keeps it out of reach of any other ctx user.
 type trackerCtxKey struct{}
 
-// trackSession mints the per-session analytics handle (uuid + pty size) and
-// brackets the session with session_start / session_end.
+// trackSession mints the per-session analytics handle (uuid + pty size + the
+// pseudonymous client address) and brackets the session with
+// session_start / session_end.
 //
 // Chain placement matters and is not obvious: wish runs the middleware list in
 // reverse, so this sits between bm.Middleware and limitConcurrency in the list
@@ -71,7 +72,13 @@ func trackSession(t *tracker) wish.Middleware {
 			if pty, _, active := s.Pty(); active {
 				w, h = pty.Window.Width, pty.Window.Height
 			}
-			ts := t.session(w, h)
+			// The real address never leaves this function: session() hashes it
+			// immediately and keeps only the derived stand-in. See pseudoIP.
+			addr := ""
+			if s.RemoteAddr() != nil {
+				addr = s.RemoteAddr().String()
+			}
+			ts := t.session(w, h, addr)
 			s.Context().SetValue(trackerCtxKey{}, ts)
 			ts.start()
 			next(s)

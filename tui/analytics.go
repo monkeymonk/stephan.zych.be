@@ -2,10 +2,14 @@ package main
 
 import (
 	"bytes"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -40,15 +44,20 @@ const (
 // analyticsPayload is Umami's /api/send payload. Everything but website/hostname
 // /tag is per-session or per-view.
 type analyticsPayload struct {
-	Website  string         `json:"website"`
-	Hostname string         `json:"hostname"`
-	Tag      string         `json:"tag"`
-	ID       string         `json:"id,omitempty"`
-	URL      string         `json:"url,omitempty"`
-	Title    string         `json:"title,omitempty"`
-	Screen   string         `json:"screen,omitempty"`
-	Name     string         `json:"name,omitempty"`
-	Data     map[string]any `json:"data,omitempty"`
+	Website  string `json:"website"`
+	Hostname string `json:"hostname"`
+	Tag      string `json:"tag"`
+	ID       string `json:"id,omitempty"`
+	// IP is a pseudonymous stand-in, never the visitor's address. Umami hashes
+	// website+ip+userAgent into its session id, so without something that
+	// varies per client every SSH visitor collapses into one session. See
+	// pseudoIP.
+	IP     string         `json:"ip,omitempty"`
+	URL    string         `json:"url,omitempty"`
+	Title  string         `json:"title,omitempty"`
+	Screen string         `json:"screen,omitempty"`
+	Name   string         `json:"name,omitempty"`
+	Data   map[string]any `json:"data,omitempty"`
 }
 
 type analyticsEvent struct {
@@ -143,6 +152,7 @@ func (t *tracker) post(ev analyticsEvent) {
 type trackerSession struct {
 	t       *tracker
 	id      string
+	ip      string // pseudonymous, see pseudoIP
 	screen  string
 	started time.Time
 
@@ -150,16 +160,17 @@ type trackerSession struct {
 	lastPath string
 }
 
-// session mints a session identifier and records the real pty size. Umami uses
-// the id to count sessions, which is what lets us stay useful without ever
-// forwarding the visitor's IP.
-func (t *tracker) session(w, h int) *trackerSession {
+// session mints a session identifier, records the real pty size, and derives a
+// pseudonymous stand-in for the client address. `addr` is a host:port string
+// and is consumed here: only the derived value is retained.
+func (t *tracker) session(w, h int, addr string) *trackerSession {
 	if t == nil {
 		return nil
 	}
 	return &trackerSession{
 		t:       t,
 		id:      newUUID(),
+		ip:      pseudoIP(addr),
 		screen:  strconv.Itoa(w) + "x" + strconv.Itoa(h),
 		started: time.Now(),
 	}
@@ -176,6 +187,7 @@ func (s *trackerSession) enqueue(p analyticsPayload) {
 	p.Tag = analyticsTag
 	p.ID = s.id
 	p.Screen = s.screen
+	p.IP = s.ip
 	select {
 	case s.t.events <- analyticsEvent{Type: "event", Payload: p}:
 	default:
@@ -221,6 +233,51 @@ func (s *trackerSession) end() {
 	s.event("session_end", map[string]any{
 		"duration": int(time.Since(s.started).Seconds()),
 	})
+}
+
+// pseudoSalt keys the address hash. Minted once per process, never persisted,
+// so the mapping from a real client to its stand-in cannot be reproduced after
+// a restart and nothing derived from an address outlives the container. That
+// also means a visitor returning after a redeploy counts as new, which is the
+// accepted cost of not keeping a stable identifier for anybody.
+var pseudoSalt = func() []byte {
+	b := make([]byte, 32)
+	_, _ = rand.Read(b)
+	return b
+}()
+
+// pseudoIP maps a client address onto RFC 6598 shared address space
+// (100.64.0.0/10) via a keyed hash.
+//
+// Umami computes its session id as uuid(websiteId, ip, userAgent, salt). Every
+// SSH visitor arrives at the collector from the same container address and now
+// with an identical User-Agent, so without something that varies per client the
+// whole TUI reads as a single session: pageviews right, visitors wrong. Sending
+// the real address would fix the numbers and forward exactly what this codebase
+// has always refused to forward.
+//
+// So: HMAC the address with a per-process key and keep 22 bits, which is the
+// host space of a /10. The result is stable for one client inside one process
+// (sessions and visitors count correctly), is not reversible to an address, and
+// is deliberately unroutable — geolocation on 100.64/10 resolves to nothing, so
+// the dashboard shows no country for TUI traffic rather than a fictional one.
+//
+// The port is stripped first: it changes on every connection, and hashing it
+// would hand every reconnect a new identity.
+func pseudoIP(addr string) string {
+	if addr == "" {
+		return ""
+	}
+	host := addr
+	if h, _, err := net.SplitHostPort(addr); err == nil {
+		host = h
+	}
+	sum := hmac.New(sha256.New, pseudoSalt)
+	_, _ = sum.Write([]byte(host))
+	d := sum.Sum(nil)
+	n := uint32(d[0])<<16 | uint32(d[1])<<8 | uint32(d[2])
+	n &= 0x3fffff // 22 host bits of 100.64.0.0/10
+	return fmt.Sprintf("100.%d.%d.%d", 64+(n>>16), (n>>8)&0xff, n&0xff)
 }
 
 // newUUID formats 16 crypto/rand bytes as a canonical UUIDv4. Hand-rolled
