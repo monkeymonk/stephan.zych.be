@@ -1,0 +1,20 @@
+{%- if updates | length %}
+<section class="sz-updates" id="updates" aria-label="Article updates">
+  <h2 class="sz-updates__heading">Updates</h2>
+  <ol class="sz-updates__list">
+    {%- for u in updates | updatesOldestFirst %}
+    <li class="sz-updates__item sz-updates__item--{{ u.kind or 'revision' }}" id="update-{{ u.n }}">
+      <div class="sz-updates__meta">
+        <sup class="sz-updates__num" aria-hidden="true">{{ u.n }}</sup>
+        <span class="sz-updates__label">{{ 'Corrected' if u.kind == 'correction' else 'Revised' }}</span>
+        <time class="sz-updates__date" datetime="{{ u.date | htmlDateString }}">{{ u.date | dateDisplay }}</time>
+        {%- if u.marks | length %}
+        <a class="sz-updates__backlink" href="#revmark-{{ u.n }}-1" aria-label="Back to the {{ 'corrected' if u.kind == 'correction' else 'revised' }} statement">↩</a>
+        {%- endif %}
+      </div>
+      <p class="sz-updates__summary">{{ u.summary | mdInline | safe }}</p>
+    </li>
+    {%- endfor %}
+  </ol>
+</section>
+{%- endif -%}

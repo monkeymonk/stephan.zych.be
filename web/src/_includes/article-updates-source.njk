@@ -1,0 +1,20 @@
+{%- if updates | length %}
+<div class="sz-md-updates">
+  <div class="md-updates-lead"><span class="md-updates-key">updates:</span></div>
+  <ol class="md-updates-list">
+    {%- for u in updates | updatesOldestFirst %}
+    <li class="md-updates-item md-updates-item--{{ u.kind or 'revision' }}">
+      <span class="md-updates-label">{{ 'corrected' if u.kind == 'correction' else 'revised' }}</span>
+      <span class="md-updates-date">{{ u.date | htmlDateString }}</span>
+      <span class="md-updates-summary">{{ u.summary | mdInline | safe }}</span>
+      {%- if u.marks | length %}
+      <ol class="md-updates-marks">
+        {%- for mark in u.marks %}
+        <li class="md-updates-mark"><span class="md-updates-marks-key">mark:</span> <span class="md-updates-mark-text">{{ mark | mdInline | safe }}</span></li>
+        {%- endfor %}
+      </ol>
+      {%- endif %}
+    {%- endfor %}
+  </ol>
+</div>
+{%- endif -%}

@@ -134,7 +134,9 @@ export class SzMarkdown extends LitElement {
     for (const a of links) {
       if (a.dataset.enhanced) continue;
       a.dataset.enhanced = 'true';
-      if (a.closest('.sz-heading-indicator') || a.classList.contains('footnote-ref')) continue;
+      // Revision markers are footnote references, not prose links: the number
+      // *is* the affordance, and a 🔗 in front of it breaks the superscript.
+      if (a.closest('.sz-heading-indicator') || a.closest('.sz-revmark') || a.classList.contains('footnote-ref')) continue;
 
       const href = a.getAttribute('href') || '';
       const isExternal = /^https?:\/\//.test(href) && !href.includes(location.hostname);

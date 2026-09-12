@@ -112,7 +112,9 @@ html, body {
   }
 
   /* Anchor jumps (heading permalinks, the outline rail) land under the fixed
-     titlebar without this. */
+     titlebar without this. .sz-revmark needs no entry here: its own 25vh
+     scroll-margin-top (below) already clears the mobile titlebar on any
+     viewport tall enough to need scrolling in the first place. */
   .sz-prose :is(h1, h2, h3, h4, h5, h6)[id] {
     scroll-margin-top: calc(var(--sz-mobile-chrome-top) + 8px);
   }
@@ -904,7 +906,8 @@ html[data-view="reading"] .sz-article__footer { display: flex; }
    run continuously and align with the content (code view); hidden in reading. */
 html[data-view="reading"] .sz-md-header,
 html[data-view="reading"] .sz-md-footer,
-html[data-view="reading"] .sz-md-series { display: none; }
+html[data-view="reading"] .sz-md-series,
+html[data-view="reading"] .sz-md-updates { display: none; }
 
 .sz-md-header { margin-bottom: 1.4em; }
 .sz-md-header .md-h1 {
@@ -971,6 +974,45 @@ html[data-view="reading"] .sz-md-series { display: none; }
 .sz-md-series .md-series-item a { color: var(--sz-accent, #89b4fa); }
 .sz-md-series .md-series-here { color: var(--sz-muted, #989caf); }
 .sz-md-series .md-series-item.is-current strong { color: var(--sz-accent, #89b4fa); }
+
+/* Updates, markdown-source twin (code view) — the `updates:` front-matter
+   key rendered as source, mirroring .sz-md-series above. */
+.sz-md-updates {
+  margin: 1.4em 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--sz-surface2, #585b70);
+}
+.sz-md-updates .md-updates-key { color: var(--sz-muted, #989caf); }
+.sz-md-updates .md-updates-list { list-style: none; margin: 6px 0 0; padding: 0; }
+.sz-md-updates .md-updates-item { margin: 6px 0; color: var(--sz-subtext0, #a6adc8); }
+.sz-md-updates .md-updates-item::before { content: none; }
+.sz-md-updates .md-updates-label {
+  color: var(--sz-accent, #89b4fa);
+  text-transform: lowercase;
+  margin-right: 6px;
+}
+.sz-md-updates .md-updates-item--correction .md-updates-label { color: var(--sz-yellow, #f9e2af); }
+.sz-md-updates .md-updates-date {
+  color: var(--sz-muted, #989caf);
+  font-variant-numeric: tabular-nums;
+  margin-right: 6px;
+}
+.sz-md-updates .md-updates-summary code {
+  color: var(--sz-lavender, #b4befe);
+}
+.sz-md-updates .md-updates-marks {
+  list-style: none;
+  margin: 4px 0 0;
+  padding-left: 14px;
+}
+.sz-md-updates .md-updates-mark {
+  margin: 2px 0;
+  color: var(--sz-subtext0, #a6adc8);
+  font-size: calc(var(--sz-font-size) * 0.92);
+}
+.sz-md-updates .md-updates-mark::before { content: none; }
+.sz-md-updates .md-updates-marks-key { color: var(--sz-muted, #989caf); margin-right: 4px; }
+.sz-md-updates .md-updates-mark-text code { color: var(--sz-lavender, #b4befe); }
 
 .sz-md-footer { margin-top: 1.5em; color: var(--sz-subtext0, #a6adc8); }
 /* The "---" is a real text node (markdown-source view renders the rule
@@ -1536,6 +1578,154 @@ a.sz-series__row:focus-visible .sz-series__arrow {
   color: var(--sz-accent, #89b4fa);
   opacity: 0.75;
 }
+
+/* Superscript revision marker — injected at build time by the web build's
+   revisionMarkers preprocessor, immediately after the exact prose snippet an
+   Updates entry marks as changed. A genuine superscript: raised and small,
+   `line-height: 0` keeps it from ever nudging the surrounding body copy's
+   line box, while the anchor's own padding gives it a real hit target
+   instead of a bare few-pixel glyph. */
+.sz-revmark {
+  line-height: 0;
+  vertical-align: super;
+  font-size: 0.7em;
+  /* An Updates back-link targets this inline glyph, and an inline box has no
+     margin of its own to land against: without an offset the marked sentence
+     lands hard against the top of the scroller (measured 98px past it, under
+     the titlebar). Land it a quarter down instead, so the statement arrives
+     with the sentences that set it up still visible. */
+  scroll-margin-top: 25vh;
+}
+.sz-revmark a {
+  display: inline-block;
+  padding: 3px 4px;
+  margin: -3px -4px;
+  border-radius: 4px;
+  color: var(--sz-accent, #89b4fa);
+  font-weight: 700;
+  text-decoration: none;
+}
+.sz-revmark--correction a { color: var(--sz-yellow, #f9e2af); }
+.sz-revmark a:hover { text-decoration: underline; }
+.sz-revmark a:focus-visible {
+  outline: 2px solid var(--sz-accent, #89b4fa);
+  outline-offset: 1px;
+}
+
+/* Top-of-article "this was updated" notice (reading view). Sits right after
+   the series nav, links down to the full #updates block. Same reasoning and
+   sizing as .sz-series above: outside the numbered body, reading-view only. */
+.sz-updates-notice {
+  display: none;
+  width: 100%;
+  max-width: 616px;
+  margin: 16px auto 24px;
+  padding: 8px 14px;
+  border: 1px solid var(--sz-surface1, #45475a);
+  border-left: 3px solid var(--sz-accent, #89b4fa);
+  border-radius: 6px;
+  color: var(--sz-subtext0, #a6adc8);
+  font-size: calc(var(--sz-font-size) * 0.85);
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+html[data-view="reading"] .sz-updates-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sz-updates-notice:hover,
+.sz-updates-notice:focus-visible {
+  background: color-mix(in srgb, var(--sz-accent, #89b4fa) 8%, transparent);
+  color: var(--sz-text, #cdd6f4);
+}
+.sz-updates-notice:focus-visible {
+  outline: 2px solid var(--sz-accent, #89b4fa);
+  outline-offset: -2px;
+}
+.sz-updates-notice__icon { color: var(--sz-accent, #89b4fa); }
+.sz-updates-notice time { color: var(--sz-text, #cdd6f4); font-weight: 600; }
+
+/* Full "Updates" block (reading view) — the article's own change record.
+   Lives after the body, before the footer; hidden outside reading view, the
+   code view renders the .sz-md-updates twin inside the gutter instead. */
+.sz-updates {
+  display: none;
+  width: 100%;
+  max-width: 616px;
+  margin: 32px auto 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--sz-surface1, #45475a);
+}
+html[data-view="reading"] .sz-updates { display: block; }
+.sz-updates__heading {
+  margin: 0 0 14px;
+  font-size: calc(var(--sz-font-size) * 1.05);
+  color: var(--sz-text, #cdd6f4);
+}
+.sz-updates__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sz-updates__item {
+  padding: 10px 14px;
+  border: 1px solid var(--sz-surface1, #45475a);
+  border-left: 3px solid var(--sz-accent, #89b4fa);
+  border-radius: 6px;
+  background: var(--sz-mantle, #181825);
+}
+/* Corrections get a warmer accent than revisions — subtle, not alarming: the
+   post was wrong once, it isn't a recurring problem. */
+.sz-updates__item--correction { border-left-color: var(--sz-yellow, #f9e2af); }
+.sz-updates__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: calc(var(--sz-font-size) * 0.8);
+}
+.sz-updates__label {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sz-accent, #89b4fa);
+}
+.sz-updates__item--correction .sz-updates__label { color: var(--sz-yellow, #f9e2af); }
+.sz-updates__date { color: var(--sz-muted, #989caf); font-variant-numeric: tabular-nums; }
+.sz-updates__summary {
+  margin: 0;
+  color: var(--sz-subtext0, #a6adc8);
+  line-height: 1.55;
+}
+.sz-updates__summary code {
+  color: var(--sz-lavender, #b4befe);
+  background: color-mix(in srgb, var(--sz-lavender, #b4befe) 12%, transparent);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.sz-updates__summary strong { color: var(--sz-text, #cdd6f4); }
+.sz-updates__summary a { color: var(--sz-accent, #89b4fa); }
+.sz-updates__num {
+  color: var(--sz-muted, #989caf);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.sz-updates__backlink {
+  margin-left: auto;
+  padding: 2px 4px;
+  color: var(--sz-muted, #989caf);
+  text-decoration: none;
+}
+.sz-updates__backlink:hover,
+.sz-updates__backlink:focus-visible { color: var(--sz-text, #cdd6f4); }
+.sz-updates__backlink:focus-visible {
+  outline: 2px solid var(--sz-accent, #89b4fa);
+  outline-offset: 1px;
+}
 .post-row__series {
   display: inline-flex;
   align-self: flex-start;
@@ -1556,6 +1746,22 @@ a.sz-series__row:focus-visible .sz-series__arrow {
   padding: 0 6px;
   border-radius: 3px;
   font-variant-numeric: tabular-nums;
+}
+
+/* Blog-index "updated" marker — same slot and shape as .post-row__series
+   above, shown when the post carries an `updates` list. */
+.post-row__updated {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 5px;
+  font-size: calc(var(--sz-font-size) * 0.74);
+  letter-spacing: 0.02em;
+  color: var(--sz-yellow, #f9e2af);
+}
+.post-row__updated::before {
+  content: "↻";
+  color: var(--sz-overlay1, #7f849c);
 }
 
 /* ═══════════════════════════════════════════════════

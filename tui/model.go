@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/x/ansi"
 )
 
@@ -564,6 +565,49 @@ func (m *Model) startEffect(kind string) tea.Cmd {
 	return nil
 }
 
+// applyRevisionMarkers inserts a `[n]` visual cue immediately after each
+// update's verbatim mark snippet in a's body — the TUI's stand-in for the
+// web build's superscript <sup> markers, since the reader has no anchor
+// navigation to link one to. n is the marked update's 1-based file-order
+// position, matching the number updatesMarkdown prefixes each entry with.
+//
+// Unlike the web build's preprocessor, this never fails the build — there is
+// no build here, only a live SSH server. A snippet that no longer matches
+// exactly once (the prose moved, or the snippet is ambiguous) is skipped and
+// warned about on stderr, once per article open, with the slug and the
+// snippet — a stale mark degrades gracefully instead of taking the server down.
+func applyRevisionMarkers(body string, updates []Update, slug string) string {
+	type insertion struct {
+		offset int
+		text   string
+	}
+	var insertions []insertion
+	for i, u := range updates {
+		n := i + 1
+		for _, mark := range u.Marks {
+			count := strings.Count(body, mark)
+			if count != 1 {
+				log.Warn("revision marker mismatch, skipping", "slug", slug, "snippet", mark, "count", count)
+				continue
+			}
+			insertions = append(insertions, insertion{
+				offset: strings.Index(body, mark) + len(mark),
+				text:   fmt.Sprintf("[%d]", n),
+			})
+		}
+	}
+	if len(insertions) == 0 {
+		return body
+	}
+	// Apply from the end of the string backwards so an earlier insertion
+	// never shifts an offset computed for a later one.
+	sort.SliceStable(insertions, func(i, j int) bool { return insertions[i].offset > insertions[j].offset })
+	for _, ins := range insertions {
+		body = body[:ins.offset] + ins.text + body[ins.offset:]
+	}
+	return body
+}
+
 func (m *Model) openReader(a Article) {
 	// Every route into an article records the place it was reached from — a
 	// list, the article that linked here, the palette — so `q` has somewhere
@@ -572,11 +616,15 @@ func (m *Model) openReader(a Article) {
 	m.leave()
 	a.Body = m.resolveSiteVars(a.Body)
 	a.Body = m.resolveConditionals(a.Body)
+	a.Body = applyRevisionMarkers(a.Body, a.Updates, a.Slug)
 	if nav := m.seriesNavMarkdown(a); nav != "" {
 		a.Body = nav + "\n" + a.Body // sits after the title/description, before the body
 	}
 	if pm := m.projectMetaMarkdown(a); pm != "" {
 		a.Body = pm + "\n" + a.Body // project metadata card, before the body
+	}
+	if upd := m.updatesMarkdown(a); upd != "" {
+		a.Body = a.Body + "\n" + upd // sits after the body — the original prose stays untouched above it
 	}
 	m.readerArticle = a
 	m.readerList, m.readerIndex = m.sectionSequence(a)
@@ -641,6 +689,45 @@ func (m Model) seriesNavMarkdown(a Article) string {
 		}
 	}
 	b.WriteString("\n---\n")
+	return b.String()
+}
+
+// numberedUpdate pairs an update with its stable file-order number — its
+// 1-based position in a.Updates — so the number survives being explicitly
+// re-sorted by date for display. It is what lets each rendered entry below
+// carry the same `[n]` that applyRevisionMarkers left in the prose above.
+type numberedUpdate struct {
+	Update
+	n int
+}
+
+// updatesMarkdown builds the in-article updates block that records how a's
+// judgement changed since publication — the TUI mirror of the web `updates`
+// block. Unlike the series nav it is appended after the body (the original
+// prose stays untouched above it), so its leading rule separates it from what
+// precedes it rather than trailing one like seriesNavMarkdown does. Entries
+// are authored oldest-first in front matter and render in that same order —
+// file order — so entry `[1]` prints before `[2]`, matching the superscript
+// numbers in the prose above; the sort is by date rather than trusted file
+// order, but each entry keeps its file-order number regardless.
+func (m Model) updatesMarkdown(a Article) string {
+	if len(a.Updates) == 0 {
+		return ""
+	}
+	updates := make([]numberedUpdate, len(a.Updates))
+	for i, u := range a.Updates {
+		updates[i] = numberedUpdate{Update: u, n: i + 1}
+	}
+	sort.SliceStable(updates, func(i, j int) bool { return updates[i].Date < updates[j].Date })
+	var b strings.Builder
+	b.WriteString("---\n\n## Updates\n\n")
+	for _, u := range updates {
+		label := "Revised"
+		if u.Kind == "correction" {
+			label = "Corrected"
+		}
+		fmt.Fprintf(&b, "- **[%d] %s %s** — %s\n", u.n, label, u.Date, u.Summary)
+	}
 	return b.String()
 }
 
@@ -1127,6 +1214,9 @@ func (m Model) renderItems(items []Article, cursor int) string {
 				badge += fmt.Sprintf(" · part %d", a.Order)
 			}
 			meta = append(meta, m.st.Series.Render(badge))
+		}
+		if len(a.Updates) > 0 {
+			meta = append(meta, m.st.Updated.Render("✎ updated"))
 		}
 		if a.Date != "" {
 			meta = append(meta, m.st.Date.Render(a.Date))

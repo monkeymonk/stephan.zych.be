@@ -31,7 +31,10 @@ module.exports = function(eleventyConfig) {
   // Emit ```mermaid fences as raw <pre class="mermaid"> so the client-side
   // renderer can turn them into diagrams; all other fences keep Prism
   // highlighting. Runs after the syntaxhighlight plugin, wrapping its fence rule.
+  // Captured below so `mdInline` can reuse the exact configured instance.
+  let mdInstance;
   eleventyConfig.amendLibrary('md', (md) => {
+    mdInstance = md;
     const fallback =
       md.renderer.rules.fence ||
       ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
@@ -45,6 +48,12 @@ module.exports = function(eleventyConfig) {
     };
   });
 
+  // Render a short Markdown string inline (no wrapping <p>) — for values that
+  // live in front matter/data rather than the article body, e.g. an update's
+  // `summary`. Reuses the exact md instance amended above, so it stays in
+  // step with anything configured on it.
+  eleventyConfig.addFilter('mdInline', str => mdInstance.renderInline(String(str || '')));
+
   eleventyConfig.addPassthroughCopy('src/assets');
   eleventyConfig.addPassthroughCopy('src/styles');
   // Content images live in the shared root content/assets (owned by both
@@ -52,11 +61,10 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ '../content/assets': 'assets/content' });
   eleventyConfig.addPassthroughCopy({ 'src/CNAME': 'CNAME' });
 
-  eleventyConfig.addFilter('dateDisplay', date => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric', month: 'long', day: 'numeric'
-    });
+  const dateDisplay = date => new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'long', day: 'numeric'
   });
+  eleventyConfig.addFilter('dateDisplay', dateDisplay);
 
   eleventyConfig.addFilter('htmlDateString', date => {
     return new Date(date).toISOString().split('T')[0];
@@ -114,6 +122,56 @@ module.exports = function(eleventyConfig) {
       .filter(p => p.data.series === slug)
       .sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
   });
+
+  // An update entry's date, normalized: js-yaml parses an unquoted
+  // `YYYY-MM-DD` into a JS Date, but a string slips through just as easily
+  // (e.g. if the value were ever quoted), so coerce either into a Date.
+  const updateDate = u => new Date(u && u.date);
+
+  // Newest date across an article's `updates` list — the top-of-article
+  // notice and the dateModified/lastmod fallback both need this. Falsy for
+  // an absent/empty list. Entries are authored oldest-first but not trusted
+  // to stay that way, so this takes the max rather than the first/last item.
+  eleventyConfig.addFilter('latestUpdate', updates => {
+    if (!updates || !updates.length) return null;
+    return updates.reduce((latest, u) => {
+      const d = updateDate(u);
+      return !latest || d > latest ? d : latest;
+    }, null);
+  });
+
+  // Same list, oldest-first (file order), for the in-article Updates block.
+  // File order already reads oldest-first (new entries are appended at the
+  // bottom), but that's authoring convention, not something this trusts —
+  // it sorts explicitly by date. Each item is still annotated with `n`, its
+  // 1-based file-order position, computed before the sort so a misfiled
+  // (out-of-date-order) entry can never renumber the markers already
+  // injected in the prose, which point at `#update-<n>` by that position.
+  eleventyConfig.addFilter('updatesOldestFirst', updates => {
+    return (updates || [])
+      .map((u, i) => Object.assign({}, u, { n: i + 1 }))
+      .sort((a, b) => updateDate(a) - updateDate(b));
+  });
+
+  // "Revised YYYY-MM-DD" / "Corrected YYYY-MM-DD" — the one place that
+  // decides the marker's kind label, reused by the marker's aria-label
+  // below. article-updates.njk repeats the same wording independently for
+  // the canonical Updates entry and the drawer mirrors it again for its own
+  // visible label — three call sites, one source of the wording.
+  const revisionPrefix = (kind, dateStr) => `${kind === 'correction' ? 'Corrected' : 'Revised'} ${dateStr}`;
+
+  // Escape a string for use inside a double-quoted HTML attribute. The
+  // revisionMarkers preprocessor below builds `<sup>`/`<label>`/`<input>`/
+  // `<aside>` markup by hand (it runs before markdown-it, on raw source —
+  // see the comment on that preprocessor), so nothing else stands between
+  // an update's authored text and the page; summaries routinely carry
+  // backticks, quotes and apostrophes, all of which must not be able to
+  // break out of the attribute they're placed in.
+  const escapeAttr = str => String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 
   // Estimate reading time in minutes from rendered content
   eleventyConfig.addFilter('readingTime', content => {
@@ -176,6 +234,89 @@ module.exports = function(eleventyConfig) {
       const size = webpSize(file);
       return size ? ` width="${size.w}" height="${size.h}"` : '';
     } catch { return ''; }
+  });
+
+  // Superscript revision markers. `marks` on an `updates` entry are verbatim
+  // Markdown substrings copied from the article body; this preprocessor finds
+  // each one in the raw Markdown source and splices a `<sup>` marker in right
+  // after it, linking to that entry in the #updates block. It has to run here
+  // — before markdown-it — because a mark snippet is authored Markdown
+  // (`**bold**`, `` `code` ``), so it can only be found verbatim in the
+  // source, not in the HTML markdown-it renders from it. This is also what
+  // keeps the published body byte-identical: the marker is data attached to
+  // the update entry, never text the author added to the prose.
+  //
+  // The match is strict on purpose: a mark must occur in the body exactly
+  // once. Zero occurrences means the prose moved out from under a stale
+  // snippet; more than one means the snippet is ambiguous about which
+  // occurrence it marks. Either throws and fails the build, naming the file,
+  // the snippet, and the count — the same loud-failure posture as the
+  // check-content-assets poster check.
+  eleventyConfig.addPreprocessor('revisionMarkers', 'md', (data, content) => {
+    const updates = data.updates;
+    if (!Array.isArray(updates) || !updates.length) return content;
+
+    const markers = [];
+    updates.forEach((u, uIndex) => {
+      const marks = Array.isArray(u.marks) ? u.marks : [];
+      marks.forEach((mark, mIndex) => {
+        const n = uIndex + 1;
+        const i = mIndex + 1;
+        const snippet = String(mark);
+        let count = 0;
+        let firstIndex = -1;
+        for (let from = 0; ;) {
+          const idx = content.indexOf(snippet, from);
+          if (idx === -1) break;
+          count++;
+          if (firstIndex === -1) firstIndex = idx;
+          from = idx + 1;
+        }
+        if (count !== 1) {
+          const inputPath = (data.page && data.page.inputPath) || '(unknown input)';
+          const advice = count === 0
+            ? 'the prose no longer contains it — update the `marks` snippet to match the current wording'
+            : 'lengthen the snippet until it identifies a single occurrence';
+          throw new Error(
+            `Revision marker mismatch in ${inputPath}: the mark ${JSON.stringify(snippet)} ` +
+            `was found ${count} time(s) in the body (expected exactly 1) — ${advice}.`
+          );
+        }
+        const kind = u.kind === 'correction' ? 'correction' : 'revision';
+        const dateStr = u.date instanceof Date ? u.date.toISOString().split('T')[0] : String(u.date || '');
+        markers.push({ n, i, kind, dateStr, snippetEnd: firstIndex + snippet.length, summary: u.summary });
+      });
+    });
+
+    // Document order: a mark belonging to a later `updates` entry can still
+    // occur earlier in the prose than one from an earlier entry.
+    markers.sort((a, b) => a.snippetEnd - b.snippetEnd);
+
+    // Apply from the end of the string backwards so an earlier insertion never
+    // shifts the offset a later (in string order) one was computed against.
+    // Two marks can share an offset when one covers the last words of a block,
+    // so markers are grouped per offset and their `<sup>`s concatenate there.
+    const buckets = new Map();
+    for (const m of markers) {
+      const isCorrection = m.kind === 'correction';
+      // The marker is a plain in-page link to its entry in the #updates
+      // block, and the native `title` is the whole hover affordance: no
+      // custom bubble, no in-place drawer. The number alone says nothing, so
+      // the tooltip names the kind and the date and then says what the mark
+      // means in one phrase.
+      const hint = `${revisionPrefix(m.kind, m.dateStr)} · there is a change here`;
+      const sup =
+        `<sup class="sz-revmark${isCorrection ? ' sz-revmark--correction' : ''}" id="revmark-${m.n}-${m.i}">` +
+        `<a href="#update-${m.n}" title="${escapeAttr(hint)}" aria-label="${escapeAttr(hint)}">${m.n}</a></sup>`;
+      buckets.set(m.snippetEnd, (buckets.get(m.snippetEnd) || '') + sup);
+    }
+
+    const offsets = [...buckets.keys()].sort((a, b) => b - a);
+    let out = content;
+    for (const offset of offsets) {
+      out = out.slice(0, offset) + buckets.get(offset) + out.slice(offset);
+    }
+    return out;
   });
 
   // Give every article heading a stable slug id, so the outline rail (sz-toc)

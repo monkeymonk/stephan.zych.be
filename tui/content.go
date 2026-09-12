@@ -19,14 +19,26 @@ type Article struct {
 	Description string
 	Date        string
 	Tags        []string
-	Series      string // series slug (blog posts only); "" when not part of a series
-	Order       int    // 1-based position within the series
-	Body        string // markdown, HTML pre-stripped for terminal rendering
-	Section     string // "pages" | "projects" | "blog"
-	Client      string // project metadata-card facts (projects section only)
+	Series      string   // series slug (blog posts only); "" when not part of a series
+	Order       int      // 1-based position within the series
+	Updates     []Update // recorded evolutions of the article, file order (oldest first)
+	Body        string   // markdown, HTML pre-stripped for terminal rendering
+	Section     string   // "pages" | "projects" | "blog"
+	Client      string   // project metadata-card facts (projects section only)
 	Role        string
 	Timeframe   string
 	LiveURL     string
+}
+
+// Update is one recorded evolution of a published article: a `revision` when
+// the article was right when published and the subject moved, a `correction`
+// when it was wrong. Authored oldest-first in front matter; renderers reverse
+// it for display.
+type Update struct {
+	Date    string
+	Kind    string // "revision" | "correction"; empty means revision
+	Summary string
+	Marks   []string // verbatim Markdown snippets copied from the article body; each gets a `[n]` marker inserted right after it
 }
 
 // Content is the whole loaded corpus, grouped by section.
@@ -160,6 +172,61 @@ func metaTags(m map[string]any) []string {
 	return tags
 }
 
+// metaUpdates parses the `updates` front-matter list: each recorded revision
+// or correction to a published article. An entry is a map with optional date/
+// kind/summary keys; one missing its summary is dropped. File order (authored
+// oldest-first) is preserved — callers reverse it for newest-first display.
+func metaUpdates(m map[string]any) []Update {
+	v, ok := m["updates"]
+	if !ok {
+		return nil
+	}
+	list, ok := v.([]any)
+	if !ok {
+		return nil
+	}
+	updates := make([]Update, 0, len(list))
+	for _, e := range list {
+		entry, ok := e.(map[string]any)
+		if !ok {
+			continue
+		}
+		summary := metaString(entry, "summary")
+		if summary == "" {
+			continue
+		}
+		updates = append(updates, Update{
+			Date:    normalizeDate(metaString(entry, "date")),
+			Kind:    metaString(entry, "kind"),
+			Summary: summary,
+			Marks:   metaMarks(entry),
+		})
+	}
+	return updates
+}
+
+// metaMarks parses an update entry's `marks` list: verbatim Markdown
+// substrings copied from the article body, each of which gets a revision
+// marker inserted after it. Same defensive shape as metaTags — non-string
+// and empty entries are skipped, order preserved.
+func metaMarks(entry map[string]any) []string {
+	v, ok := entry["marks"]
+	if !ok {
+		return nil
+	}
+	list, ok := v.([]any)
+	if !ok {
+		return nil
+	}
+	marks := make([]string, 0, len(list))
+	for _, mk := range list {
+		if s, ok := mk.(string); ok && s != "" {
+			marks = append(marks, s)
+		}
+	}
+	return marks
+}
+
 func readArticle(path, section string) (Article, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
@@ -182,6 +249,7 @@ func readArticle(path, section string) (Article, error) {
 		Tags:        metaTags(meta),
 		Series:      metaString(meta, "series"),
 		Order:       metaInt(meta, "order"),
+		Updates:     metaUpdates(meta),
 		Body:        stripHTML(body),
 		Section:     section,
 		Client:      metaString(meta, "client"),

@@ -6,6 +6,13 @@ date: 2026-05-20
 tags: [security, ai, sandboxing, docker]
 poster: /assets/content/sandbox-boxes.webp
 ogImage: /assets/content/sandbox-boxes.jpg
+updates:
+  - date: 2026-09-10
+    kind: revision
+    marks:
+      - "keep **`sbx`** for one-shot untrusted commands."
+      - "So the split that stuck: **Greywall for the agents I run all day in my own project tree, `sbx` for the commands I run once and don't trust.**"
+    summary: "`sbx` picked up real substance since I filed it under one-shot only: a proper TUI dashboard for managing and monitoring running sandboxes, persistent environments you create once and return to instead of respawning per command, reusable **templates and kits** so a project's setup boots the same way twice, direct SSH access at `<sandbox>.sbx`, skill sharing across sandboxes, and credential and policy handling considerably more solid than what I described above. That's enough to move it from a very good isolation primitive toward **an actual execution environment for agents**, and I'm re-running it as a much more central part of my day-to-day workflow than the one-shot role I gave it here. None of that touches the rule this piece is built on: the hypervisor boundary argument still stands, only where `sbx` ranks as a daily driver moved."
 ---
 
 > **TL;DR:** A coding agent runs as *you*: every SSH key, every client's `.env`, your whole home directory. So I sandbox them. After a stint on `sbx` microVMs and a doomed attempt to build my own `bwrap`+Go wrapper, I landed on **Greywall** (a deny-by-default kernel jail over my *real* files, secrets masked in place) for the agents I run all day, and keep **`sbx`** for one-shot untrusted commands. The one rule that matters: a boundary the agent can reconfigure isn't one.

@@ -181,10 +181,13 @@ sz-neovim {
 .sz-article__footer { display: block !important; }
 .sz-article__hero { display: block !important; }
 .sz-series { display: block !important; }
+.sz-updates-notice { display: flex !important; }
+.sz-updates { display: block !important; }
 
 .sz-md-header,
 .sz-md-series,
-.sz-md-footer { display: none !important; }
+.sz-md-footer,
+.sz-md-updates { display: none !important; }
 
 /* The document line-number gutter and the per-block one both derive their
    spacing from the screen line-height and mean nothing on paper. !important
@@ -665,6 +668,61 @@ pre.mermaid svg marker :is(path, polygon) { fill: #555 !important; }
   color: #333;
 }
 .sz-series__arrow { display: none; }
+
+/* Revision marker — must print dark like any other in-text link, not in the
+   accent colour that reads as near-white on paper. Matches base.css's
+   selector specificity for both variants (one class + `label`) exactly, so
+   this wins the tie the way the file's "sits after base.css" load order
+   intends — see the note on the trap this same branch already hit, just
+   below. */
+.sz-revmark label,
+.sz-revmark--correction label { color: #1a1a1a; }
+
+
+/* Updates block — same reasoning as .sz-series above: the record that a
+   published claim changed is worth keeping on paper, restyled rather than
+   hidden. Covers both the compact top notice and the full #updates block. */
+.sz-updates-notice {
+  max-width: none;
+  margin: 8pt 0;
+  padding: 4pt 8pt;
+  border: 0.5pt solid #ccc;
+  border-left: 1.5pt solid #555;
+  border-radius: 0;
+  background: none;
+  color: #333;
+  font-size: 9pt;
+}
+.sz-updates-notice__icon,
+.sz-updates-notice time { color: #1a1a1a; }
+.sz-updates {
+  max-width: none;
+  margin: 10pt 0 0;
+  padding-top: 8pt;
+  border-top: 0.5pt solid #ccc;
+  break-inside: avoid;
+}
+.sz-updates__heading { color: #1a1a1a; }
+.sz-updates__item {
+  background: none;
+  border: 0.5pt solid #ccc;
+  border-left: 1.5pt solid #555;
+  border-radius: 0;
+  break-inside: avoid;
+}
+.sz-updates__num,
+.sz-updates__label,
+.sz-updates__date,
+.sz-updates__summary { color: #333; }
+/* Both need to match the screen rules' specificity: base.css colours the
+   correction label and the summary's bold runs with accent variables that
+   print as near-white. */
+.sz-updates__label,
+.sz-updates__item--correction .sz-updates__label { color: #1a1a1a; }
+.sz-updates__summary strong { color: #1a1a1a; }
+.sz-updates__summary code { color: #1a1a1a; background: none; }
+/* Purely navigational — meaningless once the anchor can no longer be clicked. */
+.sz-updates__backlink { display: none; }
 
 .sz-article__footer {
   max-width: none;

@@ -77,3 +77,32 @@ export function scrollByLines(delta: number): void {
   const px = Number.isFinite(line) && line > 0 ? line : FALLBACK_LINE_PX;
   scrollRoot().scrollBy({ top: delta * px, behavior: 'auto' });
 }
+
+/**
+ * Scroll a same-document anchor target into view inside the real scroller.
+ * In-page fragment links (heading permalinks, revision-marker superscripts,
+ * their Updates-block backlinks) are native `<a href="#id">`s: clicking one
+ * only ever moves `location.hash` and lets *document* scroll to it, which
+ * does nothing when scrollRoot() above is a subtree scroller (desktop's
+ * #main-content) — the anchor stays exactly where it was. Routing the click
+ * through here instead scrolls the scroller that is actually on screen.
+ *
+ * Mirrors sz-toc's own jump(): same reduced-motion check, same `block:
+ * 'start'`, no offset math here — landing offsets stay declarative, in
+ * base.css: `scroll-margin-top` on `.sz-prose` headings for the mobile fixed
+ * titlebar, and on `.sz-revmark` so an Updates back-link lands the marked
+ * sentence with its context instead of against the top edge. This rides both
+ * for free, since the scrolling is the browser's own scrollIntoView rather
+ * than a hand-rolled scrollTo(). Returns false, touching nothing, when `id`
+ * resolves to no element, so a caller can fall through to the browser's own
+ * (harmless) default.
+ */
+export function scrollToAnchor(id: string, smooth = true): boolean {
+  const target = document.getElementById(id);
+  if (!target) return false;
+  target.scrollIntoView({
+    behavior: smooth && !reducedMotion.matches ? 'smooth' : 'auto',
+    block: 'start',
+  });
+  return true;
+}

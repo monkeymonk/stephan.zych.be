@@ -1,0 +1,22 @@
+{%- if updates | length %}
+{%- set correctionCount = 0 %}
+{%- set revisionCount = 0 %}
+{%- for u in updates %}
+{%- if u.kind == 'correction' %}
+{%- set correctionCount = correctionCount + 1 %}
+{%- else %}
+{%- set revisionCount = revisionCount + 1 %}
+{%- endif %}
+{%- endfor %}
+{%- if correctionCount and revisionCount %}
+{%- set updateLabel = (correctionCount + revisionCount) ~ ' update' ~ ('s' if correctionCount + revisionCount != 1 else '') %}
+{%- elif correctionCount %}
+{%- set updateLabel = correctionCount ~ ' correction' ~ ('s' if correctionCount != 1 else '') %}
+{%- else %}
+{%- set updateLabel = revisionCount ~ ' revision' ~ ('s' if revisionCount != 1 else '') %}
+{%- endif %}
+<a class="sz-updates-notice" href="#updates">
+  <span class="sz-updates-notice__icon" aria-hidden="true">↻</span>
+  Updated <time datetime="{{ (updates | latestUpdate) | htmlDateString }}">{{ (updates | latestUpdate) | htmlDateString }}</time> · {{ updateLabel }}
+</a>
+{%- endif -%}

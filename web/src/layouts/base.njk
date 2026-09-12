@@ -10,6 +10,7 @@
   {%- set metaDescription = description | default(site.description) -%}
   {%- set metaImage = site.url + (ogImage or poster or '/assets/social-card.jpg') -%}
   {%- set isArticle = section.name == 'blog' and date -%}
+  {%- set modifiedDate = (updates | latestUpdate) or date -%}
   <title>{{ metaTitle }}</title>
   <meta name="description" content="{{ metaDescription }}">
   {% if noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}
@@ -23,6 +24,9 @@
   <meta property="og:image" content="{{ metaImage }}">
   {%- if isArticle %}
   <meta property="article:published_time" content="{{ date | htmlDateString }}">
+  {%- if updates | length %}
+  <meta property="article:modified_time" content="{{ modifiedDate | htmlDateString }}">
+  {%- endif %}
   <meta property="article:author" content="{{ site.author }}">
   {%- for tag in tags %}{% if tag !== 'blog' %}
   <meta property="article:tag" content="{{ tag }}">{% endif %}{%- endfor %}
@@ -35,7 +39,7 @@
   <meta name="twitter:creator" content="{{ site.socials.twitter }}">
   {%- endif %}
   {%- if isArticle %}
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":{{ metaTitle | dump | safe }},"description":{{ metaDescription | dump | safe }},"image":{{ metaImage | dump | safe }},"datePublished":{{ (date | htmlDateString) | dump | safe }},"dateModified":{{ (date | htmlDateString) | dump | safe }},"url":{{ (site.url + page.url) | dump | safe }},"mainEntityOfPage":{{ (site.url + page.url) | dump | safe }},"author":{"@type":"Person","name":{{ site.author | dump | safe }},"url":{{ site.url | dump | safe }}},"publisher":{"@type":"Organization","name":{{ site.title | dump | safe }},"logo":{"@type":"ImageObject","url":{{ (site.url + "/assets/social-card.jpg") | dump | safe }}}}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":{{ metaTitle | dump | safe }},"description":{{ metaDescription | dump | safe }},"image":{{ metaImage | dump | safe }},"datePublished":{{ (date | htmlDateString) | dump | safe }},"dateModified":{{ (modifiedDate | htmlDateString) | dump | safe }},"url":{{ (site.url + page.url) | dump | safe }},"mainEntityOfPage":{{ (site.url + page.url) | dump | safe }},"author":{"@type":"Person","name":{{ site.author | dump | safe }},"url":{{ site.url | dump | safe }}},"publisher":{"@type":"Organization","name":{{ site.title | dump | safe }},"logo":{"@type":"ImageObject","url":{{ (site.url + "/assets/social-card.jpg") | dump | safe }}}}}</script>
   {%- elif (page.url == '/' or page.url == '/about/') and page.url != '/cv/' %}
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":{{ site.author | dump | safe }},"url":{{ site.url | dump | safe }},"jobTitle":"Lead Developer & Frontend Architect","worksFor":{"@type":"Organization","name":"STEPHANZYCH","legalName":"STEPHAN ZYCH SRL","url":"https://stephanzych.be","vatID":"BE 0804.229.671"},"sameAs":[{{ site.socials.github | dump | safe }},{{ site.socials.linkedin | dump | safe }}]}</script>
   {%- endif %}

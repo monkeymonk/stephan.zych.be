@@ -9,6 +9,35 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-09-12
+
+### Added
+- Published articles can now record their own evolution. An `updates` entry in
+  a post's front matter carries what changed and when, and the body it
+  annotates is never edited: a superscript marker is injected at render time
+  onto the exact sentence whose claim moved, linking to the full entry in a new
+  Updates block at the foot of the article, which links back. A notice at the
+  top says when the post was last updated, and the blog index marks it. Entries
+  are either a `revision` (it was right when published, the subject moved) or a
+  `correction` (it was wrong), numbered by their position in the file so
+  appending one never renumbers the markers already in the prose. The marker's
+  anchoring is enforced at build time: a snippet that no longer matches its
+  prose exactly once fails the build rather than silently drifting off the claim
+  it belongs to. `dateModified` in the `BlogPosting` JSON-LD,
+  `article:modified_time` and the sitemap's `lastmod` all follow the latest
+  update date, where before they always repeated the publication date. Both
+  renderers carry it: the terminal shows `[n]` cues in the prose and the same
+  block underneath. Applied to two posts so far, "I Run My AI Agents in a Box"
+  and "Typing Got Cheap. Judgement Didn't.".
+
+### Fixed
+- In-page fragment links never worked. The article scrolls inside its own
+  container, so a native `#anchor` click moved the document instead and nothing
+  happened: the outline rail worked only because it scrolls itself, and the
+  shareable heading permalinks the build has been emitting all along did
+  nothing when clicked. Every same-page anchor now scrolls the container that
+  is actually on screen, on click and on load.
+
 ## [1.10.0] - 2026-09-11
 
 ### Added
@@ -634,7 +663,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.3...v1.10.0
 [1.9.3]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.2...v1.9.3
 [1.9.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.1...v1.9.2

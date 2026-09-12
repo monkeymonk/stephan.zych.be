@@ -56,6 +56,8 @@ layout: base.njk
 
   {% include "series-nav.njk" %}
 
+  {% include "article-updates-notice.njk" %}
+
   <sz-markdown line-numbers class="sz-article__body">
     {# Markdown header — inside the numbered body, shown in code view #}
     <div class="sz-md-header">
@@ -77,6 +79,8 @@ layout: base.njk
 
     {{ content | safe }}
 
+    {% include "article-updates-source.njk" %}
+
     {% if section.name == 'blog' %}
     {% set shareBase = site.url + page.url %}
     {% set shareText = title | urlencode %}
@@ -87,6 +91,10 @@ layout: base.njk
     </div>
     {% endif %}
   </sz-markdown>
+
+  {% if section.name == 'blog' %}
+  {% include "article-updates.njk" %}
+  {% endif %}
 
   {# Styled footer — shown only in reading (glow) view #}
   {% if section.name == 'blog' %}

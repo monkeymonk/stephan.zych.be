@@ -7,6 +7,7 @@ import { wireOverlays } from './overlays.js';
 import { wireKeyboard } from './keyboard.js';
 import { wireFocusNav } from './focus-nav.js';
 import { wireShare } from './share.js';
+import { wireAnchorNav } from './anchor-nav.js';
 
 // wireNeovimPalette() is desktop-only — invoked from app/index.ts's
 // loadDesktopOnly(), since the palette it feeds is never loaded on mobile.
@@ -26,4 +27,5 @@ wireOverlays();
 wireKeyboard();
 wireFocusNav();
 wireShare();
+wireAnchorNav();
 

@@ -6,6 +6,14 @@ date: 2026-07-31
 tags: [tooling, terminal, agents, review, ownership]
 poster: /assets/content/machine-city.webp
 ogImage: /assets/content/machine-city.jpg
+updates:
+  - date: 2026-09-12
+    kind: revision
+    marks:
+      - "**`tuicr -w`**: I read what survived, hunk by hunk, and comment on the lines that are wrong."
+      - "**tuicr** is where that stops: a code review TUI with vim keybindings, in the terminal, next to the agent that wrote the code."
+      - "Which is why review lives in its own program rather than a chat pane"
+    summary: "Review has moved into the editor. **`codecompanion.nvim`** puts the agent interaction in a Neovim buffer, **ACP** lets it drive the same agent setup and, where supported, the same subscription, and **`atlas.nvim`** has replaced `tuicr` for reading tracked changes and pull requests. **`code-review.nvim`** then covers what `tuicr` never did: untracked files, which in practice means the Markdown plans and notes an agent works from before any code exists. That last part is the actual change of mind. Ownership starts before the diff, so what gets reviewed is the plan, the assumptions and the direction, not only the result. The loop itself is unchanged, and so is the argument: the agent writes, I read, question and guide. Call it this piece's closer collecting on itself. Swap `tuicr` for something else and the argument survives, because it was never about the tools."
 ---
 
 > **TL;DR:** Typing is cheap now, judgement isn't, and the chat-sidebar shape optimises the wrong one: one working tree, one agent, review reduced to scrolling until you hit **Accept All**. My loop instead: **[workmux](https://github.com/raine/workmux)** gives each agent its own worktree and tmux window, the prompt is written in Neovim with real path completion (**[prompt.nvim](https://github.com/monkeymonk/prompt.nvim)**, mine), tests and rule-carrying reviewer agents catch everything mechanical, and whatever survives I read hunk by hunk in **[tuicr](https://github.com/agavra/tuicr)**, where my objections export straight back as the next prompt. **A rule is judgement that scales; a review comment is judgement that evaporates.** Machines check the work before I read it, never instead of me.
