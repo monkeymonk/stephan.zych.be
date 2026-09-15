@@ -753,9 +753,14 @@ html[data-view="reading"] .code-gutter span { display: block; }
 }
 
 @media (max-width: 768px) {
-  .post-row { flex-direction: column; gap: 8px; }
+  /* The feed itself is full-bleed here (sz-portfolio drops the list's inset),
+     so a row is an edge-to-edge tap target and the row carries the page's own
+     16px gutter instead of stacking one inside another. The 2px transparent
+     hover border is part of that 16 on the left. */
+  .post-row { flex-direction: column; gap: 8px; padding: 16px 16px 16px 14px; }
   .post-row__date { flex-direction: row; align-items: baseline; width: auto; gap: 10px; }
   .post-row__arrow { display: none; }
+  .post-month { padding: 14px 16px 6px; }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1035,11 +1040,16 @@ html[data-view="reading"] .sz-md-updates { display: none; }
   .sz-prose.sz-prose--numbered { padding: 0; }
   .sz-gutter { width: 36px; padding: 0 6px 0 8px; }
   .sz-prose--numbered .sz-content { padding: 0 16px; }
-  /* Reading view's own padding (32px) wins on specificity, so trim it here too. */
-  html[data-view="reading"] .sz-prose--numbered .sz-content { padding: 16px 14px 32px; }
+  /* Reading view's own padding (32px) wins on specificity, so trim it here
+     too. This is the article's ONLY horizontal gutter: .sz-content owns it at
+     every breakpoint, and .sz-prose--numbered is padding-zero by design (see
+     the base rule) precisely so the two never stack. */
+  html[data-view="reading"] .sz-prose--numbered .sz-content { padding: 16px 16px 32px; }
   .sz-article__header { padding: 24px 16px 0; }
-  .sz-series { margin: 20px 14px; }
-  .sz-article__body.sz-prose { padding: 16px 16px 32px; }
+  /* Vertical only. Side padding here would sit *outside* .sz-content's own,
+     indenting article prose 30px while the header, footer, pager and every
+     standalone page stay at 16 — which is exactly what it used to do. */
+  .sz-article__body.sz-prose { padding: 16px 0 32px; }
   .sz-article__title { font-size: calc(var(--sz-font-size) * 1.3); }
   /* A four-column table needs ~380px of monospace at the body size, so at
      phone width it used to scroll with no cue and simply hid its last column.
@@ -1155,6 +1165,13 @@ sz-portfolio { counter-reset: sz-pane -1; }
   color: var(--sz-subtext0, #a6adc8);
 }
 .project-pane__tag::before { content: "#"; opacity: 0.5; }
+
+/* Same reasoning as .post-row: the grid is full-bleed on a phone, so the pane
+   carries the 16px page gutter itself. 15px, because the backplate's own 1px
+   border sits outside it. */
+@media (max-width: 768px) {
+  .project-pane { padding: 16px 15px; }
+}
 
 /* ═══════════════════════════════════════════════════
    Article breadcrumb + blog footer
@@ -1292,6 +1309,12 @@ html[data-view="reading"] .sz-article__breadcrumb {
 }
 
 @media (max-width: 768px) {
+  /* The breadcrumb carries the gutter (below); the toolbar's own 32px only
+     ever worked on desktop, where the 680px breadcrumb is narrower than the
+     row and the padding is absorbed by centring. Below that it stacks, and
+     the crumbs landed at 48px against a 16px page. The view toggle this row
+     also holds is display:none here, so the row is breadcrumb-only. */
+  .sz-article__toolbar { padding: 14px 0 0; }
   .sz-article__breadcrumb { padding: 12px 16px 0; }
   .sz-article__footer { padding: 20px 16px 32px; }
   .sz-article__pager { flex-direction: column; padding: 8px 16px 32px; }
@@ -1726,6 +1749,34 @@ html[data-view="reading"] .sz-updates { display: block; }
   outline: 2px solid var(--sz-accent, #89b4fa);
   outline-offset: 1px;
 }
+
+/* Narrow-viewport gutter for the three reading-view blocks that sit outside
+   the numbered body — series nav, updates notice, updates record. Each is
+   sized `width: 100%; max-width: 616px; margin: … auto`, which centres it in
+   the reading column while the column is the constraint; once the viewport
+   is narrower than 616px the max-width stops binding, the auto margins
+   resolve to 0 and all three run edge to edge while the header, body and
+   footer stay inset.
+
+   Capping the max-width is the fix rather than giving them side margins:
+   auto margins keep centring the box at every width, where a fixed
+   `margin: … 16px` is over-constrained against `width: 100%` between 616px
+   and this breakpoint and pins the block hard left with the whole gutter
+   collected on one side. The 32px it gives up is the page's own 2×16px
+   gutter, so the card edges land on the prose column, as they do on desktop.
+
+   This block has to live BELOW those three definitions, not in the main
+   responsive section near the top of the file: a media query adds no
+   specificity, so an override placed above `.sz-series` / `.sz-updates` is
+   simply overwritten by them at equal specificity. That is how the series
+   rule sat up there, dead. */
+@media (max-width: 768px) {
+  .sz-series,
+  .sz-updates-notice,
+  .sz-updates { max-width: min(616px, calc(100% - 32px)); }
+  .sz-series { margin: 20px auto; }
+}
+
 .post-row__series {
   display: inline-flex;
   align-self: flex-start;

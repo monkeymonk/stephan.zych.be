@@ -9,6 +9,23 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-09-15
+
+### Fixed
+- Mobile now has one horizontal gutter. Four surfaces disagreed about where
+  the edge of the page is: the updates notice and the Updates block ran flush
+  to both screen edges, article prose sat 30px in because the body wrapper
+  added a gutter outside the one the content already had, the breadcrumb sat
+  at 48px for the same stacking reason, and a blog row's text sat at 30px
+  because the archive inset its list and then the row padded itself again.
+  Everything a reader's eye lines up on now sits at 16px, at every phone
+  width, which is also the relationship these blocks have always had on
+  desktop. Archive rows and project panes go edge to edge with it, so a tap
+  target is the full width of the screen. The series nav carried the
+  full-bleed bug too, plus a mobile rule that had never applied — it sat above
+  the definition it was meant to override, at equal specificity — and is fixed
+  with them.
+
 ## [1.11.0] - 2026-09-12
 
 ### Added
@@ -663,7 +680,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.1...HEAD
+[1.11.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.0...v1.11.1
 [1.11.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.3...v1.10.0
 [1.9.3]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.2...v1.9.3

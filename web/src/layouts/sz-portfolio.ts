@@ -139,7 +139,10 @@ export class SzPortfolio extends LitElement {
            there — negative margins cancelling the host's padding — overflowed
            the document by exactly that padding on the right, because nothing in
            this subtree clips any more now that the host is overflow:visible.
-           Children that want the inset carry it themselves instead. */
+           Children that want the inset carry it themselves instead, at the
+           16px every other mobile surface uses (article prose, page prose,
+           CV, article header and footer) — the archive used to sit at 12 and
+           read as a misaligned column against them. */
         :host {
           padding: 12px 0;
           height: auto;
@@ -153,8 +156,8 @@ export class SzPortfolio extends LitElement {
           flex-wrap: nowrap;
           overflow-x: auto;
           scrollbar-width: none;
-          padding-left: 12px;
-          padding-right: 12px;
+          padding-left: 16px;
+          padding-right: 16px;
         }
         .filter-bar::-webkit-scrollbar {
           display: none;
@@ -162,11 +165,14 @@ export class SzPortfolio extends LitElement {
         .filter-btn {
           flex-shrink: 0;
         }
-        .list,
+        /* .list is deliberately absent: a post row and a project pane are
+           tap targets, so they run edge to edge and carry the 16px gutter in
+           their own padding (styles/base.css). Insetting the list too would
+           stack the two and push the text to 30px. */
         .sentinel,
         .pager {
-          margin-left: 12px;
-          margin-right: 12px;
+          margin-left: 16px;
+          margin-right: 16px;
         }
       }
 
