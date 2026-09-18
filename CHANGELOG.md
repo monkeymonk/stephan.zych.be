@@ -9,6 +9,31 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.11.2] - 2026-09-18
+
+### Added
+- New post: "CI Is Where I Put Things I Don't Want to Remember"
+  (`/blog/ci-things-i-dont-want-to-remember/`) — CI as the place mechanical
+  decisions go once you are tired of depending on somebody to remember them,
+  told through this repo's own pipeline: release-only social-asset gating that
+  deliberately stays out of the local build, the three-way keybinding drift
+  check, the architecture gate guarding a rule that had already decayed once,
+  the rule left to human review because every mechanical approximation cried
+  wolf, SHA-tagged images against the `:latest` the compose file still pulls,
+  and the scans that report without gating the deploy. Broadens into the same
+  pattern in agency work, keeps the line between mechanical transport and
+  human judgement, and closes on the question underneath all of it: whose day
+  does this actually make easier? Illustrated with a wire-room poster (WebP +
+  JPG twin for LinkedIn) and two Mermaid diagrams.
+
+### Fixed
+- The TUI keyboard harness's link-picker case counted the picker's own border
+  chrome as link rows, so its cursor index was two rows short and `⏎` landed
+  on whatever the cursor clamped to. It passed for a year because the newest
+  article always happened to end on an internal link; a post ending on an
+  external one made it copy a URL instead of navigating. It now counts only
+  rows carrying a link's metadata.
+
 ## [1.11.1] - 2026-09-15
 
 ### Fixed
@@ -680,7 +705,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.1...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.2...HEAD
+[1.11.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.1...v1.11.2
 [1.11.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.0...v1.11.1
 [1.11.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.9.3...v1.10.0
