@@ -310,10 +310,17 @@ async function historyChecks(run) {
     await s.press('l', 700);
     // Walk to an internal row: an external row copies its URL to the client
     // clipboard instead of navigating, which is a different observable.
+    //
+    // Count only rows carrying a link's own metadata. The picker is a bordered
+    // box, so its title, both rules and the hint line also contain `│`, and
+    // including them offsets the index by the chrome: DOWN then overshoots the
+    // list and the cursor clamps on the last link, which may be external. That
+    // bug passed for a year because every top article happened to end on an
+    // internal link.
     const picker = await s.snapshot();
-    const rows = picker.split('\n').filter(l => l.includes('│'));
+    const rows = picker.split('\n').filter(l => l.includes('│') && (l.includes('→ ') || /https?:\/\//.test(l)));
     const target = rows.findIndex(l => l.includes('→ article') || l.includes('→ page') || l.includes('→ list'));
-    assert(target >= 0, `the top blog article has no internal link to follow (picker rows: ${rows.length})`);
+    assert(target >= 0, `the top blog article has no internal link to follow (picker link rows: ${rows.length})`);
     for (let i = 0; i < target; i++) await s.press(DOWN, 200);
     await s.press(ENTER, 900);
 
