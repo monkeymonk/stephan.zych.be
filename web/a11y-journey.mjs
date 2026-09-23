@@ -24,7 +24,7 @@ const ARTICLE = '/blog/terminal-over-ssh/'; // long, has links + a mermaid diagr
 const DIAGRAM_ARTICLE = '/blog/orval-typed-api-clients/';
 
 /** Blog posts / project entries currently published — both archives print whole. */
-const POST_ROWS = 8;
+const POST_ROWS = 9;
 const PROJECT_PANES = 14;
 
 // document.activeElement stops at a shadow host, so the real focus owner has to

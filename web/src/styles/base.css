@@ -943,6 +943,10 @@ html[data-view="reading"] .sz-md-updates { display: none; }
   display: block;
   max-width: 100%;
   max-height: 45vh;
+  /* Both caps rely on the intrinsic ratio, which the attribute width/height
+     would otherwise override — keep it scaling instead of distorting. */
+  width: auto;
+  height: auto;
   margin: 16px 0 0;
   border-radius: 6px;
 }

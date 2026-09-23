@@ -1,6 +1,6 @@
 {
   "name": "stephan.zych.be",
-  "version": "1.11.2",
+  "version": "1.11.3",
   "description": "",
   "scripts": {
     "dev": "concurrently \"npx @11ty/eleventy --serve\" \"node esbuild.config.mjs --watch\"",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.1.2",
+    "@11ty/eleventy-img": "^7.0.0",
     "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.2",
     "@axe-core/playwright": "^4.12.1",
     "concurrently": "^9.2.1",

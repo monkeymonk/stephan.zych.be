@@ -9,6 +9,21 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.11.3] - 2026-09-23
+
+### Changed
+- Every article, project and page `<img>` now ships as a responsive WebP
+  `srcset` (400/800/1200/1600px), resized at build time instead of served at
+  full source size. Hero images load eager (they're the page's LCP element);
+  everything else loads lazy. Originals are still served as-is for social
+  previews (`og:image`) and the CV's structured data.
+
+### Fixed
+- Image alt text dropped any inline code it contained, so screen readers
+  heard "the  command palette" instead of "the : command palette", and the
+  `workmux list` screenshot's description started mid-sentence. Inline code
+  in an image description now reaches the `alt` attribute as plain text.
+
 ## [1.11.2] - 2026-09-18
 
 ### Added
@@ -705,7 +720,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.2...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.3...HEAD
+[1.11.3]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.2...v1.11.3
 [1.11.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.1...v1.11.2
 [1.11.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.0...v1.11.1
 [1.11.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.10.0...v1.11.0

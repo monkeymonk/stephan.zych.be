@@ -118,6 +118,10 @@ tui/             SSH terminal version (Go + Charm: Wish · Bubble Tea · Glamour
 docs/            Design notes and audits
 ```
 
+Content `<img>` tags are resized to responsive WebP `srcset`s at build time by
+[`@11ty/eleventy-img`](https://www.11ty.dev/docs/plugins/image/), output under
+`web/_site/img/`.
+
 Content lives once, at the repo root. The web build reads it through two symlinks
 (`web/src/content` and `web/src/data`); the TUI reads it directly (`CONTENT_DIR`,
 default `../content`).

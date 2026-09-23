@@ -1,4 +1,5 @@
 const syntaxHighlight = require('@11ty/eleventy-plugin-syntaxhighlight');
+const { eleventyImageTransformPlugin } = require('@11ty/eleventy-img');
 
 // Minimal .env loader (no dependency) for local builds. CI provides env vars
 // directly via GitHub Actions secrets, so .env is only used in development.
@@ -46,6 +47,16 @@ module.exports = function(eleventyConfig) {
       }
       return fallback(tokens, idx, options, env, self);
     };
+
+    // markdown-it builds an image's alt from its children as plain text but
+    // drops `code_inline` tokens, so ![the `:` palette](…) shipped as
+    // alt="the  palette". Keep the code's text; everything else is unchanged.
+    const renderInlineAsText = md.renderer.renderInlineAsText;
+    md.renderer.renderInlineAsText = function (tokens, options, env) {
+      return (tokens || []).map(t => t.type === 'code_inline'
+        ? t.content
+        : renderInlineAsText.call(this, [t], options, env)).join('');
+    };
   });
 
   // Render a short Markdown string inline (no wrapping <p>) — for values that
@@ -60,6 +71,42 @@ module.exports = function(eleventyConfig) {
   // front-ends, like the markdown corpus); serve them under /assets/content.
   eleventyConfig.addPassthroughCopy({ '../content/assets': 'assets/content' });
   eleventyConfig.addPassthroughCopy({ 'src/CNAME': 'CNAME' });
+
+  // The image transform below resolves an absolute <img src> against the
+  // input dir (src/), so `/assets/content/x.webp` would look for
+  // `src/assets/content/x.webp`. The real file only exists via the
+  // `src/content` symlink, at `src/content/assets/x.webp`. Rewrite just the
+  // img src before the transform runs (priority 0 beats its -1 — Eleventy
+  // sorts priorities descending) so it resolves there instead. Web-local
+  // images (e.g. the styleguide's /assets/wallpapers/...) don't start with
+  // /assets/content/ and pass through untouched.
+  eleventyConfig.htmlTransformer.addPosthtmlPlugin('html', function contentAssetSrcPlugin() {
+    return (tree) => {
+      tree.match({ tag: 'img' }, (node) => {
+        if (node.attrs && typeof node.attrs.src === 'string' && node.attrs.src.startsWith('/assets/content/')) {
+          node.attrs.src = '/content/assets/' + node.attrs.src.slice('/assets/content/'.length);
+        }
+        return node;
+      });
+      return tree;
+    };
+  }, { priority: 0 });
+
+  // Resize every <img> to responsive WebP at build time. Single format means
+  // plain <img srcset>, not a <picture> wrapper — no CSS selector changes.
+  // Widths never upscale, so a smaller source just emits fewer of them.
+  eleventyConfig.addPlugin(eleventyImageTransformPlugin, {
+    formats: ['webp'],
+    widths: [400, 800, 1200, 1600],
+    htmlOptions: {
+      imgAttributes: {
+        loading: 'lazy',
+        decoding: 'async',
+        // 736px = the widest prose column: 800px max-width minus 2×32px padding.
+        sizes: '(max-width: 768px) 100vw, 736px',
+      },
+    },
+  });
 
   const dateDisplay = date => new Date(date).toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric'
@@ -195,45 +242,6 @@ module.exports = function(eleventyConfig) {
     } catch {
       return String(url || '').replace(/^https?:\/\//, '').replace(/[/:].*$/, '');
     }
-  });
-
-  // Read a local WebP's intrinsic dimensions (no dependency, CI-safe) so poster
-  // <img>s can carry width/height and reserve layout space — no content shift
-  // as the image loads. Returns "" on any failure so it never breaks a build.
-  const path = require('path');
-  const webpSize = file => {
-    const fs = require('fs');
-    const buf = fs.readFileSync(file);
-    if (buf.length < 30 || buf.toString('ascii', 0, 4) !== 'RIFF' ||
-        buf.toString('ascii', 8, 12) !== 'WEBP') return null;
-    const fourcc = buf.toString('ascii', 12, 16);
-    if (fourcc === 'VP8 ') {
-      return { w: buf.readUInt16LE(26) & 0x3fff, h: buf.readUInt16LE(28) & 0x3fff };
-    }
-    if (fourcc === 'VP8L') {
-      const b = buf.readUInt32LE(21);
-      return { w: (b & 0x3fff) + 1, h: ((b >> 14) & 0x3fff) + 1 };
-    }
-    if (fourcc === 'VP8X') {
-      return {
-        w: ((buf[24] | (buf[25] << 8) | (buf[26] << 16)) & 0xffffff) + 1,
-        h: ((buf[27] | (buf[28] << 8) | (buf[29] << 16)) & 0xffffff) + 1,
-      };
-    }
-    return null;
-  };
-  eleventyConfig.addFilter('imgDimAttrs', poster => {
-    if (!poster || typeof poster !== 'string') return '';
-    try {
-      const rel = poster.replace(/^\//, '');
-      // Content images resolve to the shared root content/assets (served at
-      // /assets/content); everything else is a web-local asset under src/.
-      const file = rel.startsWith('assets/content/')
-        ? path.join(__dirname, '..', 'content', 'assets', rel.slice('assets/content/'.length))
-        : path.join(__dirname, 'src', rel);
-      const size = webpSize(file);
-      return size ? ` width="${size.w}" height="${size.h}"` : '';
-    } catch { return ''; }
   });
 
   // Superscript revision markers. `marks` on an `updates` entry are verbatim

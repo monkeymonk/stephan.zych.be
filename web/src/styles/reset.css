@@ -27,6 +27,13 @@ svg {
   max-width: 100%;
 }
 
+/* eleventy-img now sets width/height attributes on every <img> (for layout
+   reservation); without this, one constrained only by max-width would keep
+   the attribute height and stretch instead of scaling proportionally. */
+img {
+  height: auto;
+}
+
 input,
 button,
 textarea,

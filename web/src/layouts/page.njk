@@ -9,6 +9,6 @@ layout: base.njk
   {% if date %}<p style="color: var(--sz-subtext)">{{ date | dateDisplay }}</p>{% endif %}
   {# Decorative: the h1 above is the only description of it we have, and using
      it as alt just makes AT read the title twice. #}
-  {% if poster %}<img src="{{ poster }}" alt="" loading="lazy" decoding="async"{{ poster | imgDimAttrs | safe }}>{% endif %}
+  {% if poster %}<img src="{{ poster }}" alt="" loading="lazy" decoding="async">{% endif %}
   {{ content | safe }}
 </sz-markdown>
