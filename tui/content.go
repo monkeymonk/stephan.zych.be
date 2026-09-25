@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/charmbracelet/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -59,6 +60,18 @@ var (
 	reIframe     = regexp.MustCompile(`(?is)<iframe[^>]*\bsrc="([^"]+)"[^>]*>.*?</iframe>`)
 	reVideo      = regexp.MustCompile(`(?is)<video[^>]*\bsrc="([^"]+)"[^>]*>.*?</video>`)
 	reWidgetOpen = regexp.MustCompile(`(?is)<sz-(neofetch|gitlog|stats|wakapi|contact-card)\b[^>]*>`)
+	// reSzTagPair matches a well-formed <sz-tag>text</sz-tag> span, so its
+	// text content can be preserved (as backtick-wrapped inline code)
+	// instead of being deleted by the generic reSzTag rule below — shared
+	// between stripHTML (general markdown bodies) and resolveSzTag
+	// (tui/cv.go's free-text CV fields, which bypass stripHTML entirely
+	// since cvArticle assembles Article.Body directly rather than reading
+	// it from a content/*.md file).
+	reSzTagPair = regexp.MustCompile(`(?is)<sz-tag>(.*?)</sz-tag>`)
+	// reStraySzTag matches a lone (unpaired) <sz-tag>/</sz-tag> marker left
+	// after reSzTagPair has resolved every well-formed pair — used by
+	// resolveSzTag to warn about malformed CV markup without crashing.
+	reStraySzTag = regexp.MustCompile(`(?i)</?sz-tag\b[^>]*>`)
 	reSzTag      = regexp.MustCompile(`(?is)<sz-[a-z-]+[^>]*>.*?</sz-[a-z-]+>|<sz-[a-z-]+[^>]*/?>`)
 	reAnyTag     = regexp.MustCompile(`(?s)<[^>]+>`)
 	reBlankRun   = regexp.MustCompile(`\n{3,}`)
@@ -67,11 +80,12 @@ var (
 
 // stripHTML turns embedded HTML (which Glamour can't render meaningfully) into
 // terminal-friendly text: iframes become a video note, sz-* widgets are dropped,
-// remaining tags are unwrapped but their text content is kept. Fenced code
-// blocks are left verbatim — HTML-like tokens inside them (e.g. <br/> in a
-// mermaid diagram) are content, not markup. All HTML in the markdown corpus is
-// single-line, so the per-line stripping below is equivalent to the old whole-
-// body pass for prose.
+// <sz-tag>text</sz-tag> spans (checked before the generic sz-* rule, which would
+// otherwise delete them) become backtick-wrapped inline code, remaining tags are
+// unwrapped but their text content is kept. Fenced code blocks are left verbatim —
+// HTML-like tokens inside them (e.g. <br/> in a mermaid diagram) are content, not
+// markup. All HTML in the markdown corpus is single-line, so the per-line
+// stripping below is equivalent to the old whole-body pass for prose.
 func stripHTML(body string) string {
 	lines := strings.Split(body, "\n")
 	inFence := false
@@ -88,12 +102,35 @@ func stripHTML(body string) string {
 		s = reIframe.ReplaceAllString(s, "\n> ▶ video: $1\n")
 		s = reVideo.ReplaceAllString(s, "\n> ▶ video: $1\n")
 		s = reWidgetOpen.ReplaceAllString(s, "\n"+widgetPrefix+"$1"+widgetSuffix+"\n")
+		s = reSzTagPair.ReplaceAllString(s, "`$1`")
 		s = reSzTag.ReplaceAllString(s, "")
 		s = reAnyTag.ReplaceAllString(s, "") // removes leftover </sz-…> closings and other tags
 		lines[i] = s
 	}
 	body = reBlankRun.ReplaceAllString(strings.Join(lines, "\n"), "\n\n")
 	return strings.TrimSpace(body)
+}
+
+// resolveSzTag replaces every well-formed "<sz-tag>text</sz-tag>" span in
+// text with backtick-wrapped "`text`" so Glamour renders it distinctly —
+// the TUI's mirror of the web build's <sz-tag> Lit component (which
+// renders it as a styled chip, see cvGlamourStyle in glamour_theme.go for
+// the matching Code-style treatment on the CV page). Used directly by
+// tui/cv.go's free-text field construction (summary, job.summary,
+// job.note, evidence.detail, community.detail), which bypasses stripHTML
+// entirely since cvArticle assembles Article.Body directly. An unmatched
+// <sz-tag>/</sz-tag> (no pair) is left as the raw literal text and logged
+// rather than dropped or crashed on — the same never-take-the-server-down
+// tolerance the rest of this parser applies to malformed input.
+func resolveSzTag(text, path string) string {
+	if !strings.Contains(text, "<sz-tag") && !strings.Contains(text, "</sz-tag") {
+		return text
+	}
+	resolved := reSzTagPair.ReplaceAllString(text, "`$1`")
+	if reStraySzTag.MatchString(resolved) {
+		log.Warn("malformed CV <sz-tag> marker, leaving raw", "path", path, "text", text)
+	}
+	return resolved
 }
 
 // parseFrontmatter splits a `---`-delimited YAML header from the markdown body.

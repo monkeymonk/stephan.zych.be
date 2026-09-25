@@ -2,8 +2,13 @@
 layout: base.njk
 title: "CV · Stéphan Zych"
 description: "Full résumé of Stéphan Zych, hands-on lead developer and web architect with 15+ years across agency, founder, and consulting roles: application and web architecture, PHP and JavaScript/TypeScript, Docker and CI/CD delivery, developer experience, technical leadership, and AI-assisted engineering."
-permalink: /cv/
+pagination:
+  data: cvVariants
+  size: 1
+  alias: variant
+permalink: "/cv/{% if variant.slug %}{{ variant.slug }}/{% endif %}"
 ---
+{% set cv = variant.cv %}
 {% set alumniOf = [] %}
 {% for edu in cv.education %}
 {% set alumniOf = (alumniOf.push({ "@type": "Organization", "name": edu.school }), alumniOf) %}
@@ -20,7 +25,7 @@ permalink: /cv/
 {% if cv.basics.linkedin %}{% set sameAs = (sameAs.push("https://" + cv.basics.linkedin), sameAs) %}{% endif %}
 {% if cv.basics.github %}{% set sameAs = (sameAs.push("https://" + cv.basics.github), sameAs) %}{% endif %}
 
-{% set jobTitle = "Lead Developer" %}
+{% set jobTitle = variant.label or "Lead Developer" %}
 
 {% set cvPerson = {
   "@type": "Person",
@@ -32,7 +37,7 @@ permalink: /cv/
   "email": cv.basics.email,
   "address": { "@type": "PostalAddress", "addressLocality": "Brussels", "addressCountry": "BE" },
   "image": site.url + cv.basics.photo,
-  "url": site.url + "/cv/",
+  "url": site.url + ((variant.slug and ("/cv/" + variant.slug + "/")) or "/cv/"),
   "sameAs": sameAs
 } %}
 

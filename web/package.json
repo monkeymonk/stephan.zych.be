@@ -1,11 +1,11 @@
 {
   "name": "stephan.zych.be",
-  "version": "1.11.3",
+  "version": "1.12.0",
   "description": "",
   "scripts": {
     "dev": "concurrently \"npx @11ty/eleventy --serve\" \"node esbuild.config.mjs --watch\"",
     "build": "npx @11ty/eleventy && node esbuild.config.mjs",
-    "check:cv": "node scripts/check-cv-drift.mjs",
+    "check:cv": "node scripts/check-cv-parser.mjs && node scripts/check-cv-drift.mjs",
     "check:assets": "node scripts/check-content-assets.mjs",
     "check:keybindings": "node ../scripts/check-keybindings.mjs",
     "check:structure": "node scripts/check-structure.mjs",
@@ -31,6 +31,7 @@
     "@axe-core/playwright": "^4.12.1",
     "concurrently": "^9.2.1",
     "esbuild": "^0.20.2",
+    "gray-matter": "^4.0.3",
     "lighthouse": "^13.4.0",
     "playwright": "^1.49.0",
     "typescript": "^5.9.3"

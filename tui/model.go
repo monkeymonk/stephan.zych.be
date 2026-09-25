@@ -86,6 +86,7 @@ type Model struct {
 	readerArticle Article
 	readerList    []Article // the section sequence, for prev/next navigation
 	readerIndex   int       // readerArticle's position within readerList
+	cvVariant     string    // slug of the CV role variant to render, "" for the base
 }
 
 // NewModel builds the initial model from already-loaded content.
@@ -108,10 +109,10 @@ func NewModel(content *Content, data *SiteData, loadErr error, width, height int
 	m.theme = themes[m.themeName]
 	s := buildStyles(m.theme)
 	m.st = &s
-	// The CV is data-driven (content/data/cv.json), not a markdown file, so
-	// LoadContent doesn't pick it up. Register it as a page so it's reachable
-	// exactly like about/whoami — via internal /cv/ links, `:cv`, and search —
-	// without needing a nav tab.
+	// The CV is parsed from content/cv/index.md, not a markdown file
+	// LoadContent's generic content directory scan picks up, so it's
+	// registered here as a page — reachable exactly like about/whoami — via
+	// internal /cv/ links, `:cv`, and search — without needing a nav tab.
 	if content != nil && content.Pages != nil && data != nil {
 		content.Pages["cv"] = m.cvArticle()
 	}
@@ -297,8 +298,12 @@ func (m Model) headingBar(level int, text string, width int) string {
 }
 
 func (m *Model) renderMarkdown(a Article) string {
+	style := m.glamourStyle()
+	if a.Slug == "cv" {
+		style = m.cvGlamourStyle()
+	}
 	r, err := glamour.NewTermRenderer(
-		glamour.WithStyles(m.glamourStyle()),
+		glamour.WithStyles(style),
 		glamour.WithWordWrap(m.contentWidth()),
 	)
 	if err != nil {
@@ -313,7 +318,7 @@ func (m *Model) renderMarkdown(a Article) string {
 	if cw < 20 {
 		cw = 20
 	}
-	if rc, err := glamour.NewTermRenderer(glamour.WithStyles(m.glamourStyle()), glamour.WithWordWrap(cw)); err == nil {
+	if rc, err := glamour.NewTermRenderer(glamour.WithStyles(style), glamour.WithWordWrap(cw)); err == nil {
 		codeRenderer = rc
 	}
 
@@ -851,6 +856,48 @@ func (m *Model) setTheme(name string) {
 	m.st = &s
 	if m.screen == screenReader {
 		m.reader.SetContent(m.renderMarkdown(m.readerArticle))
+	}
+}
+
+// resolveCVVariant returns the CV to render for slug: the base CV
+// unchanged for an empty or unknown slug, else the matching
+// content/cv/<slug>.md variant's fully-parsed CVData, standing alone —
+// there is no merge step, each variant file is a complete, standalone CV
+// (see CVVariant's doc comment in data.go).
+func (m Model) resolveCVVariant(slug string) CVData {
+	if slug == "" {
+		return m.data.CV
+	}
+	for _, v := range m.data.Variants {
+		if v.Slug == slug {
+			return v.CV
+		}
+	}
+	return m.data.CV
+}
+
+// setCVVariant switches the session's CV role variant and rebuilds the cv
+// page, mirroring setTheme's shape. If the reader is already open on the cv
+// page, its content is re-rendered in place.
+func (m *Model) setCVVariant(slug string) {
+	m.cvVariant = slug
+	m.content.Pages["cv"] = m.cvArticle()
+	if m.screen == screenReader && m.readerArticle.Slug == "cv" {
+		m.readerArticle = m.content.Pages["cv"]
+		m.reader.SetContent(m.renderMarkdown(m.readerArticle))
+	}
+}
+
+// showCVVariant is the palette's `:cv`/`:cv <slug>` action: switch to slug
+// (setCVVariant refreshes the reader in place if it's already open on the
+// cv page), then open the cv page if it wasn't already showing.
+func (m *Model) showCVVariant(slug string) {
+	m.setCVVariant(slug)
+	if m.screen == screenReader && m.readerArticle.Slug == "cv" {
+		return
+	}
+	if a, ok := m.content.Pages["cv"]; ok {
+		m.openReader(a)
 	}
 }
 

@@ -13,11 +13,23 @@ type commandSpec struct {
 	desc  string
 }
 
-var paletteSpecs = []commandSpec{
-	{": home / projects / blog", "jump around"},
-	{": about / contact / whoami", "open a page"},
-	{": <anything>", "fuzzy-filter every page & post"},
-	{": quit", "disconnect"},
+// paletteSpecs documents every palette command for the help screen. The cv
+// line is built from m.data.Variants rather than hand-listing slugs, so a
+// new content/cv/*.md variant (e.g. lead.md) shows up here with no Go
+// change — the same "no type/template change to add a variant" guarantee
+// the CV role-switcher design promises everywhere else.
+func (m Model) paletteSpecs() []commandSpec {
+	cvUsage := "cv"
+	for _, v := range m.data.Variants {
+		cvUsage += " / cv " + v.Slug
+	}
+	return []commandSpec{
+		{": home / projects / blog", "jump around"},
+		{": about / contact / whoami", "open a page"},
+		{": " + cvUsage, "switch CV variant"},
+		{": <anything>", "fuzzy-filter every page & post"},
+		{": quit", "disconnect"},
+	}
 }
 
 // allArticles flattens every readable article for global search.
@@ -54,7 +66,7 @@ func (m Model) renderHelp() string {
 		b.WriteString("  " + key.Render(padRight(h.Key, 22)) + desc.Render(h.Desc) + "\n")
 	}
 	b.WriteString("\n" + head.Render("Command palette  (:)") + "\n\n")
-	for _, c := range paletteSpecs {
+	for _, c := range m.paletteSpecs() {
 		b.WriteString("  " + key.Render(padRight(c.usage, 28)) + desc.Render(c.desc) + "\n")
 	}
 	b.WriteString("\n" + desc.Render("  Same content as ") +

@@ -26,7 +26,7 @@
 .sz-cv {
   display: block;
   padding: 24px 32px 48px;
-  max-width: 800px;
+  max-width: calc(800px * var(--sz-font-scale));
   margin: 0 auto;
   color: var(--sz-text, #cdd6f4);
   font-size: var(--sz-font-size);
@@ -89,6 +89,7 @@
   margin: 0;
   color: var(--sz-lavender, #b4befe);
 }
+
 .sz-cv__location {
   margin: 0;
   color: var(--sz-subtext0, #a6adc8);
@@ -197,6 +198,7 @@
   background: var(--sz-surface0, #313244);
   border-radius: 2px;
 }
+
 
 /* ── Marker lists (education & training, leadership & community) ── */
 
@@ -351,6 +353,100 @@
   color: var(--sz-mauve, #cba6f7);
 }
 
+/* ── Page toolbar — role switcher (no-JS links + JS-enhanced <select>) and
+   the print/PDF button, side by side ──
+   Markup lives in cv-body.njk, shared with /cv/print/*, so the whole
+   toolbar is hidden there unconditionally in cv-print.css (same pattern
+   as .sz-cv__prompt) — never rely on template placement alone to keep it
+   off the print page. Styled as an obviously interactive bordered panel
+   (not plain inline text) — a role switcher easy to miss is worse than
+   none, so this deliberately reads louder than the rest of the on-screen
+   chrome around it. */
+
+.sz-cv__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 0 0 calc(var(--sz-line-px) * 2);
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--sz-accent, #89b4fa) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sz-accent, #89b4fa) 35%, transparent);
+  border-radius: 6px;
+}
+/* Reset the standalone (identity-panel) spacing now that it's a flex
+   sibling of the switcher instead of stacked under the contact list. */
+.sz-cv__toolbar .sz-cv__download {
+  margin-top: 0;
+  margin-left: auto;
+}
+.sz-cv__variant-switcher {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+.sz-cv__variant-prompt {
+  margin: 0;
+  font-weight: 700;
+  font-size: calc(var(--sz-font-size) * 0.85);
+  color: var(--sz-text, #cdd6f4);
+}
+.sz-cv__variant-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sz-cv__variant-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 16px;
+  font-size: calc(var(--sz-font-size) * 1.05);
+  font-weight: 600;
+  color: var(--sz-subtext1, #bac2de);
+  background: var(--sz-surface0, #313244);
+  border: 1px solid var(--sz-surface1, #45475a);
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+a.sz-cv__variant-link:hover {
+  color: var(--sz-base, #1e1e2e);
+  background: var(--sz-accent, #89b4fa);
+  border-color: var(--sz-accent, #89b4fa);
+  transform: translateY(-1px);
+}
+.sz-cv__variant-item.is-current .sz-cv__variant-link {
+  color: var(--sz-base, #1e1e2e);
+  background: var(--sz-accent, #89b4fa);
+  border-color: var(--sz-accent, #89b4fa);
+  font-weight: 700;
+}
+.sz-cv__role-select {
+  min-height: 30px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: calc(var(--sz-font-size) * 1.05);
+  font-weight: 600;
+  color: var(--sz-text, #cdd6f4);
+  background: var(--sz-surface0, #313244);
+  border: 1px solid var(--sz-surface1, #45475a);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.sz-cv__role-select:hover,
+.sz-cv__role-select:focus-visible {
+  border-color: var(--sz-accent, #89b4fa);
+}
+.sz-cv__role-select option {
+  color: var(--sz-text, #cdd6f4);
+  background: var(--sz-base, #1e1e2e);
+}
+
 @media (max-width: 768px) {
   .sz-cv { padding: 16px 16px 32px; }
   .sz-cv__header {
@@ -361,4 +457,27 @@
   .sz-cv__prompt { margin: -14px -14px 0; }
   .sz-cv__photo { grid-column: 1; width: 88px; height: 88px; }
   .sz-cv__identity { grid-column: 1; }
+
+  /* Toolbar: label / select / button stack as full-width, centred blocks
+     instead of wrapping into a lopsided left-select/right-button split —
+     the select and button are each "justified" (stretched, centred text)
+     rather than left-hugging their own natural width. */
+  .sz-cv__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sz-cv__variant-switcher {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sz-cv__role-select {
+    width: 100%;
+    text-align: center;
+    text-align-last: center;
+  }
+  .sz-cv__toolbar .sz-cv__download {
+    display: flex;
+    justify-content: center;
+    margin-left: 0;
+  }
 }

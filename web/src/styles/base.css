@@ -792,7 +792,7 @@ html[data-view="reading"] .code-gutter span { display: block; }
 
 /* Header */
 .sz-article__header {
-  max-width: 680px;
+  max-width: calc(680px * var(--sz-font-scale));
   width: 100%;
   margin: 0 auto;
   padding: 48px 32px 0;
@@ -893,7 +893,7 @@ html[data-view="reading"] .sz-prose--numbered {
      to the column so those children scroll inside instead of overflowing. */
   width: 100%;
   min-width: 0;
-  max-width: 680px;
+  max-width: calc(680px * var(--sz-font-scale));
   margin: 0 auto;
 }
 html[data-view="reading"] .sz-prose--numbered .sz-content {
@@ -1200,8 +1200,7 @@ sz-portfolio { counter-reset: sz-pane -1; }
 /* Code view keeps the breadcrumb flush-left with the content; reading view
    centers it over the 680px reading column. */
 html[data-view="reading"] .sz-article__breadcrumb {
-  max-width: 680px;
-  width: 100%;
+  max-width: calc(680px * var(--sz-font-scale));
   margin: 0 auto;
 }
 .sz-article__breadcrumb a {
@@ -1219,8 +1218,7 @@ html[data-view="reading"] .sz-article__breadcrumb {
 }
 
 .sz-article__footer {
-  max-width: 680px;
-  width: 100%;
+  max-width: calc(680px * var(--sz-font-scale));
   margin: 0 auto;
   padding: 24px 32px 48px;
   border-top: 1px solid var(--sz-surface0, #313244);
@@ -1268,7 +1266,7 @@ html[data-view="reading"] .sz-article__breadcrumb {
 
 /* Previous / next pager — at the foot of every blog post and project page. */
 .sz-article__pager {
-  max-width: 680px;
+  max-width: calc(680px * var(--sz-font-scale));
   width: 100%;
   margin: 0 auto;
   padding: 8px 32px 48px;

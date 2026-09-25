@@ -44,6 +44,11 @@ func (m *Model) navItems() []paletteItem {
 		name := name
 		out = append(out, paletteItem{"󰸌", "colorscheme " + name, "set theme", func(m *Model) tea.Cmd { m.setTheme(name); return nil }})
 	}
+	out = append(out, paletteItem{"󰈙", "cv", m.data.CVLabel + " CV", func(m *Model) tea.Cmd { m.showCVVariant(""); return nil }})
+	for _, v := range m.data.Variants {
+		slug, label := v.Slug, v.Label
+		out = append(out, paletteItem{"󰈙", "cv " + slug, label + " CV", func(m *Model) tea.Cmd { m.showCVVariant(slug); return nil }})
+	}
 	out = append(out,
 		paletteItem{"󰈙", "whoami", "man page for one (1) developer", func(m *Model) tea.Cmd {
 			if a, ok := m.content.Pages["whoami"]; ok {

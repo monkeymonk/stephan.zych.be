@@ -1,8 +1,13 @@
 ---
 layout: cv-print.njk
 title: "Stéphan Zych · CV"
-permalink: /cv/print/
+pagination:
+  data: cvVariants
+  size: 1
+  alias: variant
+permalink: "/cv/print/{% if variant.slug %}{{ variant.slug }}/{% endif %}"
 noindex: true
 eleventyExcludeFromCollections: true
 ---
+{% set cv = variant.cv %}
 {% include "cv-body.njk" %}

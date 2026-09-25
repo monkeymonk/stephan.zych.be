@@ -27,6 +27,20 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addGlobalData('components', require('./lib/components.js'));
   eleventyConfig.addGlobalData('tokens', require('./lib/tokens.js'));
 
+  // CV base data + role variants, parsed from content/cv/*.md at build
+  // time. `cv` is the ambient base CV (still read directly by
+  // src/pages/cv-md.njk); `cvVariants` drives the per-role CV/print routes.
+  const { loadBaseCV, cvVariants } = require('./lib/cvContent.js');
+  eleventyConfig.addGlobalData('cv', loadBaseCV());
+  eleventyConfig.addGlobalData('cvVariants', cvVariants);
+
+  // content/cv/*.md is consumed exclusively through cvContent.js's own
+  // parser + cv.njk/cv-print.njk's pagination above — it must NOT also be
+  // templated by Eleventy's default per-file processing (every .md file
+  // under the input tree is templated by default), or it silently produces
+  // stray, unstyled pages at /content/cv/<slug>/ nobody asked for.
+  eleventyConfig.ignores.add('src/content/cv/**');
+
   eleventyConfig.addPlugin(syntaxHighlight);
 
   // Emit ```mermaid fences as raw <pre class="mermaid"> so the client-side

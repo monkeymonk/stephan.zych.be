@@ -80,6 +80,31 @@ func (m Model) glamourStyle() ansi.StyleConfig {
 	}
 }
 
+// cvGlamourStyle is glamourStyle()'s exact output with only its Code style
+// customized to look like a chip/badge — the CV reader's rendering of a
+// resolved <sz-tag> span (resolveSzTag in cv.go backtick-wraps it so
+// Glamour treats it as inline code), styled distinctly from the site-wide
+// default inline-code look so a tag mention reads as a pill rather than
+// literal code. Built on the theme's accent colour with a tinted
+// background, the same tintBase approach H1-H6 already use for their
+// backgrounds, for visual consistency with this file's approach. Used
+// only when rendering the "cv" page (see renderMarkdown in model.go) — the
+// accepted tradeoff is that genuine inline code anywhere in CV content
+// would also render chip-styled, which is fine since CV prose never needs
+// literal code.
+func (m Model) cvGlamourStyle() ansi.StyleConfig {
+	style := m.glamourStyle()
+	t := m.theme
+	style.Code = ansi.StyleBlock{StylePrimitive: ansi.StylePrimitive{
+		Color:           sp(t.Accent),
+		BackgroundColor: sp(tintBase(t.Accent, t.Base, 0.30)),
+		Prefix:          " ",
+		Suffix:          " ",
+		Bold:            bp(true),
+	}}
+	return style
+}
+
 // tintBase blends a hue with the given base background at the given alpha,
 // approximating the web's translucent heading backgrounds.
 func tintBase(hex, base string, alpha float64) string {

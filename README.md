@@ -69,18 +69,21 @@ The web `dev` task starts Eleventy's dev server and esbuild in watch mode concur
 | `npm run check:all` | Every check above, cheapest first |
 | `npm run audit` | Record Lighthouse + axe across the audited routes (`-- --baseline` to re-record) |
 
-The CV lives once, as structured data in `content/data/cv.json`, and is rendered
-four ways from that single source: the web page at `/cv/`, the TUI `cv` screen, a
-plain-text/Markdown copy at `/cv.md` (`curl stephan.zych.be/cv.md`), and a
-print-optimised résumé sheet — served as its own chrome-free `/cv/print/` page
-behind the "Print / Save as PDF" button, and linked `media="print"` on `/cv/`
-itself, so printing the on-site CV yields that same document rather than a
-de-terminalised screen page — no committed binary, no typesetting toolchain,
-always in sync with the data. `npm run check:cv` fails if the shared
-headline numbers drift between `cv.json`, `profile.json`, and the about/whoami
-pages, or if the CV section headings drift between the three renderers. It runs
-as its own CI job over the full checkout rather than inside `npm run build` —
-the guard reads `tui/cv.go`, which the web image's build context excludes.
+The CV lives once, as `content/cv/index.md` plus one Markdown file per role
+variant (`content/cv/php.md`, `content/cv/react.md`, ...), and is rendered as
+one page per variant — the web page at `/cv/` (default) and `/cv/<slug>/`,
+the TUI `cv` screen (`:cv <slug>` switches roles), a plain-text/Markdown copy
+at `/cv.md` (`curl stephan.zych.be/cv.md`, default variant only), and a
+print-optimised résumé sheet per variant — served as its own chrome-free
+`/cv/print/` (and `/cv/print/<slug>/`) page behind the "Print / Save as PDF"
+button, and linked `media="print"` on `/cv/` itself, so printing the on-site
+CV yields that same document rather than a de-terminalised screen page — no
+committed binary, no typesetting toolchain, always in sync with the source.
+`npm run check:cv` fails if the shared headline numbers drift between
+`content/cv/index.md`, `profile.json`, and the about/whoami pages, or if the
+CV section headings drift between the three renderers. It runs as its own CI
+job over the full checkout rather than inside `npm run build` — the guard
+reads `tui/cv.go`, which the web image's build context excludes.
 
 `npm run check:assets` enforces the content rule that every post ships with a
 `.webp` poster **and** a `.jpg` `ogImage` twin — LinkedIn's crawler renders
@@ -98,7 +101,8 @@ content/         Shared source of truth — read by BOTH front-ends
   blog/          Articles (YYYY-MM-DD-<slug>.md)
   projects/      Project case studies
   pages/         Standalone pages
-  data/          Site data as JSON (nav, profile, site, themes, cv, ...)
+  cv/            The CV: index.md (base) + one Markdown file per role variant
+  data/          Site data as JSON (nav, profile, site, themes, ...)
   assets/        Images referenced by content
 web/             Static site (Eleventy + Lit + TypeScript → Caddy / GitHub Pages)
   lib/           Build-time Node modules (external data fetched at build)

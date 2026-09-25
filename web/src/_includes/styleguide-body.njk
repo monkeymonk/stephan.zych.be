@@ -297,6 +297,10 @@ Inline SVG from a fixed set declared in `sz-icon.ts`: no sprite request, no icon
 <span style="display: inline-flex; align-items: center; gap: 6px"><sz-icon name="external" size="18"></sz-icon> <code>external</code></span>
 </div>
 
+### Inline tag — `sz-tag`
+
+A chip-styled custom element for a tag mention mid-sentence in CV prose (`content/cv/*.md`, rendered with `| safe`), reusing `.sz-cv__taglist li`'s exact chip visual so it reads identically whether it sits inside a `<ul>` or inline in a sentence: shipping with <sz-tag>Docker</sz-tag> and <sz-tag>Traefik</sz-tag> behind it.
+
 ### View toggle — `sz-view-toggle`
 
 The control in the toolbar at the top of this page, which is where every page that renders through `page.njk` gets one. It writes the persisted `appState.viewMode`, applied globally as `<html data-view>`, so this second instance and the toolbar's move together: flip either, or run `:set view code`. Both carry `class="sz-page__view"`, which is what hides them below 768px, where the reading view is forced.

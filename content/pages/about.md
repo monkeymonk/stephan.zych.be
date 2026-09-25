@@ -12,6 +12,14 @@ permalink: /about/
 
 Fifteen years turning *"can you just make it pop?"* into web platforms that survive contact with production. I co-founded a Brussels agency, **Cherry Pulp**, helped grow it from 4 to 20 people, shipped **200+ platforms**, and stuck around until it got acquired. These days I'm **Lead Developer at CBTW**, working through my own company **[STEPHANZYCH](https://stephanzych.be)** — still suspiciously hands-on for someone with "lead" in the title.
 
+## Hiring, or staffing a role?
+
+<sz-panel cmd="curl stephan.zych.be/cv.md">
+
+Skip to the point: [the CV](/cv/) covers the same fifteen years in recruiter-readable form, with framing tailored for **PHP** or **React** roles if you're screening for one specifically. Grab the plain-text cut with `curl stephan.zych.be/cv.md`, or [print it straight to PDF](/cv/print/).
+
+</sz-panel>
+
 ## What I actually do
 
 The unglamorous stuff that makes everyone else faster: architecture, tooling, conventions, developer experience. I build the boilerplates, CLIs, and standards that turn *"every project is a special snowflake"* into *"every project boots the same way and nobody cries on deploy day."*
@@ -101,8 +109,6 @@ That's most of what I do: raising the floor for a whole team through tooling, co
 ## Say hi
 
 I'm in Brussels 🇧🇪, I speak French natively and English professionally, and I'm always up for a good conversation about architecture, terminals, or why your build is slow. The fastest way is the [contact page](/contact/), or type `:whoami` in the command palette to see who you're really talking to.
-
-Prefer the formal version? There's a proper [CV](/cv/): read it in the browser, `curl stephan.zych.be/cv.md` for the plain-text cut, or [print it to PDF](/cv/print/).
 
 ---
 

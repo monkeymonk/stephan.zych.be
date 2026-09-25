@@ -33,42 +33,8 @@ eleventyExcludeFromCollections: true
 {%- set blocks = (blocks.push("## Core expertise\n\n" + (expertiseLines | join("\n"))), blocks) -%}
 {%- endif -%}
 
-{%- if cv.experience -%}
-{%- set jobBlocks = [] -%}
-{%- for job in cv.experience -%}
-{%- set jobParts = [] -%}
-{%- set jobTitle = "### " + job.role -%}
-{%- if job.company -%}{%- set jobTitle = jobTitle + " — " + job.company -%}{%- endif -%}
-{%- if job.via -%}{%- set jobTitle = jobTitle + " · via " + job.via -%}{%- endif -%}
-{%- set jobParts = (jobParts.push(jobTitle), jobParts) -%}
-{%- if job.location or job.period -%}
-{%- set meta = "" -%}
-{%- if job.location -%}{%- set meta = meta + job.location -%}{%- endif -%}
-{%- if job.location and job.period -%}{%- set meta = meta + " · " -%}{%- endif -%}
-{%- if job.period -%}{%- set meta = meta + job.period -%}{%- endif -%}
-{%- set jobParts = (jobParts.push("*" + meta + "*"), jobParts) -%}
-{%- endif -%}
-{%- if job.summary -%}{%- set jobParts = (jobParts.push(job.summary), jobParts) -%}{%- endif -%}
-{%- if job.highlights -%}
-{%- set highlightLines = [] -%}
-{%- for item in job.highlights -%}{%- set highlightLines = (highlightLines.push("- " + item), highlightLines) -%}{%- endfor -%}
-{%- set jobParts = (jobParts.push(highlightLines | join("\n")), jobParts) -%}
-{%- endif -%}
-{%- if job.groups -%}
-{%- for group in job.groups -%}
-{%- set groupLines = [] -%}
-{%- if group.label -%}{%- set groupLines = (groupLines.push("**" + group.label + "**"), groupLines) -%}{%- endif -%}
-{%- if group.items -%}
-{%- for item in group.items -%}{%- set groupLines = (groupLines.push("- " + item), groupLines) -%}{%- endfor -%}
-{%- endif -%}
-{%- set jobParts = (jobParts.push(groupLines | join("\n")), jobParts) -%}
-{%- endfor -%}
-{%- endif -%}
-{%- if job.clients -%}{%- set jobParts = (jobParts.push("**Representative clients:** " + (job.clients | join(" · "))), jobParts) -%}{%- endif -%}
-{%- if job.note -%}{%- set jobParts = (jobParts.push(job.note), jobParts) -%}{%- endif -%}
-{%- set jobBlocks = (jobBlocks.push(jobParts | join("\n\n")), jobBlocks) -%}
-{%- endfor -%}
-{%- set blocks = (blocks.push("## Work experience\n\n" + (jobBlocks | join("\n\n"))), blocks) -%}
+{%- if cv.experienceMarkdown -%}
+{%- set blocks = (blocks.push(cv.experienceMarkdown), blocks) -%}
 {%- endif -%}
 
 {%- if cv.evidence -%}

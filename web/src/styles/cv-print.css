@@ -51,6 +51,10 @@ body {
 }
 /* Terminal-flavoured prompt line — on-site chrome, never printed. */
 .sz-cv__prompt { display: none; }
+/* Role switcher (plain-links or JS-enhanced select) — never on the print
+   page; the toolbar wrapper itself stays unstyled/visible here so the
+   print button beside it (below, its own rule) keeps working. */
+.sz-cv__variant-switcher { display: none; }
 .sz-cv__photo {
   flex-shrink: 0;
   width: 64px;

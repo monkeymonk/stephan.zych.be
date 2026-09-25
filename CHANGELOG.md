@@ -9,6 +9,41 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-09-25
+
+### Added
+- Role-variant CV pages: `/cv/php/`, `/cv/react/` and `/cv/lead/` alongside
+  the default `/cv/`, each a real, shareable, printable static page with
+  its own print twin (`/cv/print/php/`, `/cv/print/react/`,
+  `/cv/print/lead/`) and a plain-links switcher between variants. The SSH
+  TUI's `cv` reader gets the same switching through the command palette
+  (`:cv`, `:cv php`, `:cv react`, `:cv lead`).
+  CV prose can now call out a term inline, mid-sentence, with
+  `<sz-tag>text</sz-tag>` — a real Lit web component on the web, rendered
+  as backtick-highlighted text in the terminal; structured bullets
+  (expertise, technical stack, interests) need no markup at all, their
+  chip styling already comes from the surrounding list.
+- A dedicated "Hiring, or staffing a role?" panel on the about page,
+  pointing recruiters straight at the CV (`/cv/`), its plain-text cut, and
+  the printable version — previously that link only lived at the bottom of
+  the "Say hi" section.
+
+### Changed
+- CV content moved from `content/data/cv.json` to `content/cv/index.md`
+  plus one Markdown file per role variant: YAML front matter now carries
+  only the flat identity/contact scalars (name, tagline, location, email,
+  website, linkedin, github, photo), and every other section (work
+  experience, core expertise, technical stack, interests, selected
+  engineering work, earlier roles, leadership & community, education,
+  language skills) is a `##` heading in the Markdown body, so adding a
+  role is authoring a file rather than editing JSON.
+
+### Fixed
+- The article/page reading column (header, prose, breadcrumb, footer,
+  pager) and the CV page's own column now widen with the "aA" text-size
+  control instead of staying pinned at a fixed pixel width — larger text
+  no longer gets squeezed into a proportionally narrower line.
+
 ## [1.11.3] - 2026-09-23
 
 ### Changed
@@ -720,7 +755,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.3...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.3...v1.12.0
 [1.11.3]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.2...v1.11.3
 [1.11.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.1...v1.11.2
 [1.11.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.0...v1.11.1

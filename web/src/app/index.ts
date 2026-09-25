@@ -25,6 +25,7 @@ import '../features/screen-shader/index.js';
 
 // UI primitives
 import '../components/ui/sz-icon.js';
+import '../components/ui/sz-tag.js';
 import '../components/ui/sz-glass.js';
 import '../components/ui/sz-panel.js';
 import '../components/ui/sz-view-toggle.js';
@@ -138,6 +139,12 @@ router.init();
 import { initMermaid } from '../features/mermaid/mermaid.js';
 void initMermaid();
 actions.on(ROUTER_ACTION.ROUTE_CHANGED, () => void initMermaid());
+
+// CV role-variant switcher: progressively enhance the plain-links nav into
+// a <select> when present on the page, same lifecycle as initMermaid above.
+import { initCvRoleSwitcher } from '../features/cv-role-switcher/cv-role-switcher.js';
+initCvRoleSwitcher();
+actions.on(ROUTER_ACTION.ROUTE_CHANGED, () => initCvRoleSwitcher());
 
 // Define page-specific widgets present on the current page, and re-scan after
 // each SPA navigation (the router swaps page content).

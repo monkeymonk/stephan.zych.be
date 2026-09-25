@@ -151,8 +151,20 @@ type CVLanguage struct {
 	Note  string `json:"note"`
 }
 
-// CVData mirrors cv.json — the CV reader page's structured source, shared
-// with the web build.
+// CVVariant is a role-targeted rewrite of the base CV, parsed from its own
+// content/cv/<slug>.md file — a complete, standalone CV, not a diff against
+// the base. There is no merge step: CV is simply what that file parses to
+// (via loadCV, the same full parse the base gets), standing alone. Slug and
+// Label come from that file's front matter (the only fields not shared with
+// CVData's shape).
+type CVVariant struct {
+	Slug  string
+	Label string
+	CV    CVData
+}
+
+// CVData mirrors content/cv/index.md — the CV reader page's structured
+// source, shared with the web build.
 type CVData struct {
 	Basics struct {
 		Name     string `json:"name"`
@@ -187,12 +199,23 @@ type SiteData struct {
 	Site        SiteMeta
 	Series      map[string]SeriesMeta
 	CV          CVData
-	Wakapi      *WakapiStats
+	// CVLabel is the base (index.md) CV's own `label:` front-matter value,
+	// read separately from CV rather than added to CVData — the web build's
+	// cvContent.js makes the identical choice (baseParsed.label, kept apart
+	// from the assembled `cv` object) since label is switcher metadata, not
+	// CV content. Falls back to "Default" when index.md omits it, matching
+	// web's `baseParsed.label || 'Default'`.
+	CVLabel  string
+	Variants []CVVariant // role variants parsed from content/cv/*.md, excluding index.md
+	Wakapi   *WakapiStats
 }
 
-// LoadData reads the shared JSON config from dataDir. Missing files are
-// tolerated (that section stays zero-valued) so the TUI still runs.
-func LoadData(dataDir string) *SiteData {
+// LoadData reads the shared config: JSON from dataDir, plus the CV (now
+// markdown, under contentDir/cv/) — two independently-overridable roots, so
+// both are needed here rather than one derived from the other. Missing
+// files are tolerated (that section stays zero-valued) so the TUI still
+// runs.
+func LoadData(contentDir, dataDir string) *SiteData {
 	d := &SiteData{}
 	readJSON(filepath.Join(dataDir, "nav.json"), &d.Nav)
 	readJSON(filepath.Join(dataDir, "profile.json"), &d.Profile)
@@ -200,7 +223,10 @@ func LoadData(dataDir string) *SiteData {
 	readJSON(filepath.Join(dataDir, "shortcuts.json"), &d.Shortcuts)
 	readJSON(filepath.Join(dataDir, "site.json"), &d.Site)
 	readJSON(filepath.Join(dataDir, "seriesData.json"), &d.Series)
-	readJSON(filepath.Join(dataDir, "cv.json"), &d.CV)
+	cvIndexPath := filepath.Join(contentDir, "cv", "index.md")
+	d.CV = loadCV(cvIndexPath)
+	d.CVLabel = loadCVLabel(cvIndexPath)
+	d.Variants = loadCVVariants(contentDir)
 	return d
 }
 
@@ -210,6 +236,83 @@ func readJSON(path string, v any) {
 		return
 	}
 	_ = json.Unmarshal(raw, v)
+}
+
+// loadCV reads content/cv/index.md — the base CV — into a CVData: its flat
+// YAML front matter maps onto Basics/Expertise/Evidence/etc., and its body
+// is parsed per the shared grammar (see parseCVBody in cv.go). A missing
+// file degrades to a zero-valued CVData rather than panicking, the same
+// tolerant spirit as readJSON's silently-ignored unmarshal error.
+func loadCV(path string) CVData {
+	var cv CVData
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return cv
+	}
+	meta, body := parseFrontmatter(raw)
+
+	cv.Basics.Name = metaString(meta, "name")
+	cv.Basics.Tagline = metaString(meta, "tagline")
+	cv.Basics.Location = metaString(meta, "location")
+	cv.Basics.Email = metaString(meta, "email")
+	cv.Basics.Website = metaString(meta, "website")
+	cv.Basics.Linkedin = metaString(meta, "linkedin")
+	cv.Basics.Github = metaString(meta, "github")
+	cv.Basics.Photo = metaString(meta, "photo")
+	cv.Basics.Pdf = "/cv/print/"
+
+	cv.Summary, cv.Experience, cv.Expertise, cv.Skills, cv.Interests, cv.Evidence, cv.Earlier, cv.EarlierClients, cv.Community, cv.Education, cv.Languages = parseCVBody(body, path)
+	return cv
+}
+
+// loadCVLabel reads index.md's own `label:` front-matter key — kept as a
+// separate read from loadCV (not added to CVData) since label is switcher
+// metadata, not CV content; mirrors cvContent.js's baseParsed.label, right
+// down to the "Default" fallback when index.md omits the key.
+func loadCVLabel(path string) string {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return "Default"
+	}
+	meta, _ := parseFrontmatter(raw)
+	if label := metaString(meta, "label"); label != "" {
+		return label
+	}
+	return "Default"
+}
+
+// loadCVVariants globs content/cv/*.md excluding index.md and parses each
+// into a CVVariant — since every variant file is a complete, standalone CV,
+// each is parsed with the exact same loadCV used for the base, no merge
+// step. A glob error (malformed pattern only — never a missing directory)
+// yields no variants rather than panicking.
+func loadCVVariants(contentDir string) []CVVariant {
+	matches, err := filepath.Glob(filepath.Join(contentDir, "cv", "*.md"))
+	if err != nil {
+		return nil
+	}
+	var variants []CVVariant
+	for _, path := range matches {
+		if filepath.Base(path) == "index.md" {
+			continue
+		}
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		meta, _ := parseFrontmatter(raw)
+		slug := metaString(meta, "slug")
+
+		cv := loadCV(path)
+		cv.Basics.Pdf = "/cv/print/" + slug + "/"
+
+		variants = append(variants, CVVariant{
+			Slug:  slug,
+			Label: metaString(meta, "label"),
+			CV:    cv,
+		})
+	}
+	return variants
 }
 
 // iconGlyph maps a data icon name to a nerdfont glyph for the palette.

@@ -98,7 +98,7 @@ func main() {
 		log.Warn("content load failed", "dir", contentDir, "err", loadErr)
 	}
 	dataDir := env("DATA_DIR", contentDir+"/data")
-	data := LoadData(dataDir)
+	data := LoadData(contentDir, dataDir)
 	wakapi := FetchWakapi()
 	data.Wakapi = wakapi
 
@@ -145,7 +145,7 @@ func runSSH(content *Content, data *SiteData, wakapi *WakapiStats, loadErr error
 		if err != nil {
 			c, err = content, loadErr
 		}
-		d := LoadData(dataDir)
+		d := LoadData(contentDir, dataDir)
 		d.Wakapi = wakapi
 		ts, _ := s.Context().Value(trackerCtxKey{}).(*trackerSession)
 		return NewModel(c, d, err, w, h).withOutput(s).withTracker(ts), []tea.ProgramOption{tea.WithAltScreen()}

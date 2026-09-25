@@ -1,5 +1,26 @@
 <div class="sz-cv">
 
+<div class="sz-cv__toolbar">
+  {% if cvVariants and cvVariants.length > 1 %}
+  <nav class="sz-cv__variant-switcher" aria-label="CV role variant">
+    <p class="sz-cv__variant-prompt">Framing this CV for:</p>
+    <ul class="sz-cv__variant-list">
+      {%- for v in cvVariants %}
+      {%- set vHref = (("/cv/" + v.slug + "/") if v.slug else "/cv/") %}
+      {%- if v.slug == variant.slug %}
+      <li class="sz-cv__variant-item is-current"><span class="sz-cv__variant-link" aria-current="page">{{ v.label }}</span></li>
+      {%- else %}
+      <li class="sz-cv__variant-item"><a class="sz-cv__variant-link" href="{{ vHref }}">{{ v.label }}</a></li>
+      {%- endif %}
+      {%- endfor %}
+    </ul>
+  </nav>
+  {% endif %}
+  {% if cv.basics.pdf %}
+  <a class="sz-cv__download no-print" href="{{ cv.basics.pdf }}" target="_blank" rel="noopener">⎙ Print / Save as PDF</a>
+  {% endif %}
+</div>
+
   <header class="sz-cv__header">
     <p class="sz-cv__prompt" aria-hidden="true"><span class="sz-cv__sigil">❯</span>whoami --full</p>
     {% if cv.basics.photo %}
@@ -21,16 +42,13 @@
         {% if cv.basics.linkedin %}<li><a href="https://{{ cv.basics.linkedin }}">{{ cv.basics.linkedin }}</a></li>{% endif %}
         {% if cv.basics.github %}<li><a href="https://{{ cv.basics.github }}">{{ cv.basics.github }}</a></li>{% endif %}
       </ul>
-      {% if cv.basics.pdf %}
-      <a class="sz-cv__download no-print" href="{{ cv.basics.pdf }}" target="_blank" rel="noopener">⎙ Print / Save as PDF</a>
-      {% endif %}
     </div>
   </header>
 
   {% if cv.summary %}
   <section class="sz-cv__section">
     <h2>About me</h2>
-    {% for paragraph in cv.summary %}<p>{{ paragraph }}</p>{% endfor %}
+    {% for paragraph in cv.summary %}<p>{{ paragraph | safe }}</p>{% endfor %}
   </section>
   {% endif %}
 
@@ -65,7 +83,7 @@
         {%- if job.period %}{{ job.period }}{% endif -%}
       </p>
       {% endif %}
-      {% if job.summary %}<p class="sz-cv__job-summary">{{ job.summary }}</p>{% endif %}
+      {% if job.summary %}<p class="sz-cv__job-summary">{{ job.summary | safe }}</p>{% endif %}
       {% if job.highlights %}
       <ul class="sz-cv__job-list">
         {% for item in job.highlights %}<li>{{ item }}</li>{% endfor %}
@@ -87,7 +105,7 @@
       <p class="sz-cv__job-clients">Representative clients: {{ job.clients | join(' · ') }}</p>
       {% endif %}
       {% if job.note %}
-      <p class="sz-cv__job-note">{{ job.note }}</p>
+      <p class="sz-cv__job-note">{{ job.note | safe }}</p>
       {% endif %}
     </article>
     {% endfor %}
@@ -101,7 +119,7 @@
       {% for item in cv.evidence %}
       <li>
         {%- if item.label %}<strong>{{ item.label }}.</strong>{% endif -%}
-        {%- if item.detail %} {{ item.detail }}{% endif -%}
+        {%- if item.detail %} {{ item.detail | safe }}{% endif -%}
         {% if item.link %}<a class="sz-cv__evidence-link" href="https://{{ item.link }}" rel="noopener">{{ item.link }}</a>{% endif %}
       </li>
       {% endfor %}
@@ -164,7 +182,7 @@
     <h2>Leadership &amp; community</h2>
     <ul class="sz-cv__list-plain">
       {% for item in cv.community %}
-      <li>{% if item.label %}<strong>{{ item.label }}</strong>{% endif %}{% if item.detail %} — {{ item.detail }}{% endif %}</li>
+      <li>{% if item.label %}<strong>{{ item.label }}</strong>{% endif %}{% if item.detail %} — {{ item.detail | safe }}{% endif %}</li>
       {% endfor %}
     </ul>
   </section>
