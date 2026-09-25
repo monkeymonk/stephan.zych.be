@@ -9,6 +9,17 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.12.1] - 2026-09-25
+
+### Fixed
+- CI's `check-cv` job (`node web/scripts/check-cv-drift.mjs`, run with no
+  `npm ci` step by design) failed outright after v1.12.0 added a
+  `gray-matter` import to that script — replaced with a minimal, local
+  front-matter splitter so the job stays dependency-free, matching every
+  other whole-repo check next to it. The new `check-cv-parser.mjs` unit
+  test (added in v1.12.0, needs `gray-matter` via `cvContent.js`) now runs
+  in the `verify-keys` job instead, which already does `npm ci`.
+
 ## [1.12.0] - 2026-09-25
 
 ### Added
@@ -755,7 +766,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.12.1...HEAD
+[1.12.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.12.0...v1.12.1
 [1.12.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.3...v1.12.0
 [1.11.3]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.2...v1.11.3
 [1.11.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.1...v1.11.2

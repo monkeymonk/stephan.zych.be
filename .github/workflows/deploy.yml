@@ -132,6 +132,10 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
+      # cvContent.js's own unit test — needs gray-matter (npm-installed
+      # above), unlike check-cv-drift.mjs's whole-repo drift check, which
+      # deliberately stays dependency-free for the check-cv job above.
+      - run: node scripts/check-cv-parser.mjs
       - run: npx playwright install --with-deps chromium
       - run: npm run build
         env:

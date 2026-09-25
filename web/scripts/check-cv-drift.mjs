@@ -6,7 +6,32 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import matter from 'gray-matter';
+
+// This script runs in CI's `check-cv` job with no `npm ci` step (see
+// .github/workflows/deploy.yml's comment on that job) — it, and every
+// other whole-repo check next to it, is deliberately "pure node, no
+// dependencies" so it never needs node_modules installed. A minimal,
+// flat-scalar-only front-matter splitter (not a real YAML parser — every
+// content/cv/*.md field this script reads is a plain `key: value` line,
+// optionally double-quoted per this repo's front-matter convention) keeps
+// that true instead of pulling in gray-matter the way web/lib/cvContent.js
+// does (that one is fine — it only runs inside `npm run build`/`check:cv`,
+// both npm-ci'd).
+function parseFrontmatter(raw) {
+  if (!raw.startsWith('---\n')) return { data: {}, content: raw };
+  const end = raw.indexOf('\n---', 4);
+  if (end < 0) return { data: {}, content: raw };
+  const data = {};
+  for (const line of raw.slice(4, end).split('\n')) {
+    const m = line.match(/^([a-zA-Z0-9_]+):\s*(.*)$/);
+    if (!m) continue;
+    let value = m[2].trim();
+    if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+    data[m[1]] = value;
+  }
+  const content = raw.slice(end + 4).replace(/^\n+/, '');
+  return { data, content };
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..', '..');
@@ -184,7 +209,7 @@ const CV_HEADING2 = /^##[ \t]+(.+)$/gm;
 
 function extractSharedSections(filePath) {
   const raw = readFileSync(filePath, 'utf8');
-  const { data, content } = matter(raw);
+  const { data, content } = parseFrontmatter(raw);
   const body = content.trim();
 
   const sections = {};
