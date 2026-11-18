@@ -5,7 +5,7 @@
 # Base images are pinned by digest (supply-chain); the tag is kept for clarity.
 # Refresh with: docker manifest inspect -v <image:tag>
 
-FROM golang:1.26.6-alpine@sha256:3889b425f035be855a72fb4755265311293b6d414521f0a519d819df32222d83 AS build
+FROM golang:1.26.11-alpine@sha256:ecb67f987aa1a57794c91d19ade7ae0209f2f0f5496aaef9e6ae85ddf92d02ab AS build
 WORKDIR /app
 COPY tui/go.mod tui/go.sum ./
 RUN go mod download

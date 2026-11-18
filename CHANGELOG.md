@@ -9,6 +9,17 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.13.1] - 2026-11-18
+
+### Security
+- Bumped the Go toolchain pin from 1.26.6 to 1.26.11 (CI `go-version` in
+  both Go jobs, and `tui/Dockerfile`'s digest-pinned base image) and
+  `golang.org/x/net` from v0.57.0 to v0.60.0, clearing the 11 standard
+  library advisories `govulncheck` reported against `net/http`,
+  `net/textproto`, `crypto/tls` and `crypto/x509` (GO-2026-6603 through
+  GO-2026-6859). Verified with `GOTOOLCHAIN=go1.26.11 govulncheck ./...`:
+  no vulnerabilities found.
+
 ## [1.13.0] - 2026-11-18
 
 ### Added
@@ -805,7 +816,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.1...HEAD
+[1.13.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.0...v1.13.1
 [1.13.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.12.1...v1.13.0
 [1.12.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.12.0...v1.12.1
 [1.12.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.3...v1.12.0
