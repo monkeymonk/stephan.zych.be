@@ -2,6 +2,12 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { panelStyles } from '../../core/styles.js';
 import { jsonArrayAttribute } from '../../core/data.js';
+// A row value with items separated by " | " cycles through sz-rotate (e.g.
+// the `Role` row); it needs to be defined whenever a card might use it, and
+// a card's rows render inside sz-neofetch's own shadow DOM rather than the
+// light DOM, so the document-level scan in app/lazy-components.ts never
+// sees it there; this side-effect import is what actually loads it.
+import '../ui/sz-rotate.js';
 
 const LOGO = String.raw`
  ███████╗███████╗
@@ -99,7 +105,7 @@ export class SzNeofetch extends LitElement {
               <div class="rule"></div>
               ${this.rows.map(([k, v]) => html`
                 <div class="row ${k.toLowerCase() === 'status' ? 'status' : ''}">
-                  <span class="k">${k}</span><span class="v">${v}</span>
+                  <span class="k">${k}</span><span class="v">${v.includes('|') ? html`<sz-rotate>${v}</sz-rotate>` : v}</span>
                 </div>
               `)}
               <div class="palette" aria-hidden="true">

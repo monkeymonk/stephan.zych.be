@@ -81,11 +81,12 @@ var (
 // stripHTML turns embedded HTML (which Glamour can't render meaningfully) into
 // terminal-friendly text: iframes become a video note, sz-* widgets are dropped,
 // <sz-tag>text</sz-tag> spans (checked before the generic sz-* rule, which would
-// otherwise delete them) become backtick-wrapped inline code, remaining tags are
-// unwrapped but their text content is kept. Fenced code blocks are left verbatim —
-// HTML-like tokens inside them (e.g. <br/> in a mermaid diagram) are content, not
-// markup. All HTML in the markdown corpus is single-line, so the per-line
-// stripping below is equivalent to the old whole-body pass for prose.
+// otherwise delete them) become backtick-wrapped inline code, remaining tags
+// are unwrapped but their text content is kept. Fenced code blocks are left
+// verbatim — HTML-like tokens inside them (e.g. <br/> in a mermaid diagram)
+// are content, not markup. All HTML in the markdown corpus is single-line,
+// so the per-line stripping below is equivalent to the old whole-body pass
+// for prose.
 func stripHTML(body string) string {
 	lines := strings.Split(body, "\n")
 	inFence := false

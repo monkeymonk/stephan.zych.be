@@ -30,14 +30,28 @@ const (
 
 const maxContentWidth = 88
 
-type tickMsg time.Time // clock, once a second
-type animMsg time.Time // animation frames, ~24fps
+type tickMsg time.Time   // clock, once a second
+type animMsg time.Time   // animation frames, ~24fps
+type rotateMsg time.Time // neofetch identity card row cycling, one per rotateDwell
+
+// rotateDwell is how long each neofetch card row item stays on screen before
+// the next tick swaps it — the TUI's fixed counterpart to the web build's
+// optional per-element `dwell` attribute (web/src/components/ui/sz-rotate.ts).
+const rotateDwell = 2800 * time.Millisecond
 
 func tick() tea.Cmd {
 	return tea.Every(time.Second, func(t time.Time) tea.Msg { return tickMsg(t) })
 }
 func animTick() tea.Cmd {
 	return tea.Tick(time.Second/24, func(t time.Time) tea.Msg { return animMsg(t) })
+}
+
+// rotateTick fires far slower than animTick (once per rotateDwell, not 24fps)
+// deliberately: the card it drives only ever appears on the reader screen,
+// where needsAnim() is false — see needsRotate's doc comment for why that
+// screen must never get a 24fps repaint over SSH.
+func rotateTick() tea.Cmd {
+	return tea.Tick(rotateDwell, func(t time.Time) tea.Msg { return rotateMsg(t) })
 }
 
 // Model is the root Bubble Tea model.
@@ -76,6 +90,14 @@ type Model struct {
 	palettePrefix string
 	palItems      []paletteItem
 	palFrame      int
+
+	// rotateTicking guards the slow rotateMsg ticker the same way animating
+	// guards animTick — see needsRotate and the rotateMsg case in Update.
+	// rotateIndex is the shared cycling position: every multi-item row on
+	// the neofetch identity card picks its own items[rotateIndex %
+	// len(items)], so one counter drives all of them (see neofetchCard).
+	rotateTicking bool
+	rotateIndex   int
 
 	readerLinks []pageLink
 	linkCursor  int
@@ -186,6 +208,27 @@ func (m Model) needsAnim() bool {
 		return false
 	}
 	return m.screen == screenHome || (m.overlay == overlayPalette && m.palFrame < paletteRevealLen) || m.screen == screenEffect
+}
+
+// needsRotate reports whether the neofetch identity card, as currently
+// rendered, has a row worth cycling: the card only ever appears embedded in
+// an open reader article via widgets.go's "neofetch" case (e.g.
+// content/pages/about.md carries the \x00WIDGET:neofetch\x00 marker
+// stripHTML leaves behind), so this checks for that marker rather than
+// hardcoding the about slug — any content page that embeds the widget gets
+// the same ticking. identityHasRotatingRow (neofetch.go) is the same
+// splitRotateItems check neofetchCard uses to pick the displayed item,
+// reused here just to answer "is there anything to tick for". The
+// rotateMsg twin of needsAnim, same overlayConfirmQuit guard: the quit
+// prompt covers the reader completely, so ticking behind it would repaint
+// an invisible screen for as long as the question goes unanswered.
+func (m Model) needsRotate() bool {
+	if m.overlay == overlayConfirmQuit {
+		return false
+	}
+	return m.screen == screenReader &&
+		strings.Contains(m.readerArticle.Body, widgetPrefix+"neofetch"+widgetSuffix) &&
+		identityHasRotatingRow(m.data.Profile.Identity.Rows)
 }
 
 // --- layout ---------------------------------------------------------------
@@ -929,6 +972,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.animating = false
 		return m, nil
 
+	case rotateMsg:
+		if m.needsRotate() {
+			m.rotateIndex++
+			m.reader.SetContent(m.renderMarkdown(m.readerArticle))
+			return m, rotateTick()
+		}
+		m.rotateTicking = false
+		return m, nil
+
 	case tea.KeyMsg:
 		if !m.overlay.open() && m.screen != screenEffect {
 			// A transient status message survives until the next keystroke in
@@ -959,15 +1011,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // afterKey ensures the animation loop is running when the resulting screen needs
-// it (e.g. returning to the home screen, whose tagline cycles), and reports the
-// resulting screen as a pageview. Every keystroke leaves through it; the
-// tracker's own lastPath dedupe is what makes the repeats harmless, so no
-// dedupe state belongs on Model (which is copied by value).
+// it (e.g. returning to the home screen, whose tagline cycles), starts the
+// <sz-rotate> ticker the same way when the open reader has one to cycle, and
+// reports the resulting screen as a pageview. Every keystroke leaves through
+// it; the tracker's own lastPath dedupe is what makes the repeats harmless, so
+// no dedupe state belongs on Model (which is copied by value).
 func (m Model) afterKey(cmd tea.Cmd) (tea.Model, tea.Cmd) {
 	m.trackPath()
 	if m.needsAnim() && !m.animating {
 		m.animating = true
-		return m, tea.Batch(cmd, animTick())
+		cmd = tea.Batch(cmd, animTick())
+	}
+	if m.needsRotate() && !m.rotateTicking {
+		m.rotateTicking = true
+		cmd = tea.Batch(cmd, rotateTick())
 	}
 	return m, cmd
 }

@@ -11,6 +11,7 @@ const LAZY: Record<string, () => Promise<unknown>> = {
   'sz-contact-card': () => import('../components/widgets/sz-contact-card.js'),
   'sz-copy': () => import('../components/widgets/sz-copy.js'),
   'sz-toc': () => import('../components/ui/sz-toc.js'),
+  'sz-rotate': () => import('../components/ui/sz-rotate.js'),
 };
 
 const loaded = new Set<string>();

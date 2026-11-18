@@ -301,6 +301,12 @@ Inline SVG from a fixed set declared in `sz-icon.ts`: no sprite request, no icon
 
 A chip-styled custom element for a tag mention mid-sentence in CV prose (`content/cv/*.md`, rendered with `| safe`), reusing `.sz-cv__taglist li`'s exact chip visual so it reads identically whether it sits inside a `<ul>` or inline in a sentence: shipping with <sz-tag>Docker</sz-tag> and <sz-tag>Traefik</sz-tag> behind it.
 
+### Inline rotate — `sz-rotate`
+
+A generic, content-authored rotating value: the items are the element's own text content, pipe-separated, never an attribute. One item renders statically; two or more cross-fade on a timer, sized to the widest item so nothing around it reflows. Its real use is a status field, not a sentence: the identity card's `Role` row above cycles through this exact element because its value in `content/data/profile.json` contains a `|`, with no other markup involved.
+
+<div style="display: flex; gap: 8px; align-items: baseline"><span style="color: var(--sz-accent, #89b4fa); font-weight: 700; flex: 0 0 64px">Role</span><span style="color: var(--sz-subtext0, #a6adc8)"><sz-rotate>Architect | Lead | Developer</sz-rotate></span></div>
+
 ### View toggle — `sz-view-toggle`
 
 The control in the toolbar at the top of this page, which is where every page that renders through `page.njk` gets one. It writes the persisted `appState.viewMode`, applied globally as `<html data-view>`, so this second instance and the toolbar's move together: flip either, or run `:set view code`. Both carry `class="sz-page__view"`, which is what hides them below 768px, where the reading view is forced.

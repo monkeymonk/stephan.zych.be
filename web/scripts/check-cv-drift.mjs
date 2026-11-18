@@ -41,12 +41,16 @@ const paths = {
   profile: path.join(repoRoot, 'content/data/profile.json'),
   about: path.join(repoRoot, 'content/pages/about.md'),
   whoami: path.join(repoRoot, 'content/pages/whoami.md'),
+  baseLayout: path.join(repoRoot, 'web/src/layouts/base.njk'),
+  articleLayout: path.join(repoRoot, 'web/src/layouts/article.njk'),
 };
 
 const cvText = readFileSync(paths.cv, 'utf8');
 const profileText = readFileSync(paths.profile, 'utf8');
 const aboutText = readFileSync(paths.about, 'utf8');
 const whoamiText = readFileSync(paths.whoami, 'utf8');
+const baseLayoutText = readFileSync(paths.baseLayout, 'utf8');
+const articleLayoutText = readFileSync(paths.articleLayout, 'utf8');
 
 // (content/cv/index.md is Markdown, not JSON — no parse-validity check needed;
 // readFileSync above already fails loudly if the file is missing.)
@@ -255,6 +259,43 @@ if (cvFiles.length > 1) {
         failures.push(`✗ content/cv/${file} has shared CV section "${name}" absent from content/cv/${refCvFile}`);
       }
     }
+  }
+}
+
+// 7. Role vocabulary: "frontend architect" was the Cherry Pulp-era title;
+// the CV was rewritten for the CBTW era to "Application Architect"
+// (structured) / "application & web architect" (prose), but the files that
+// restate the role by hand kept the old wording. It drifted silently once
+// already because this script only ever pinned numbers and section
+// headings, never the job title itself. Pin content/cv/index.md's own
+// `label` front matter as the source of truth, then mechanically forbid the
+// retired phrase and require the current one everywhere else the role title
+// is restated outside the CV (the blog corpus is prose, not restated
+// front matter, and is deliberately not scanned here).
+const { data: cvFrontmatter } = parseFrontmatter(cvText);
+if (cvFrontmatter.label !== 'Application Architect') {
+  failures.push(
+    `✗ content/cv/index.md front matter "label" is "${cvFrontmatter.label}", expected "Application Architect"; if this is a deliberate rename, update profile.json/base.njk/article.njk/about.md/whoami.md (and this check) to match`
+  );
+}
+
+const roleVocabFiles = [
+  { label: 'content/pages/about.md', text: aboutText },
+  { label: 'content/pages/whoami.md', text: whoamiText },
+  { label: 'content/data/profile.json', text: profileText },
+  { label: 'web/src/layouts/base.njk', text: baseLayoutText },
+  { label: 'web/src/layouts/article.njk', text: articleLayoutText },
+];
+
+const frontendArchitectRegex = /frontend\s+architect\b/i;
+const applicationArchitectRegex = /application\s*(?:&(?:amp;)?\s*web\s*)?architect/i;
+
+for (const { label, text } of roleVocabFiles) {
+  if (frontendArchitectRegex.test(text)) {
+    failures.push(`✗ ${label} still says "frontend architect" — the role was renamed to "Application Architect" (see content/cv/index.md)`);
+  }
+  if (!applicationArchitectRegex.test(text)) {
+    failures.push(`✗ ${label} has no "application architect" / "application & web architect" title phrase matching the CV's current role vocabulary`);
   }
 }
 

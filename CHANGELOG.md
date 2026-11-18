@@ -9,6 +9,45 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-11-18
+
+### Added
+- `<sz-rotate>`: an inline component that shows one item of a list at a
+  time, cycling every 2.8s with a fade, sized to its widest item so
+  nothing around it moves. Both renderers understand it, and any neofetch
+  identity-card row whose value is pipe-separated rotates through its
+  items. The about card's `Role` is the first user: it cycles the four CV
+  framings (**application & web architect**, technical lead, fullstack
+  PHP, fullstack React), so the card says in four words what the CV
+  variants say in four pages. Reduced motion pins it to the first item.
+
+### Changed
+- The about page, `whoami`, the neofetch identity card and the site-wide
+  `Person` JSON-LD now say **application & web architect** instead of
+  *frontend architect*, matching `content/cv/index.md`'s own label and
+  tagline. The frontend framing was the Cherry Pulp-era identity and had
+  drifted a layer narrower than the CV it links to.
+- About's "What I actually do" picks up the half of the current CV it was
+  missing: shared Docker environments, CI pipelines, containerised
+  deployment and observability, across concurrent projects and a
+  distributed team. AI-assisted engineering moves out of "Off the clock"
+  into its own section, since the CV lists it as core expertise rather
+  than a hobby.
+- The about CV panel now names the `lead` variant alongside `php` and
+  `react`; `/cv/lead/` has existed since v1.12.0 but went unadvertised.
+- `whoami`'s synopsis gains a `--delivery` option, matching the same
+  reframing.
+- `content/data/profile.json`: the timeline's rich-media row no longer
+  claims a 2009 start (TBWA/Agency.com ran 2011–2013); Com2B Networks
+  2009–2011 is now its own row, so the gitlog still accounts for the full
+  fifteen years. The skills bar drops Astro, which appears in no CV
+  variant's stack.
+
+### Fixed
+- `check-cv-drift.mjs` now pins the CV role vocabulary too, not just the
+  headline numbers and section headings. That gap is the only reason the
+  about page could fall out of step with the CV without CI noticing.
+
 ## [1.12.1] - 2026-09-25
 
 ### Fixed
@@ -766,7 +805,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.12.1...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.12.1...v1.13.0
 [1.12.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.12.0...v1.12.1
 [1.12.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.3...v1.12.0
 [1.11.3]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.11.2...v1.11.3

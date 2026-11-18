@@ -15,22 +15,23 @@ STEPHAN(1)                   User Commands                   STEPHAN(1)
 
 ## NAME
 
-**stephan** — lead developer, frontend architect, recovering CTO
+**stephan** — lead developer, application & web architect, recovering CTO
 
 ## SYNOPSIS
 
-`stephan [--architecture] [--tooling] [--strong-opinions] [PROJECT...]`
+`stephan [--architecture] [--tooling] [--delivery] [--strong-opinions] [PROJECT...]`
 
 ## DESCRIPTION
 
 Fifteen years of building web platforms, evolving from "the frontend guy" into the person who decides why your build is slow, and then fixes it. Co-founded **Cherry Pulp** (Brussels, 2013–2024): grew it 4 → 20 people, shipped 200+ platforms, exited to **CBTW** in 2023, where `stephan` now runs as Lead Developer.
 
-Specialises in the foundations: architecture, tooling, conventions, and developer experience. Full-stack across the JavaScript and PHP ecosystems, with a frontend bias and an art-school backstory.
+Specialises in the foundations: architecture, tooling, conventions, delivery pipelines, and developer experience. Full-stack across the JavaScript and PHP ecosystems, with an art-school backstory.
 
 ## OPTIONS
 
 - `--architecture`: define technical direction, stack choices, and the shape of the thing before a line is written.
 - `--tooling`: boilerplates, CLIs, and conventions, so projects boot the same way every time.
+- `--delivery`: Docker environments, CI pipelines, and deploys that don't end in someone's FTP client.
 - `--strong-opinions`: supplied by default. Cannot be disabled.
 
 ## ENVIRONMENT

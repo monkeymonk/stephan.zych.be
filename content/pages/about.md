@@ -2,7 +2,7 @@
 layout: page.njk
 title: About · Stéphan Zych
 heading: About
-description: Lead developer, frontend architect, recovering CTO. Fifteen years building the web's unglamorous foundations, and having opinions about them. Working at CBTW through my company STEPHANZYCH.
+description: Lead developer, application & web architect, recovering CTO. Fifteen years building the web's unglamorous foundations, and having opinions about them. Working at CBTW through my company STEPHANZYCH.
 permalink: /about/
 ---
 
@@ -16,7 +16,7 @@ Fifteen years turning *"can you just make it pop?"* into web platforms that surv
 
 <sz-panel cmd="curl stephan.zych.be/cv.md">
 
-Skip to the point: [the CV](/cv/) covers the same fifteen years in recruiter-readable form, with framing tailored for **PHP** or **React** roles if you're screening for one specifically. Grab the plain-text cut with `curl stephan.zych.be/cv.md`, or [print it straight to PDF](/cv/print/).
+Skip to the point: [the CV](/cv/) covers the same fifteen years in recruiter-readable form, with framing tailored for **technical lead**, **PHP** or **React** roles if you're screening for one specifically. Grab the plain-text cut with `curl stephan.zych.be/cv.md`, or [print it straight to PDF](/cv/print/).
 
 </sz-panel>
 
@@ -24,7 +24,13 @@ Skip to the point: [the CV](/cv/) covers the same fifteen years in recruiter-rea
 
 The unglamorous stuff that makes everyone else faster: architecture, tooling, conventions, developer experience. I build the boilerplates, CLIs, and standards that turn *"every project is a special snowflake"* into *"every project boots the same way and nobody cries on deploy day."*
 
-Frontend is home turf, but I'm full-stack enough to be dangerous across the JavaScript and PHP worlds, and opinionated enough to tell you which one your project actually needs.
+The other half of the job is the road the code travels on: a Docker environment every project shares, CI pipelines that deploy containers instead of someone's FTP client, and enough Grafana to know which part broke. Mostly across several concurrent projects and a distributed team. Nobody puts that on a slide.
+
+Frontend is where I came up, and it still shows in how I think about interfaces. The work now is full-stack enough to be dangerous across the JavaScript and PHP worlds, and opinionated enough to tell you which one your project actually needs.
+
+## Agents are part of the stack now
+
+I build with coding agents daily, under the same rules as everything else: one canonical agent configuration rendered into whichever CLI is driving, deterministic checks, reviewed diffs, and a sandbox the agent doesn't get a vote on. Local models for the parts that shouldn't leave the house. It's an engineering practice, not a party trick.
 
 ## The path so far
 
@@ -48,7 +54,6 @@ I didn't come up purely through computer science. I studied **fine arts** at the
 
 ## Off the clock
 
-- **AI-assisted workflows & local LLMs**: running models on my own hardware, because the cloud doesn't need to know *everything*.
 - **A Docker-based homelab**: self-hosting is a personality trait now, apparently.
 - **CLI utilities & terminal nerdery**: yes, this entire website is a terminal. No, I won't apologise. (I've even given the talk: *"Terminal utilities & advanced use cases."*)
 - **Prototyping in Rust, Go, Python, and C#**, and building little games in **Godot** when I want pixels instead of pull requests.
@@ -74,7 +79,7 @@ Depends on the work. Interesting problem, decent humans, a little respect for cr
 <details>
 <summary>Frontend only, or full-stack?</summary>
 
-Frontend is home turf, but I'm full-stack enough to be useful across the JavaScript and PHP worlds, and honest enough to tell you when you need a specialist instead of me.
+Full-stack, with a frontend accent. I came up through the browser and still think in interfaces, but the architecture work runs across PHP backends, APIs, and how the whole thing ships. Honest enough to tell you when you need a specialist instead of me.
 
 </details>
 
