@@ -9,6 +9,12 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+### Fixed
+- Command palette notifications (`:coffee`, `:sudo`, ...) and the `:matrix`
+  and `:party` effects now show while the terminal window is in browser
+  fullscreen. They lived outside the fullscreen element, so the browser never
+  painted them; they now render in the top layer as manual popovers.
+
 ## [1.13.1] - 2026-11-18
 
 ### Security

@@ -5,6 +5,7 @@ import { ActionController } from '../../core/action-controller.js';
 import { KeymapController } from '../../core/keymap-controller.js';
 import { OverlayController } from '../../core/overlay-controller.js';
 import { EFFECT_ACTION } from './actions.js';
+import { mountEffectLayer } from './top-layer.js';
 
 @customElement('sz-effect-matrix')
 export class SzEffectMatrix extends LitElement {
@@ -55,8 +56,7 @@ export class SzEffectMatrix extends LitElement {
     this.cleanupEffect?.();
 
     const canvas = document.createElement('canvas');
-    canvas.style.cssText = 'position:fixed;inset:0;z-index:9999;pointer-events:none;';
-    document.body.appendChild(canvas);
+    mountEffectLayer(canvas, 'position:fixed;inset:0;z-index:9999;pointer-events:none;');
 
     const ctx = canvas.getContext('2d');
     if (!ctx) {

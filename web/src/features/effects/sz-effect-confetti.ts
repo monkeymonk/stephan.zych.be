@@ -3,6 +3,7 @@ import { customElement } from 'lit/decorators.js';
 import { reducedMotion } from '../../core/styles.js';
 import { ActionController } from '../../core/action-controller.js';
 import { EFFECT_ACTION } from './actions.js';
+import { mountEffectLayer } from './top-layer.js';
 
 @customElement('sz-effect-confetti')
 export class SzEffectConfetti extends LitElement {
@@ -38,8 +39,7 @@ export class SzEffectConfetti extends LitElement {
     this.cleanupEffect?.();
 
     const container = document.createElement('div');
-    container.style.cssText = 'position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;';
-    document.body.appendChild(container);
+    mountEffectLayer(container, 'position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;');
 
     this.ensureConfettiStyle();
 
@@ -69,15 +69,14 @@ export class SzEffectConfetti extends LitElement {
     this.cleanupEffect?.();
 
     const flash = document.createElement('div');
-    flash.style.cssText = `
+    mountEffectLayer(flash, `
       position:fixed;
       inset:0;
       z-index:9999;
       pointer-events:none;
       background:radial-gradient(circle at center, rgb(249 226 175 / 0.6), rgb(137 180 250 / 0.18) 45%, transparent 75%);
       animation:confetti-flash 180ms ease-out 2 alternate;
-    `;
-    document.body.appendChild(flash);
+    `);
 
     this.ensureConfettiStyle();
 

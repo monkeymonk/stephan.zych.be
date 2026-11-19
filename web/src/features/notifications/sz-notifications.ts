@@ -23,10 +23,21 @@ export class SzNotifications extends LitElement {
   }]]);
 
   static styles = css`
+    /* The host is a manual popover so the toast renders in the top layer:
+       browser fullscreen only paints the fullscreen element's subtree plus
+       the top layer, and this element sits outside sz-window. The reset
+       below cancels the UA [popover] box (inset/margin/border/padding). */
     :host {
       position: fixed;
-      left: 50%;
-      bottom: 40px;
+      inset: auto auto 40px 50%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      overflow: visible;
+      width: auto;
+      height: auto;
       z-index: 9999;
       transform: translateX(-50%);
       pointer-events: none;
@@ -81,6 +92,7 @@ export class SzNotifications extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
+    this.setAttribute('popover', 'manual');
   }
 
   disconnectedCallback(): void {
@@ -105,10 +117,19 @@ export class SzNotifications extends LitElement {
       duration: payload.duration ?? 2500,
       type: payload.type ?? 'info',
     };
+    this.raise();
     this.hideTimer = window.setTimeout(() => {
       this.notification = undefined;
       this.hideTimer = undefined;
+      if (this.matches(':popover-open')) this.hidePopover();
     }, this.notification.duration);
+  }
+
+  /** Re-open so the toast lands above a fullscreen element entered after it was shown. */
+  private raise(): void {
+    if (typeof this.showPopover !== 'function') return;
+    if (this.matches(':popover-open')) this.hidePopover();
+    this.showPopover();
   }
 
   private clearHideTimer(): void {
