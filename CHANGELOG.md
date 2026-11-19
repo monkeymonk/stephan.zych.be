@@ -14,6 +14,11 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
   and `:party` effects now show while the terminal window is in browser
   fullscreen. They lived outside the fullscreen element, so the browser never
   painted them; they now render in the top layer as manual popovers.
+- The copyright footer plate now has visible side padding, and its text is
+  optically centred. Its padding was set on the component host, where the
+  page reset's `* { padding: 0 }` silently zeroed it; it now lives on an
+  inner wrapper, trimmed to cap height and baseline (`text-box`) so the
+  text no longer rides high in the plate.
 
 ## [1.13.1] - 2026-11-18
 

@@ -31,13 +31,30 @@ export class SzCopyrightFooter extends LitElement {
          hold if you retune it.
          The blur is the same frosted vocabulary as sz-glass, minus the
          refraction: this is a 11px label, not a surface. */
-      padding: 3px 8px;
       border-radius: 5px;
       color: var(--sz-subtext1, #bac2de);
       background: color-mix(in srgb, var(--sz-crust, #11111b) 82%, transparent);
       border: 1px solid color-mix(in srgb, var(--sz-surface1, #45475a) 55%, transparent);
       backdrop-filter: blur(6px) saturate(140%);
       -webkit-backdrop-filter: blur(6px) saturate(140%);
+    }
+    /* The padding lives on an inner wrapper, not :host: the page reset's
+       "* { padding: 0 }" matches the host element from the outer scope and
+       outer-scope rules beat :host, so a host padding is silently zeroed. */
+    .plate {
+      display: block;
+      padding: 6px 12px 2px;
+    }
+    /* Centre the cap band, not the line box: JetBrains Mono's ascent and
+       descent are uneven, so equal padding around the line box left the
+       text riding ~4px high. Trimming to cap height and baseline makes
+       the padding the optical margin; descenders hang into the bottom one.
+       The fallback above is the same centring done by hand. */
+    @supports (text-box: trim-both cap alphabetic) {
+      .plate {
+        text-box: trim-both cap alphabetic;
+        padding: 7px 12px;
+      }
     }
     a {
       pointer-events: auto;
@@ -63,8 +80,8 @@ export class SzCopyrightFooter extends LitElement {
   `;
 
   render() {
-    return html`<span>© Stéphan Zych</span> ·
+    return html`<span class="plate"><span>© Stéphan Zych</span> ·
       <a href="/terms-and-conditions/">Terms &amp; Conditions</a> ·
-      <a href="/privacy/">Privacy</a>`;
+      <a href="/privacy/">Privacy</a></span>`;
   }
 }
