@@ -50,6 +50,11 @@ export function wireNeovimPalette() {
       return commands.filter(c => c.label.includes(q) || (c.description?.toLowerCase().includes(q) ?? false));
     },
     execute(item: PaletteItem, args?: string[]) {
+      // Cookieless Umami event, one per command run. Only the label, which
+      // comes from the fixed list above: arguments are left out, so nothing
+      // typed freely ever reaches the dashboard. Same event name and property
+      // as the TUI (tui/keymap.go), told apart by the tracker's tag.
+      window.umami?.track('command', { name: item.label });
       const navTab = registry.nav.find(t => t.name === item.label);
       if (navTab) { router.navigate(navTab.path); return; }
       if (item.id === 'colorscheme' && args?.[0]) {

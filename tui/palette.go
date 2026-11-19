@@ -67,6 +67,16 @@ func (m *Model) navItems() []paletteItem {
 	return out
 }
 
+// paletteCommandName is the analytics name of a command item: its first word,
+// so `colorscheme tokyonight` and `cv lead` report as `colorscheme` and `cv`,
+// matching the web palette, which keeps arguments out of the label.
+func paletteCommandName(label string) string {
+	if f := strings.Fields(label); len(f) > 0 {
+		return f[0]
+	}
+	return label
+}
+
 func (m *Model) articleItems() []paletteItem {
 	out := []paletteItem{}
 	for _, a := range m.allArticles() {

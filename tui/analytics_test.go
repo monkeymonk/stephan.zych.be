@@ -219,3 +219,19 @@ func TestClientDescriptionIsSentRatherThanGuessed(t *testing.T) {
 		t.Errorf("clientOS(plain OpenSSH) = %q, want empty: the protocol does not carry the host OS, and a guess would be fiction", got)
 	}
 }
+
+// The command event names the command, never its argument: a TUI label like
+// `colorscheme tokyonight` has to land in the same bucket as the web's
+// `colorscheme`.
+func TestPaletteCommandName(t *testing.T) {
+	for label, want := range map[string]string{
+		"colorscheme tokyonight": "colorscheme",
+		"cv lead":                "cv",
+		"quit":                   "quit",
+		"":                       "",
+	} {
+		if got := paletteCommandName(label); got != want {
+			t.Errorf("paletteCommandName(%q) = %q, want %q", label, got, want)
+		}
+	}
+}

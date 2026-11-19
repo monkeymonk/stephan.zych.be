@@ -181,6 +181,9 @@ var keyTable = []binding{
 		run: func(m Model) (Model, tea.Cmd) {
 			items := m.paletteFiltered()
 			if len(items) > 0 && m.cursor < len(items) {
+				if m.palettePrefix == ":" {
+					m.tracker.event("command", map[string]any{"name": paletteCommandName(items[m.cursor].label)})
+				}
 				m = m.closeOverlay()
 				// One statement, as palette.go:126 writes it: the item's action
 				// mutates through the pointer, so the Model has to be read
