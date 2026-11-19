@@ -163,7 +163,8 @@ One box serves both front-ends from the shared `content/` source:
 
 ```bash
 # Prereq: move the host's own sshd off :22 (e.g. to 2200) and firewall it.
-docker compose up -d --build
+# Umami's secrets are required; compose refuses to start without them.
+UMAMI_DB_PASSWORD=... UMAMI_APP_SECRET=... docker compose up -d --build
 ```
 
 - **`tui`** — distroless SSH server, host port `22` → container `2222`.

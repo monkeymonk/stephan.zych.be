@@ -51,9 +51,11 @@ services:
     environment:
       # Caddy auto-HTTPS in prod; override SITE_ADDRESS=:8080 for local runs.
       - SITE_ADDRESS=${SITE_ADDRESS:-stephan.zych.be}
-      # Subdomain Caddy reverse-proxies to Umami. Unset locally -> the Caddyfile
-      # falls back to :8081 (no cert); prod exports ANALYTICS_ADDRESS=analytics.zych.be.
-      - ANALYTICS_ADDRESS
+      # Subdomain Caddy reverse-proxies to Umami. Defaults to prod, like
+      # SITE_ADDRESS, so a hand-run `docker compose up` on the box can't
+      # silently drop the analytics.zych.be site block. Override with
+      # ANALYTICS_ADDRESS=:8081 for local runs (no cert).
+      - ANALYTICS_ADDRESS=${ANALYTICS_ADDRESS:-analytics.zych.be}
       # Basic-auth credentials for the private /_stats dashboard, read from the
       # shell that runs compose. In CI they're forwarded from GitHub secrets by
       # .github/workflows/deploy.yml; for a local run, export them inline:
@@ -119,16 +121,20 @@ services:
   # Secrets come from the shell running compose (GitHub secrets in CI):
   #   UMAMI_DB_PASSWORD  Postgres password (shared with umami-db below)
   #   UMAMI_APP_SECRET   session/JWT signing secret
+  # Both are required (`:?`): compose refuses to run without them rather than
+  # starting Umami with an empty DB password that crash-loops it.
   umami:
-    image: ghcr.io/umami-software/umami:postgresql-latest # pin to a digest to match the other images
+    # Digest-pinned: the floating postgresql-latest tag pulled a new image on
+    # every deploy, which is how the 8.7G disk filled up. Bump on purpose.
+    image: ghcr.io/umami-software/umami@sha256:b64f40400d77bcadd39cf5c62a1e368c99524ca442024f96e1133355a19a5dbc
     restart: unless-stopped
     depends_on:
       umami-db:
         condition: service_healthy
     environment:
       - DATABASE_TYPE=postgresql
-      - DATABASE_URL=postgresql://umami:${UMAMI_DB_PASSWORD}@umami-db:5432/umami
-      - APP_SECRET=${UMAMI_APP_SECRET}
+      - DATABASE_URL=postgresql://umami:${UMAMI_DB_PASSWORD:?}@umami-db:5432/umami
+      - APP_SECRET=${UMAMI_APP_SECRET:?}
     cap_drop:
       - ALL
     security_opt:
@@ -142,7 +148,7 @@ services:
     environment:
       - POSTGRES_DB=umami
       - POSTGRES_USER=umami
-      - POSTGRES_PASSWORD=${UMAMI_DB_PASSWORD}
+      - POSTGRES_PASSWORD=${UMAMI_DB_PASSWORD:?}
     volumes:
       - umami-db-data:/var/lib/postgresql/data
     healthcheck:
