@@ -9,6 +9,24 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-11-19
+
+### Added
+- Command usage analytics: every `:` palette command run on the web and in
+  the TUI sends one cookieless Umami `command` event carrying only the
+  command's name (`colorscheme`, `matrix`, `cv`, ...). Arguments and anything
+  typed freely are never sent; the `web`/`tui` tag tells the two apart.
+
+### Fixed
+- `analytics.zych.be` is reachable again. Containers started by hand without
+  the deploy secrets left Umami crash-looping on an empty database password
+  and Caddy without the analytics site block (no certificate), while two
+  deploys that ran out of disk still reported success. The deploy script now
+  stops on the first failing command and prunes images before pulling, Umami
+  is pinned to an image digest instead of `postgresql-latest`, compose refuses
+  to start without `UMAMI_DB_PASSWORD`/`UMAMI_APP_SECRET`, and
+  `ANALYTICS_ADDRESS` defaults to `analytics.zych.be` like `SITE_ADDRESS`.
+
 ## [1.13.2] - 2026-11-19
 
 ### Fixed
@@ -829,7 +847,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.2...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.2...v1.14.0
 [1.13.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.1...v1.13.2
 [1.13.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.0...v1.13.1
 [1.13.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.12.1...v1.13.0
