@@ -1333,6 +1333,11 @@ func (m Model) statusline(crumb string, info ...string) string {
 		right += m.st.StInfo.Render(s)
 	}
 	right += m.st.StTime.Render("󰥔 " + m.clock)
+	// A long title (French ones especially) must not push the key hints off
+	// the right edge: the breadcrumb gives way, the hints never do.
+	if room := m.width - lipgloss.Width(right) - 1; room > 0 && lipgloss.Width(left) > room {
+		left = ansi.Truncate(left, room, "…")
+	}
 	gap := m.width - lipgloss.Width(left) - lipgloss.Width(right)
 	if gap < 0 {
 		gap = 0
