@@ -9,6 +9,15 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.15.1] - 2026-11-23
+
+### Fixed
+- The build no longer fails looking for the removed hand-written theme
+  stylesheets: the styleguide's design tokens are read from the themes
+  generated out of `content/data/themes.json`.
+- In the SSH TUI, a long article title no longer pushes the key hints off the
+  status line; the breadcrumb is shortened instead.
+
 ## [1.15.0] - 2026-11-23
 
 ### Added
@@ -901,7 +910,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.15.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.15.1...HEAD
+[1.15.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.2...v1.14.0
 [1.13.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.1...v1.13.2
