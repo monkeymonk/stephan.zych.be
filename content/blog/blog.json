@@ -1,5 +1,6 @@
 {
   "permalink": "/blog/{{ page.fileSlug }}/",
   "layout": "post.njk",
+  "lang": "en",
   "section": { "name": "blog", "path": "/blog/" }
 }

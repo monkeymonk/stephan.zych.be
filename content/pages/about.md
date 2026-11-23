@@ -4,9 +4,64 @@ title: About · Stéphan Zych
 heading: About
 description: Lead developer, application & web architect, recovering CTO. Fifteen years building the web's unglamorous foundations, and having opinions about them. Working at CBTW through my company STEPHANZYCH.
 permalink: /about/
+identity:
+  user: "stephan@zych.be"
+  rows:
+    - ["OS", "Brussels, Belgium"]
+    - ["Role", "Application & Web Architect | Technical Lead | Fullstack PHP Developer | Fullstack React Developer"]
+    - ["Company", "STEPHANZYCH · VAT BE 0804.229.671"]
+    - ["Uptime", "15 years"]
+    - ["Shell", "zsh · tmux · neovim"]
+    - ["Editor", "neovim (btw)"]
+    - ["Stack", "TS · React · Laravel · Docker"]
+    - ["Shipped", "200+ platforms · 1 exit"]
+    - ["Langs", "FR (native) · EN (pro)"]
+    - ["SSH", "ssh stephan.zych.be"]
+    - ["Status", "available to talk"]
+timeline:
+  - hash: a1b2c3d
+    ref: "HEAD → main"
+    message: Lead Developer @ CBTW (via STEPHANZYCH)
+    date: "2023–now"
+  - hash: d4e5f6a
+    message: Co-founder / CTO @ Cherry Pulp  (acquired)
+    date: "2013–2024"
+  - hash: 9a8b7c1
+    message: Freelance full-stack developer
+    date: "2011–2016"
+  - hash: 11f2e3d
+    message: Rich-media dev @ TBWA · Agency.com
+    date: "2011–2013"
+  - hash: 0c1d2e3
+    message: Web designer @ Com2B Networks
+    date: "2009–2011"
+stats:
+  - value: 15
+    suffix: ""
+    label: years in
+  - value: 200
+    suffix: "+"
+    label: platforms shipped
+  - value: 20
+    suffix: ""
+    label: team at peak
+  - value: 1
+    suffix: ""
+    label: exit
+skills:
+  - name: TypeScript / JavaScript
+    level: 95
+  - name: Frontend architecture
+    level: 92
+  - name: React · Vue · Next.js
+    level: 88
+  - name: PHP / Laravel / WordPress
+    level: 80
+  - name: Docker · Linux · infra
+    level: 78
 ---
 
-<sz-neofetch user="{{ profile.identity.user }}" rows='{{ profile.identity.rows | dump }}'></sz-neofetch>
+<sz-neofetch user="{{ identity.user }}" rows='{{ identity.rows | dump }}'></sz-neofetch>
 
 ## The short version
 
@@ -34,11 +89,11 @@ I build with coding agents daily, under the same rules as everything else: one c
 
 ## The path so far
 
-<sz-gitlog commits='{{ profile.timeline | dump }}'></sz-gitlog>
+<sz-gitlog commits='{{ timeline | dump }}'></sz-gitlog>
 
 ## By the numbers
 
-<sz-stats counters='{{ profile.stats | dump }}' skills='{{ profile.skills | dump }}'></sz-stats>
+<sz-stats counters='{{ stats | dump }}' skills='{{ skills | dump }}'></sz-stats>
 
 A few names you might recognise, who trusted me not to break their websites: **Unicef · Oxfam · Engie · Delhaize · Telenet · KBC Brussels · RTL · RTBF · Monizze**. No pressure.
 {% if wakapi %}

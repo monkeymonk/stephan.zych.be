@@ -1,0 +1,46 @@
+{% import "lang-switch.njk" as langs %}
+{% set allTags = collections.blog.concat(collections.blogFr) | collectTags(['blog']) %}
+{# The tmux tab bar is what tells a sighted reader which section this is, so
+   the page has no visible title — but it still needs exactly one h1. Kept
+   outside sz-portfolio: its shadow template slots children straight into the
+   grid/list container, and a heading is not one of the feed's items. #}
+<h1 class="sr-only">{{ t('blog_index_heading', indexLang) }}</h1>
+<sz-portfolio layout="list" compact filters="{{ allTags | join(',') }}" page-size="10">
+  <div class="post-index__lang" slot="lang-filter">{{ langs.langSwitch({ en: '/blog/', fr: '/fr/blog/' }, indexLang, undefined, 'index') }}</div>
+  <div class="post-list">
+    {% for group in collections.blogEntries | groupByMonth(indexLang) %}
+    <details class="post-group" data-month="{{ group.key }}" open>
+      <summary class="post-month">{{ group.label }}<span class="post-month__count">{{ group.posts | length }}</span></summary>
+      <ul class="post-group__items">
+        {% for entry in group.posts %}
+        {% set post = entry | blogVersion(indexLang) %}
+        <li data-tags="{{ post.data.tags | join(',') }}">
+          <div class="post-row">
+            <span class="post-row__date">
+              <time datetime="{{ post.date | htmlDateString }}">{{ post.date | htmlDateString }}</time>
+              <span class="post-row__read">{{ t('reading_time', indexLang, { n: (post.templateContent | readingTime) }) }}</span>
+              <span class="post-row__langs">
+                {% if entry.versions.en %}<a class="post-row__lang{% if post.data.lang == 'en' %} is-current{% endif %}" href="{{ entry.versions.en.url }}" hreflang="en" lang="en" tabindex="-1" aria-label="{{ t('blog_row_version_en', indexLang) }}">EN</a>{% endif %}
+                {% if entry.versions.fr %}<a class="post-row__lang{% if post.data.lang == 'fr' %} is-current{% endif %}" href="{{ entry.versions.fr.url }}" hreflang="fr" lang="fr" tabindex="-1" aria-label="{{ t('blog_row_version_fr', indexLang) }}">FR</a>{% endif %}
+              </span>
+            </span>
+            <span class="post-row__main">
+              <a class="post-row__title post-row__link" data-row-link href="{{ post.url }}"{% if post.data.lang != indexLang %} lang="{{ post.data.lang }}"{% endif %}>{{ post.data.title }}</a>
+              {% if post.data.series %}<span class="post-row__series"><span class="post-row__series-name">{{ seriesData[post.data.series].name if seriesData[post.data.series] else post.data.series }}</span>{% if post.data.order %}<span class="post-row__series-part">{{ t('blog_row_series_part', indexLang, { n: post.data.order }) }}</span>{% endif %}</span>{% endif %}
+              {% if post.data.updates | length %}<span class="post-row__updated">{{ t('blog_row_updated', indexLang) }}</span>{% endif %}
+              <span class="post-row__desc"{% if post.data.lang != indexLang %} lang="{{ post.data.lang }}"{% endif %}>{{ post.data.description }}</span>
+              {% if post.data.tags %}
+              <span class="post-row__tags">
+                {% for tag in post.data.tags %}{% if tag !== 'blog' %}<span class="post-row__tag">{{ tag }}</span>{% endif %}{% endfor %}
+              </span>
+              {% endif %}
+            </span>
+            <span class="post-row__arrow">→</span>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endfor %}
+  </div>
+</sz-portfolio>

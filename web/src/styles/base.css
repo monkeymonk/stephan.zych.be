@@ -660,6 +660,7 @@ html[data-view="reading"] .code-gutter span { display: block; }
 }
 
 .post-row {
+  position: relative;
   display: flex;
   gap: 18px;
   padding: 16px 12px;
@@ -669,8 +670,8 @@ html[data-view="reading"] .code-gutter span { display: block; }
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .post-row:hover,
-.post-row:focus,
-.post-row:focus-visible {
+.post-row:has(.post-row__link:focus),
+.post-row:has(.post-row__link:focus-visible) {
   background: var(--sz-surface0, #313244);
   background: color-mix(in srgb, var(--sz-accent, #89b4fa) 8%, transparent);
   border-left-color: var(--sz-accent, #89b4fa);
@@ -680,8 +681,8 @@ html[data-view="reading"] .code-gutter span { display: block; }
    resolves to well under WCAG 1.4.11's 3:1 against the pane. Keyboard focus
    gets a real ring; inset, because the rows are flush and a positive offset
    would bleed over the neighbouring row. */
-.post-row:focus,
-.post-row:focus-visible {
+.post-row:has(.post-row__link:focus),
+.post-row:has(.post-row__link:focus-visible) {
   outline: 2px solid var(--sz-accent, #89b4fa);
   outline-offset: -2px;
 }
@@ -717,6 +718,21 @@ html[data-view="reading"] .code-gutter span { display: block; }
   font-size: calc(var(--sz-font-size) * 1.05);
   line-height: 1.35;
 }
+/* :hover too: the global a:hover underline outranks a bare class, and the
+   row used to be the link, so its title never underlined. */
+.post-row__link,
+.post-row__link:hover {
+  text-decoration: none;
+}
+.post-row__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.post-row__link:focus,
+.post-row__link:focus-visible {
+  outline: none;
+}
 .post-row__desc {
   color: var(--sz-subtext0, #a6adc8);
   font-size: calc(var(--sz-font-size) * 0.92);
@@ -746,8 +762,8 @@ html[data-view="reading"] .code-gutter span { display: block; }
   transition: transform 0.15s ease, color 0.15s ease;
 }
 .post-row:hover .post-row__arrow,
-.post-row:focus .post-row__arrow,
-.post-row:focus-visible .post-row__arrow {
+.post-row:has(.post-row__link:focus) .post-row__arrow,
+.post-row:has(.post-row__link:focus-visible) .post-row__arrow {
   color: var(--sz-accent, #89b4fa);
   transform: translateX(3px);
 }
@@ -759,6 +775,7 @@ html[data-view="reading"] .code-gutter span { display: block; }
      hover border is part of that 16 on the left. */
   .post-row { flex-direction: column; gap: 8px; padding: 16px 16px 16px 14px; }
   .post-row__date { flex-direction: row; align-items: baseline; width: auto; gap: 10px; }
+  .post-row__langs { margin-top: 0; align-self: center; }
   .post-row__arrow { display: none; }
   .post-month { padding: 14px 16px 6px; }
 }
@@ -870,8 +887,10 @@ html[data-view="reading"] .code-gutter span { display: block; }
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 32px 0;
+  padding: 18px 32px 0;
 }
+/* Breathing room between the breadcrumb row and the hero below it. */
+.sz-article__toolbar { padding-bottom: 12px; }
 .sz-page__toolbar { justify-content: flex-end; }
 .sz-article__view,
 .sz-page__view { flex-shrink: 0; }
@@ -1181,8 +1200,10 @@ sz-portfolio { counter-reset: sz-pane -1; }
    Article breadcrumb + blog footer
    ═══════════════════════════════════════════════════ */
 
+/* Window chrome, not content: the breadcrumb sits on the toolbar's own 32px
+   edge, mirroring the view toggle on the right, in every view. */
 .sz-article__breadcrumb {
-  padding: 16px 32px 0;
+  padding: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1197,12 +1218,7 @@ sz-portfolio { counter-reset: sz-pane -1; }
   flex: none;
   white-space: nowrap;
 }
-/* Code view keeps the breadcrumb flush-left with the content; reading view
-   centers it over the 680px reading column. */
-html[data-view="reading"] .sz-article__breadcrumb {
-  max-width: calc(680px * var(--sz-font-scale));
-  margin: 0 auto;
-}
+
 .sz-article__breadcrumb a {
   color: var(--sz-subtext0, #a6adc8);
   text-decoration: none;
@@ -1316,12 +1332,151 @@ html[data-view="reading"] .sz-article__breadcrumb {
      row and the padding is absorbed by centring. Below that it stacks, and
      the crumbs landed at 48px against a 16px page. The view toggle this row
      also holds is display:none here, so the row is breadcrumb-only. */
-  .sz-article__toolbar { padding: 14px 0 0; }
+  .sz-article__toolbar { padding: 14px 0 8px; }
   .sz-article__breadcrumb { padding: 12px 16px 0; }
   .sz-article__footer { padding: 20px 16px 32px; }
   .sz-article__pager { flex-direction: column; padding: 8px 16px 32px; }
   .sz-pager__link--next { text-align: left; }
   .sz-pager__spacer { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════
+   Language switcher (_includes/lang-switch.njk)
+   ═══════════════════════════════════════════════════ */
+
+.sz-lang-switch {
+  --sz-lang-switch-accent: var(--sz-accent, #89b4fa);
+  --sz-lang-switch-fg: var(--sz-text, #cdd6f4);
+  --sz-lang-switch-dim: var(--sz-muted, #989caf);
+  --sz-lang-switch-border: var(--sz-surface1, #45475a);
+  --sz-lang-switch-gap: 2px;
+  --sz-lang-switch-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  font-size: calc(var(--sz-font-size) * 0.8);
+  font-family: var(--sz-font-mono, 'JetBrains Mono', monospace);
+}
+/* Index context: switcher sits in sz-portfolio's filter-bar slot, which
+   provides its own spacing. */
+.sz-lang-switch[data-context="index"] { margin: 0; }
+
+.sz-lang-switch__opts {
+  display: inline-flex;
+  align-items: center;
+}
+.sz-lang-switch__opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+}
+/* -- pill: segmented EN|FR control, code only -- */
+.sz-lang-switch[data-variant="pill"] .sz-lang-switch__opts {
+  gap: var(--sz-lang-switch-gap);
+  border: 1px solid var(--sz-lang-switch-border);
+  border-radius: var(--sz-lang-switch-radius);
+  padding: 2px;
+}
+.sz-lang-switch[data-variant="pill"] .sz-lang-switch__opt {
+  padding: 2px 8px;
+  border-radius: calc(var(--sz-lang-switch-radius) - 2px);
+  color: var(--sz-lang-switch-dim);
+  letter-spacing: 0.04em;
+}
+.sz-lang-switch[data-variant="pill"] .sz-lang-switch__opt.is-current {
+  background: var(--sz-lang-switch-accent);
+  color: var(--sz-base, #1e1e2e);
+  font-weight: 700;
+}
+.sz-lang-switch[data-variant="pill"] .sz-lang-switch__opt.is-available:hover {
+  color: var(--sz-lang-switch-accent);
+}
+.sz-lang-switch[data-variant="pill"] .sz-lang-switch__opt.is-missing {
+  border: 1px dashed var(--sz-lang-switch-border);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* -- seg: segmented control for the article hero. Started as a copy of
+   components/ui/sz-view-toggle.ts; kept bordered and filled after that toggle
+   went text-only, because it sits over a poster image and must stay legible. -- */
+.sz-lang-switch[data-variant="seg"] .sz-lang-switch__opts {
+  display: inline-flex;
+  border: 1px solid var(--sz-surface1, #45475a);
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: calc(var(--sz-font-size, 13px) * 0.82);
+}
+.sz-lang-switch[data-variant="seg"] .sz-lang-switch__opt {
+  padding: 3px 12px;
+  background: transparent;
+  color: var(--sz-subtext0, #a6adc8);
+  font-family: inherit;
+  gap: 0;
+  text-decoration: none;
+}
+.sz-lang-switch[data-variant="seg"] .sz-lang-switch__code { text-transform: lowercase; }
+.sz-lang-switch[data-variant="seg"] .sz-lang-switch__opt:not(:first-child) {
+  border-left: 1px solid var(--sz-surface1, #45475a);
+}
+.sz-lang-switch[data-variant="seg"] .sz-lang-switch__opt.is-available:hover {
+  color: var(--sz-text, #cdd6f4);
+}
+.sz-lang-switch[data-variant="seg"] .sz-lang-switch__opt.is-current {
+  background: var(--sz-accent, #89b4fa);
+  color: var(--sz-crust, #11111b);
+  font-weight: 700;
+}
+.sz-lang-switch[data-variant="seg"] .sz-lang-switch__opt.is-missing {
+  color: var(--sz-muted, #989caf);
+  opacity: 0.55;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* -- hero context: in reading view the switcher overlays the top-right of
+   the hero poster, on the prose/content column. Without a visible poster (code
+   view, or a post without one) it sits in flow under the toolbar. -- */
+.sz-lang-switch[data-context="hero"] {
+  display: flex;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+}
+html[data-view="reading"] .sz-lang-switch[data-context="hero"] {
+  max-width: calc(680px * var(--sz-font-scale));
+  margin: 0 auto;
+  padding: 12px 32px 0;
+}
+html:not([data-view="reading"]) .sz-lang-switch[data-context="hero"] {
+  padding: 12px 32px 0 80px;
+}
+.sz-article__banner { position: relative; }
+html[data-view="reading"] .sz-article__banner:has(.sz-article__hero) > .sz-lang-switch[data-context="hero"] {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  justify-content: flex-end;
+  padding: 0 32px;
+  z-index: 1;
+}
+html[data-view="reading"] .sz-article__banner:has(.sz-article__hero) .sz-lang-switch__opts {
+  background: var(--sz-base, #1e1e2e);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+}
+/* After the desktop rules at equal specificity, so these win. */
+@media (max-width: 768px) {
+  html[data-view="reading"] .sz-lang-switch[data-context="hero"] {
+    padding: 12px 16px 0;
+  }
+  html[data-view="reading"] .sz-article__banner:has(.sz-article__hero) > .sz-lang-switch[data-context="hero"] {
+    top: 10px;
+    padding: 0 16px;
+  }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1817,6 +1972,35 @@ html[data-view="reading"] .sz-updates { display: block; }
   color: var(--sz-overlay1, #7f849c);
 }
 
+/* Blog-index language links -- same slot/shape family, lists which languages
+   a post has (EN/FR), shown in the date/meta column after the read time. */
+.post-row__langs {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: calc(var(--sz-font-size) * 0.7);
+}
+.post-row__lang {
+  position: relative;
+  z-index: 1;
+  color: var(--sz-overlay1, #7f849c);
+  letter-spacing: 0.04em;
+  padding: 0 4px;
+  border: 1px solid var(--sz-surface1, #45475a);
+  border-radius: 3px;
+  text-decoration: none;
+}
+.post-row__lang:hover {
+  text-decoration: none;
+  color: var(--sz-accent, #89b4fa);
+  border-color: var(--sz-accent, #89b4fa);
+}
+.post-row__lang.is-current {
+  color: var(--sz-text, #cdd6f4);
+}
+
 /* ═══════════════════════════════════════════════════
    Forced colours / increased contrast
    ═══════════════════════════════════════════════════ */
@@ -1830,8 +2014,8 @@ html[data-view="reading"] .sz-updates { display: block; }
    Only light-DOM rules live here: base.css does not cross shadow boundaries,
    so the components' own roots are a separate job. */
 @media (forced-colors: active) {
-  .post-row:focus,
-  .post-row:focus-visible,
+  .post-row:has(.post-row__link:focus),
+  .post-row:has(.post-row__link:focus-visible),
   a.sz-series__row:focus-visible,
   .post-month:focus-visible,
   .project-pane:focus,
@@ -1844,8 +2028,8 @@ html[data-view="reading"] .sz-updates { display: block; }
 
   /* Inset offsets read as "no gap" once the system repaints the background, so
      these two go back to a normal outside ring. */
-  .post-row:focus,
-  .post-row:focus-visible,
+  .post-row:has(.post-row__link:focus),
+  .post-row:has(.post-row__link:focus-visible),
   a.sz-series__row:focus-visible {
     outline-offset: -2px;
   }
@@ -1853,8 +2037,8 @@ html[data-view="reading"] .sz-updates { display: block; }
   /* Highlight/selection states that were carried purely by a tint or a shadow
      have to say so structurally instead. */
   .post-row:hover,
-  .post-row:focus,
-  .post-row:focus-visible,
+  .post-row:has(.post-row__link:focus),
+  .post-row:has(.post-row__link:focus-visible),
   a.sz-series__row:hover,
   a.sz-series__row:focus-visible,
   .sz-series__item.is-current .sz-series__row,

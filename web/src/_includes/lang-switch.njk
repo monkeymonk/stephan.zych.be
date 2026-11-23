@@ -1,0 +1,39 @@
+{# Language switcher macro. Pure Nunjucks + CSS -- no JS, no custom element,
+   so it stays out of the component roster and the check-structure /
+   check-styleguide gates.
+
+   versions = { en: url|null, fr: url|null }. `current` is the page's own
+   language ('en' or 'fr'). `variant` picks the look (pill|seg); leave it
+   unset (or pass undefined) to use the site-wide default below.
+   `context` is a plain data attribute for CSS/debugging ('post' or 'index').
+
+   Flip the site-wide default variant by changing this one line. #}
+{% set LANG_SWITCH_VARIANT = 'pill' %}
+
+{% macro opt(code, name, versions, current) %}
+{% set url = versions[code] if versions else null %}
+{% if code == current %}
+<span class="sz-lang-switch__opt is-current" lang="{{ code }}" aria-current="true" title="{{ name | safe }}">
+  <span class="sz-lang-switch__code">{{ code | upper }}</span>
+</span>
+{% elif url %}
+<a class="sz-lang-switch__opt is-available" href="{{ url }}" hreflang="{{ code }}" lang="{{ code }}" aria-label="{{ name | safe }}" title="{{ name | safe }}">
+  <span class="sz-lang-switch__code">{{ code | upper }}</span>
+</a>
+{% else %}
+<span class="sz-lang-switch__opt is-missing" lang="{{ code }}" aria-disabled="true" title="{{ t('lang_unavailable_fr_title', current) if code == 'fr' else t('lang_unavailable_en_title', current) }}">
+  <span class="sz-lang-switch__code">{{ code | upper }}</span>
+  <span class="sr-only">{{ t('lang_unavailable_fr_sr', current) if code == 'fr' else t('lang_unavailable_en_sr', current) }}</span>
+</span>
+{% endif %}
+{% endmacro %}
+
+{% macro langSwitch(versions, current, variant, context = 'post') %}
+{% set v = variant or LANG_SWITCH_VARIANT %}
+<nav class="sz-lang-switch" data-variant="{{ v }}" data-context="{{ context }}" aria-label="{{ t('lang_switch_aria_label', current) }}">
+  <span class="sz-lang-switch__opts">
+    {{ opt('en', t('lang_name_en', current), versions, current) }}
+    {{ opt('fr', t('lang_name_fr', current), versions, current) }}
+  </span>
+</nav>
+{% endmacro %}

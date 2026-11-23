@@ -2,7 +2,7 @@
 {# data-theme / data-view carry the defaults so first paint (and a no-JS visit)
    already renders in the default theme and the rendered "html" view; app/index.ts
    corrects both from the saved preference once the bundle runs. #}
-<html lang="en" data-theme="catppuccin-mocha" data-view="reading">
+<html lang="{{ lang or 'en' }}" data-theme="{{ themes.default }}" data-view="reading" data-themes="{% for t in themes.themes %}{{ t.name }}{% if not loop.last %} {% endif %}{% endfor %}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -17,12 +17,18 @@
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">
   <meta property="og:type" content="{{ 'article' if isArticle else 'website' }}">
   <meta property="og:site_name" content="{{ site.title }}">
-  <meta property="og:locale" content="en_US">
+  <meta property="og:locale" content="{{ 'fr_FR' if lang == 'fr' else 'en_US' }}">
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
   <meta property="og:title" content="{{ metaTitle }}">
   <meta property="og:description" content="{{ metaDescription }}">
   <meta property="og:image" content="{{ metaImage }}">
   {%- if isArticle %}
+  {%- set translatedUrls = collections.blogEntries | translations(page.fileSlug) %}
+  {%- if translatedUrls.en and translatedUrls.fr %}
+  <link rel="alternate" hreflang="en" href="{{ site.url }}{{ translatedUrls.en }}">
+  <link rel="alternate" hreflang="fr" href="{{ site.url }}{{ translatedUrls.fr }}">
+  <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ translatedUrls.en }}">
+  {%- endif %}
   <meta property="article:published_time" content="{{ date | htmlDateString }}">
   {%- if updates | length %}
   <meta property="article:modified_time" content="{{ modifiedDate | htmlDateString }}">
@@ -43,7 +49,13 @@
   {%- elif (page.url == '/' or page.url == '/about/') and page.url != '/cv/' %}
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":{{ site.author | dump | safe }},"url":{{ site.url | dump | safe }},"jobTitle":"Lead Developer & Application Architect","worksFor":{"@type":"Organization","name":"STEPHANZYCH","legalName":"STEPHAN ZYCH SRL","url":"https://stephanzych.be","vatID":"BE 0804.229.671"},"sameAs":[{{ site.socials.github | dump | safe }},{{ site.socials.linkedin | dump | safe }}]}</script>
   {%- endif %}
-  <meta name="theme-color" content="#1e1e2e">
+  {%- if page.url == '/blog/' or page.url == '/fr/blog/' %}
+  <link rel="alternate" hreflang="en" href="{{ site.url }}/blog/">
+  <link rel="alternate" hreflang="fr" href="{{ site.url }}/fr/blog/">
+  <link rel="alternate" hreflang="x-default" href="{{ site.url }}/blog/">
+  {%- endif %}
+  {%- set defaultTheme = (themes.themes | selectattr('name', 'equalto', themes.default) | list)[0] %}
+  <meta name="theme-color" content="{{ defaultTheme.colors.base }}">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/assets/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/JetBrainsMono-Bold.woff2" as="font" type="font/woff2" crossorigin>
@@ -75,7 +87,7 @@
   <link rel="stylesheet" id="page-css-cv-print" href="/styles/cv-print.css" media="print">
   {% endif %}
   {# Only the default theme ships render-blocking; others load on demand (app/index.ts). #}
-  <link rel="stylesheet" id="theme-css-catppuccin-mocha" href="/assets/themes/catppuccin-mocha.css">
+  <link rel="stylesheet" id="theme-css-{{ themes.default }}" href="/assets/themes/{{ themes.default }}.css">
   {# Script order is load-bearing: this module bundle must stay ahead of the
      umami tag below. core/campaign.ts captures history.replaceState while it is
      still unhooked, so stripping utm params can't trigger a second pageview. #}

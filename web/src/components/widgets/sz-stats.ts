@@ -20,7 +20,7 @@ export class SzStats extends LitElement {
   @state() private display: number[] = [];
   @state() private revealed = false;
 
-  private revealOnView = new RevealController(this, () => this.reveal());
+  protected readonly revealOnView = new RevealController(this, () => this.reveal());
 
   private reveal() {
     this.revealed = true;

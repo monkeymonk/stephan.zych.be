@@ -27,6 +27,12 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addGlobalData('components', require('./lib/components.js'));
   eleventyConfig.addGlobalData('tokens', require('./lib/tokens.js'));
 
+  // Colour themes: content/data/themes.json is the single source of truth
+  // (shared with the SSH TUI); themeCss generates each theme's stylesheet
+  // (see src/pages/theme-css.njk, which paginates themes.themes through it).
+  const { themes, themeCss } = require('./lib/themes.js');
+  eleventyConfig.addFilter('themeCss', theme => themeCss(theme, themes.roles));
+
   // CV base data + role variants, parsed from content/cv/*.md at build
   // time. `cv` is the ambient base CV (still read directly by
   // src/pages/cv-md.njk); `cvVariants` drives the per-role CV/print routes.
@@ -34,12 +40,48 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addGlobalData('cv', loadBaseCV());
   eleventyConfig.addGlobalData('cvVariants', cvVariants);
 
+  // Series display name/description, parsed from content/series/*.md at
+  // build time into the same {slug: {name, description}} shape the old
+  // content/data/seriesData.json map had.
+  eleventyConfig.addGlobalData('seriesData', require('./lib/series.js'));
+  // Blog listing title/description per language, from content/blog/_index.md
+  // and content/blog/fr/_index.md (ignored as pages and posts below).
+  eleventyConfig.addGlobalData('blogIndex', require('./lib/blogIndex.js'));
+
+  // Bilingual UI labels, parsed from content/labels/*.md at build time into
+  // {en: {...}, fr: {...}}; the `t` filter does the lookup/fallback/substitution.
+  const { labels, t } = require('./lib/labels.js');
+  eleventyConfig.addGlobalData('labels', labels);
+  eleventyConfig.addFilter('t', (key, lang, vars) => t(key, lang, vars));
+  // Also a Nunjucks global so templates can call t('key', lang, vars) directly.
+  eleventyConfig.addNunjucksGlobal('t', (key, lang, vars) => t(key, lang, vars));
+
   // content/cv/*.md is consumed exclusively through cvContent.js's own
   // parser + cv.njk/cv-print.njk's pagination above — it must NOT also be
   // templated by Eleventy's default per-file processing (every .md file
   // under the input tree is templated by default), or it silently produces
   // stray, unstyled pages at /content/cv/<slug>/ nobody asked for.
   eleventyConfig.ignores.add('src/content/cv/**');
+
+  // content/series/*.md is consumed exclusively through series.js's own
+  // parser above (registered as the seriesData global) — it must NOT also
+  // be templated by Eleventy's default per-file processing, or it silently
+  // produces stray, unstyled pages at /content/series/<slug>/ nobody asked
+  // for. Same reasoning as the content/cv ignore above.
+  eleventyConfig.ignores.add('src/content/series/**');
+  eleventyConfig.ignores.add('src/content/blog/**/_index.md');
+
+  // content/labels/*.md is consumed exclusively through labels.js's own
+  // parser above (registered as the labels global) — same reasoning as the
+  // content/series ignore above.
+  eleventyConfig.ignores.add('src/content/labels/**');
+
+  // Dev-only preview of the language switcher's states/variants. Gated out of
+  // a normal production build (ELEVENTY_RUN_MODE === 'build') unless SZ_PREVIEW
+  // opts back in, so /dev/lang-switch/ never ships by accident.
+  if (process.env.ELEVENTY_RUN_MODE === 'build' && !process.env.SZ_PREVIEW) {
+    eleventyConfig.ignores.add('src/pages/lang-switch-preview.njk');
+  }
 
   eleventyConfig.addPlugin(syntaxHighlight);
 
@@ -52,7 +94,7 @@ module.exports = function(eleventyConfig) {
     mdInstance = md;
     const fallback =
       md.renderer.rules.fence ||
-      ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
+      ((tokens, idx, options, _env, self) => self.renderToken(tokens, idx, options));
     md.renderer.rules.fence = (tokens, idx, options, env, self) => {
       const token = tokens[idx];
       const lang = (token.info || '').trim().split(/\s+/)[0];
@@ -78,6 +120,38 @@ module.exports = function(eleventyConfig) {
   // `summary`. Reuses the exact md instance amended above, so it stays in
   // step with anything configured on it.
   eleventyConfig.addFilter('mdInline', str => mdInstance.renderInline(String(str || '')));
+
+  // Intrinsic width/height for a hero poster <img>, so the browser can
+  // reserve layout space before the image loads (no CLS). Maps the same two
+  // URL shapes passthrough-copies above: /assets/content/<file> (the shared
+  // content/assets dir, symlinked at src/content/assets) and /assets/<file>
+  // (web-local, under src/assets). Memoised since the same poster can be
+  // requested many times across a build. Returns null on any error so the
+  // template can simply omit the attributes.
+  const path = require('path');
+  const imageSizeCache = new Map();
+  eleventyConfig.addAsyncFilter('imageSize', async (url) => {
+    if (typeof url !== 'string' || !url) return null;
+    if (imageSizeCache.has(url)) return imageSizeCache.get(url);
+    let result = null;
+    try {
+      const sharp = require('sharp');
+      let filePath;
+      if (url.startsWith('/assets/content/')) {
+        filePath = path.join(__dirname, 'src', 'content', 'assets', url.slice('/assets/content/'.length));
+      } else if (url.startsWith('/assets/')) {
+        filePath = path.join(__dirname, 'src', 'assets', url.slice('/assets/'.length));
+      }
+      if (filePath) {
+        const { width, height } = await sharp(filePath).metadata();
+        if (width && height) result = { width, height };
+      }
+    } catch {
+      result = null;
+    }
+    imageSizeCache.set(url, result);
+    return result;
+  });
 
   eleventyConfig.addPassthroughCopy('src/assets');
   eleventyConfig.addPassthroughCopy('src/styles');
@@ -122,7 +196,7 @@ module.exports = function(eleventyConfig) {
     },
   });
 
-  const dateDisplay = date => new Date(date).toLocaleDateString('en-US', {
+  const dateDisplay = (date, lang) => new Date(date).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
     year: 'numeric', month: 'long', day: 'numeric'
   });
   eleventyConfig.addFilter('dateDisplay', dateDisplay);
@@ -133,12 +207,12 @@ module.exports = function(eleventyConfig) {
 
   // Group an (already date-sorted) post collection into consecutive month
   // buckets for the blog archive: [{ key: 'YYYY-MM', label: 'Month YYYY', posts }].
-  eleventyConfig.addFilter('groupByMonth', posts => {
+  eleventyConfig.addFilter('groupByMonth', (posts, lang) => {
     const keyOf = d => {
       const x = new Date(d);
       return `${x.getUTCFullYear()}-${String(x.getUTCMonth() + 1).padStart(2, '0')}`;
     };
-    const labelOf = d => new Date(d).toLocaleDateString('en-US', {
+    const labelOf = d => new Date(d).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
       year: 'numeric', month: 'long', timeZone: 'UTC'
     });
     const groups = [];
@@ -154,9 +228,59 @@ module.exports = function(eleventyConfig) {
     return groups;
   });
 
+  // Shared glob+sort pass for blog posts, reused by the per-language
+  // collections below so there's one place that defines "all blog posts,
+  // newest first".
+  const blogPosts = collection => collection.getFilteredByGlob('src/content/blog/**/*.md')
+    .sort((a, b) => b.date - a.date);
+
+  // English posts only. Every existing consumer (home page, pager, series
+  // nav, etc.) expects this to stay English-only, so french posts are
+  // filtered out here rather than by changing the glob.
   eleventyConfig.addCollection('blog', collection => {
-    return collection.getFilteredByGlob('src/content/blog/**/*.md')
-      .sort((a, b) => b.date - a.date);
+    return blogPosts(collection).filter(item => item.data.lang !== 'fr');
+  });
+
+  eleventyConfig.addCollection('blogFr', collection => {
+    return blogPosts(collection).filter(item => item.data.lang === 'fr');
+  });
+
+  // Pair en/fr posts by their shared page.fileSlug (the filename after the
+  // date prefix) into one entry per slug, so the index and the language
+  // switcher both have a single place to ask "what versions exist?".
+  eleventyConfig.addCollection('blogEntries', collection => {
+    const all = blogPosts(collection);
+    const bySlug = new Map();
+    for (const item of all) {
+      const slug = item.page.fileSlug;
+      if (!bySlug.has(slug)) bySlug.set(slug, { slug, date: null, versions: { en: null, fr: null } });
+      const entry = bySlug.get(slug);
+      entry.versions[item.data.lang === 'fr' ? 'fr' : 'en'] = item;
+    }
+    const entries = [...bySlug.values()];
+    for (const entry of entries) {
+      const primary = entry.versions.en || entry.versions.fr;
+      entry.date = primary.date;
+    }
+    return entries.sort((a, b) => b.date - a.date);
+  });
+
+  // The requested language's version of an entry, falling back to whichever
+  // language actually has one. Callers never have to null-check twice.
+  eleventyConfig.addFilter('blogVersion', (entry, lang) => {
+    if (!entry) return null;
+    return entry.versions[lang] || entry.versions[lang === 'fr' ? 'en' : 'fr'];
+  });
+
+  // { en: url|null, fr: url|null } for the blogEntries entry matching slug.
+  // What the language switcher needs to render every state (current,
+  // available, missing) without reaching into collection internals itself.
+  eleventyConfig.addFilter('translations', (entries, slug) => {
+    const entry = (entries || []).find(e => e.slug === slug);
+    return {
+      en: entry && entry.versions.en ? entry.versions.en.url : null,
+      fr: entry && entry.versions.fr ? entry.versions.fr.url : null
+    };
   });
 
   eleventyConfig.addCollection('projects', collection => {

@@ -580,6 +580,26 @@ var keyTable = []binding{
 		},
 	},
 
+	{
+		id:      "reader.lang",
+		keys:    key.NewBinding(key.WithKeys("L"), key.WithHelp("L", "switch post language (EN / FR)")),
+		scope:   scopeScreen,
+		screens: setReader,
+		// Only a blog post with a translation answers L; anywhere else the key
+		// stays unresolved and falls through to the viewport.
+		when: func(m Model) bool {
+			_, ok := m.otherBlogVersion()
+			return ok
+		},
+		run: func(m Model) (Model, tea.Cmd) {
+			if a, ok := m.otherBlogVersion(); ok {
+				m.blogLang = a.Lang
+				m.openReader(a)
+			}
+			return m, nil
+		},
+	},
+
 	// --- screen: help (model.go:833-836) ----------------------------------
 	{
 		id:      "help.back",
@@ -631,6 +651,7 @@ var helpDocIDs = []string{
 	"list.first",       // g / G
 	"list.open",        // enter / l
 	"reader.prev",      // [ / ]
+	"reader.lang",      // L
 	"nav.back",         // esc / h / q
 	"app.quit",         // ctrl+c — the other way out, next to the one that asks
 	"palette.command",  // :

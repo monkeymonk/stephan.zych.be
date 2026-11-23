@@ -1,6 +1,6 @@
 {%- if series %}
 {%- set meta = seriesData[series] %}
-{%- set parts = collections.blog | seriesPosts(series) %}
+{%- set parts = collections[section.collection or 'blog'] | seriesPosts(series) %}
 {%- if parts | length %}
 <div class="sz-md-series">
   <div class="md-series-lead"><span class="md-series-key">series:</span> part {{ order or 1 }} of <strong>{{ meta.name if meta else series }}</strong></div>

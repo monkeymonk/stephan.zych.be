@@ -20,7 +20,7 @@ export class SzNeovim extends LitElement {
    * Arrow/Home/End are not character keys, so the WCAG 2.1.4 switch never
    * disables them; only j/k/gg/G go through it.
    */
-  private keysCtrl = new KeymapController(this, [
+  protected readonly keysCtrl = new KeymapController(this, [
     {
       id: 'scroll.down.j', keys: ['j'], scope: 'page', chars: true,
       description: 'Scroll down', run: () => this.moveScroller('down'),

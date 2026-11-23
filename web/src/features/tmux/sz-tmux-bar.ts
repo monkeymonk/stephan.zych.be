@@ -40,7 +40,7 @@ export class SzTmuxBar extends LitElement {
    */
   @state() private searchOpen = false;
   private fontCtrl = new StateController(this, ["fontScale", "keyShortcuts"]);
-  private actionCtrl = new ActionController(this, [
+  protected readonly actionCtrl = new ActionController(this, [
     [ROUTER_ACTION.ROUTE_CHANGED, (action) => {
       this.activePath = (action.payload as RouteChangedDetail).path;
     }],
@@ -295,8 +295,11 @@ export class SzTmuxBar extends LitElement {
   `;
 
   private isActive(tabPath: string): boolean {
-    if (tabPath === "/") return this.activePath === "/";
-    return this.activePath.startsWith(tabPath);
+    // French routes mirror English ones under /fr/ (e.g. /fr/blog/); strip
+    // that prefix so the matching tab still highlights.
+    const path = this.activePath.replace(/^\/fr(?=\/)/, "");
+    if (tabPath === "/") return path === "/";
+    return path.startsWith(tabPath);
   }
 
   connectedCallback() {

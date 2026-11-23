@@ -10,7 +10,7 @@ import { mountEffectLayer } from './top-layer.js';
 @customElement('sz-effect-matrix')
 export class SzEffectMatrix extends LitElement {
   private cleanupEffect?: () => void;
-  private actionCtrl = new ActionController(this, [[EFFECT_ACTION.MATRIX, () => this.startMatrix()]]);
+  protected readonly actionCtrl = new ActionController(this, [[EFFECT_ACTION.MATRIX, () => this.startMatrix()]]);
 
   /**
    * A `layer`: the canvas paints over everything but displaces no modal and

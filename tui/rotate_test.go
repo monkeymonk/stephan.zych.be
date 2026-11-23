@@ -1,7 +1,7 @@
 package main
 
 // The neofetch identity card's rows are the one place rotation lives now: a
-// row's value authored as a pipe-separated list in content/data/profile.json
+// row's value authored as a pipe-separated list in content/pages/about.md (front matter)
 // (e.g. the Role row's "Application & Web Architect | Technical Lead |
 // ...") cycles one item at a time — the TUI mirror of
 // web/src/components/ui/sz-rotate.ts's own "|" split over a row rendered
@@ -103,8 +103,12 @@ func TestPadRotateItemConstantWidth(t *testing.T) {
 // newNeofetchTestModel builds the minimal Model neofetchCard needs: styles
 // (for the key/value/status rendering) and the identity rows under test.
 func newNeofetchTestModel(rows [][]string) Model {
-	s := buildStyles(catppuccinMocha)
-	m := Model{theme: catppuccinMocha, st: &s, data: &SiteData{}}
+	if err := loadThemes("../content/data/themes.json"); err != nil {
+		panic(err)
+	}
+	th := themes[defaultTheme]
+	s := buildStyles(th)
+	m := Model{theme: th, st: &s, data: &SiteData{}}
 	m.data.Profile.Identity.User = "stephan@zych.be"
 	m.data.Profile.Identity.Rows = rows
 	return m

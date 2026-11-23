@@ -20,7 +20,7 @@ var szLogo = []string{
 // neofetchCard renders the identity card, embedded in an article via
 // widgets.go's "neofetch" case (e.g. content/pages/about.md carries the
 // marker). A row whose value is a pipe-separated list — authored once in
-// content/data/profile.json, e.g. the Role row's "Application & Web
+// content/pages/about.md (front matter), e.g. the Role row's "Application & Web
 // Architect | Technical Lead | ..." — cycles one item at a time, picked by
 // m.rotateIndex and wrapping around, the same split web build's
 // web/src/components/ui/sz-rotate.ts cycles on a row rendered that way.
@@ -94,7 +94,7 @@ func padRight(s string, n int) string {
 // value yields a nil slice; a value with no "|" at all yields that one item
 // unchanged (len 1) — the TUI's mirror of the "|" split
 // web/src/components/ui/sz-rotate.ts does over a row's own value, authored
-// once in content/data/profile.json (e.g. the Role row's "Application & Web
+// once in content/pages/about.md (front matter) (e.g. the Role row's "Application & Web
 // Architect | Technical Lead | ..."), not in article prose.
 func splitRotateItems(value string) []string {
 	var items []string

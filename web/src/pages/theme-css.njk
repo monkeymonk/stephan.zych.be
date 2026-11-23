@@ -1,0 +1,9 @@
+---
+pagination:
+  data: themes.themes
+  size: 1
+  alias: theme
+permalink: "/assets/themes/{{ theme.name }}.css"
+eleventyExcludeFromCollections: true
+---
+{{ theme | themeCss | safe }}

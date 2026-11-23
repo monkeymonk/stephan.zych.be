@@ -1,0 +1,10 @@
+---
+layout: base.njk
+eleventyComputed:
+  title: "{{ blogIndex.fr.title | safe }}"
+  description: "{{ blogIndex.fr.description | safe }}"
+lang: fr
+permalink: /fr/blog/
+section: { name: blog, path: /fr/blog/, collection: blogFr }
+---
+{% set indexLang = 'fr' %}{% include "blog-index.njk" %}

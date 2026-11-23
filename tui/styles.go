@@ -10,11 +10,11 @@ import (
 // Construct with buildStyles; the zero value is not useful.
 type Styles struct {
 	// chrome
-	TitleBar  lipgloss.Style
-	BrandDim  lipgloss.Style
+	TitleBar   lipgloss.Style
+	BrandDim   lipgloss.Style
 	Breadcrumb lipgloss.Style
-	CrumbSep  lipgloss.Style
-	CrumbHere lipgloss.Style
+	CrumbSep   lipgloss.Style
+	CrumbHere  lipgloss.Style
 	// menu (home)
 	MenuCursor   lipgloss.Style
 	MenuLabelSel lipgloss.Style
@@ -30,21 +30,21 @@ type Styles struct {
 	Updated   lipgloss.Style
 	DescDim   lipgloss.Style
 	// neofetch card
-	Card      lipgloss.Style
-	CardCmd   lipgloss.Style
-	CardCmdS  lipgloss.Style
-	User      lipgloss.Style
-	UserHost  lipgloss.Style
-	Rule      lipgloss.Style
-	Key       lipgloss.Style
-	Val       lipgloss.Style
-	StatusOn  lipgloss.Style
-	Logo      lipgloss.Style
+	Card     lipgloss.Style
+	CardCmd  lipgloss.Style
+	CardCmdS lipgloss.Style
+	User     lipgloss.Style
+	UserHost lipgloss.Style
+	Rule     lipgloss.Style
+	Key      lipgloss.Style
+	Val      lipgloss.Style
+	StatusOn lipgloss.Style
+	Logo     lipgloss.Style
 	// statusline
-	StInfo  lipgloss.Style
-	StTime  lipgloss.Style
-	StFill  lipgloss.Style
-	CmdErr  lipgloss.Style
+	StInfo lipgloss.Style
+	StTime lipgloss.Style
+	StFill lipgloss.Style
+	CmdErr lipgloss.Style
 	// help / misc
 	Help    lipgloss.Style
 	HelpKey lipgloss.Style
@@ -83,16 +83,16 @@ type Styles struct {
 	Backdrop  lipgloss.Color
 }
 
-// buildStyles constructs a Styles from the given Theme. buildStyles(catppuccinMocha)
+// buildStyles constructs a Styles from the given Theme. buildStyles(themes[defaultTheme])
 // produces styles identical to the global styleX vars.
 func buildStyles(t Theme) Styles {
 	return Styles{
 		// chrome
-		TitleBar:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
-		BrandDim:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
+		TitleBar:   lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		BrandDim:   lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
 		Breadcrumb: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Subtext0)),
-		CrumbSep:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Surface1)),
-		CrumbHere: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Mauve)).Bold(true),
+		CrumbSep:   lipgloss.NewStyle().Foreground(lipgloss.Color(t.Surface1)),
+		CrumbHere:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Mauve)).Bold(true),
 		// menu (home)
 		MenuCursor:   lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
 		MenuLabelSel: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),

@@ -41,7 +41,7 @@ export class SzDiagram extends LitElement {
   // everywhere else — the scope is the guard the old listener spelled out as
   // `if (!this.open) return`. No descriptions: these are not in
   // content/data/shortcuts.json and are not advertised in the help overlay.
-  private keysCtrl = new KeymapController(this, [
+  protected readonly keysCtrl = new KeymapController(this, [
     {
       id: 'diagram.zoom.in',
       keys: ['+'],

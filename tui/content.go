@@ -29,6 +29,7 @@ type Article struct {
 	Role        string
 	Timeframe   string
 	LiveURL     string
+	Lang        string // "en" | "fr"; blog posts only — pages/projects are always "en"
 }
 
 // Update is one recorded evolution of a published article: a `revision` when
@@ -42,11 +43,60 @@ type Update struct {
 	Marks   []string // verbatim Markdown snippets copied from the article body; each gets a `[n]` marker inserted right after it
 }
 
+// blogVersions records a blog post's per-language versions, as found during
+// LoadContent, so BlogVersion/BlogLangs can answer in O(1) instead of
+// re-scanning the corpus.
+type blogVersions struct {
+	en, fr *Article
+}
+
 // Content is the whole loaded corpus, grouped by section.
 type Content struct {
 	Pages    map[string]Article // by slug (about, contact, whoami)
 	Projects []Article
-	Blog     []Article
+	BlogEN   []Article // English blog posts, newest first
+	BlogFr   []Article // French blog posts, loaded from content/blog/fr, newest first
+
+	blogIndex map[string]blogVersions // by slug, for BlogVersion/BlogLangs
+	blogLists map[string][]Article    // by lang ("en"/"fr"), precomputed BlogList results
+}
+
+// BlogVersion returns the article for slug in the requested lang, if that
+// translation exists.
+func (c *Content) BlogVersion(slug, lang string) (Article, bool) {
+	v, ok := c.blogIndex[slug]
+	if !ok {
+		return Article{}, false
+	}
+	if lang == "fr" {
+		if v.fr == nil {
+			return Article{}, false
+		}
+		return *v.fr, true
+	}
+	if v.en == nil {
+		return Article{}, false
+	}
+	return *v.en, true
+}
+
+// BlogList returns one entry per slug, preferring lang and falling back to
+// the other language when lang has no version, newest first. Precomputed by
+// LoadContent; callers must not mutate the returned slice.
+func (c *Content) BlogList(lang string) []Article {
+	if lang != "fr" {
+		lang = "en"
+	}
+	return c.blogLists[lang]
+}
+
+// BlogLangs reports which translations exist for slug.
+func (c *Content) BlogLangs(slug string) (en, fr bool) {
+	v, ok := c.blogIndex[slug]
+	if !ok {
+		return false, false
+	}
+	return v.en != nil, v.fr != nil
 }
 
 // widgetMarker brackets a native-widget placeholder left in article bodies; the
@@ -265,7 +315,7 @@ func metaMarks(entry map[string]any) []string {
 	return marks
 }
 
-func readArticle(path, section string) (Article, error) {
+func readArticle(path, section, lang string) (Article, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return Article{}, err
@@ -294,20 +344,30 @@ func readArticle(path, section string) (Article, error) {
 		Role:        metaString(meta, "role"),
 		Timeframe:   metaString(meta, "timeframe"),
 		LiveURL:     metaString(meta, "liveUrl"),
+		Lang:        lang,
 	}, nil
 }
 
-func loadSection(dir, section string) ([]Article, error) {
-	entries, err := os.ReadDir(filepath.Join(dir, section))
+func loadSection(dir, section, lang string) ([]Article, error) {
+	return loadSectionDir(filepath.Join(dir, section), section, lang)
+}
+
+// loadSectionDir reads every *.md file in srcDir, tagging each Article with
+// section (the logical bucket, e.g. "blog") regardless of the actual source
+// directory — this lets French posts under content/blog/fr still carry
+// Section "blog" like their English counterparts.
+func loadSectionDir(srcDir, section, lang string) ([]Article, error) {
+	entries, err := os.ReadDir(srcDir)
 	if err != nil {
 		return nil, err
 	}
 	var out []Article
 	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
+		// "_"-prefixed files (_index.md) describe the folder, not an article.
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") || strings.HasPrefix(e.Name(), "_") {
 			continue
 		}
-		a, err := readArticle(filepath.Join(dir, section, e.Name()), section)
+		a, err := readArticle(filepath.Join(srcDir, e.Name()), section, lang)
 		if err != nil {
 			return nil, err
 		}
@@ -321,7 +381,7 @@ func loadSection(dir, section string) ([]Article, error) {
 func LoadContent(contentDir string) (*Content, error) {
 	c := &Content{Pages: map[string]Article{}}
 
-	pages, err := loadSection(contentDir, "pages")
+	pages, err := loadSection(contentDir, "pages", "en")
 	if err != nil {
 		return nil, err
 	}
@@ -329,15 +389,64 @@ func LoadContent(contentDir string) (*Content, error) {
 		c.Pages[p.Slug] = p
 	}
 
-	if c.Projects, err = loadSection(contentDir, "projects"); err != nil {
-		return nil, err
-	}
-	if c.Blog, err = loadSection(contentDir, "blog"); err != nil {
+	if c.Projects, err = loadSection(contentDir, "projects", "en"); err != nil {
 		return nil, err
 	}
 
+	if c.BlogEN, err = loadSection(contentDir, "blog", "en"); err != nil {
+		return nil, err
+	}
+
+	// content/blog/fr holds French translations; missing the directory just
+	// means no French posts exist yet, not an error.
+	frDir := filepath.Join(contentDir, "blog", "fr")
+	if _, statErr := os.Stat(frDir); statErr == nil {
+		if c.BlogFr, err = loadSectionDir(frDir, "blog", "fr"); err != nil {
+			return nil, err
+		}
+	}
+
 	// Newest posts first.
-	sort.Slice(c.Blog, func(i, j int) bool { return c.Blog[i].Date > c.Blog[j].Date })
+	sort.Slice(c.BlogEN, func(i, j int) bool { return c.BlogEN[i].Date > c.BlogEN[j].Date })
+	sort.Slice(c.BlogFr, func(i, j int) bool { return c.BlogFr[i].Date > c.BlogFr[j].Date })
+
+	// Index both versions of each slug, so BlogVersion/BlogLangs answer in
+	// O(1) instead of re-scanning the corpus on every call.
+	c.blogIndex = make(map[string]blogVersions, len(c.BlogEN)+len(c.BlogFr))
+	for i := range c.BlogEN {
+		a := &c.BlogEN[i]
+		v := c.blogIndex[a.Slug]
+		v.en = a
+		c.blogIndex[a.Slug] = v
+	}
+	for i := range c.BlogFr {
+		a := &c.BlogFr[i]
+		v := c.blogIndex[a.Slug]
+		v.fr = a
+		c.blogIndex[a.Slug] = v
+	}
+
+	// blogLists[lang] is one entry per slug, preferring lang and falling back
+	// to the other language when lang has no version, newest first.
+	buildList := func(primary, fallback []Article) []Article {
+		out := make([]Article, 0, len(primary)+len(fallback))
+		out = append(out, primary...)
+		seen := make(map[string]bool, len(primary))
+		for _, a := range primary {
+			seen[a.Slug] = true
+		}
+		for _, a := range fallback {
+			if !seen[a.Slug] {
+				out = append(out, a)
+			}
+		}
+		sort.Slice(out, func(i, j int) bool { return out[i].Date > out[j].Date })
+		return out
+	}
+	c.blogLists = map[string][]Article{
+		"en": buildList(c.BlogEN, c.BlogFr),
+		"fr": buildList(c.BlogFr, c.BlogEN),
+	}
 
 	return c, nil
 }

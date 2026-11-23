@@ -34,9 +34,10 @@ func (m Model) paletteSpecs() []commandSpec {
 
 // allArticles flattens every readable article for global search.
 func (m Model) allArticles() []Article {
-	out := make([]Article, 0, len(m.content.Projects)+len(m.content.Blog)+len(m.content.Pages))
+	out := make([]Article, 0, len(m.content.Projects)+len(m.content.BlogEN)+len(m.content.BlogFr)+len(m.content.Pages))
 	out = append(out, m.content.Projects...)
-	out = append(out, m.content.Blog...)
+	out = append(out, m.content.BlogEN...)
+	out = append(out, m.content.BlogFr...)
 	// pages in a stable order
 	slugs := make([]string, 0, len(m.content.Pages))
 	for s := range m.content.Pages {

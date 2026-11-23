@@ -80,7 +80,7 @@ button, and linked `media="print"` on `/cv/` itself, so printing the on-site
 CV yields that same document rather than a de-terminalised screen page — no
 committed binary, no typesetting toolchain, always in sync with the source.
 `npm run check:cv` fails if the shared headline numbers drift between
-`content/cv/index.md`, `profile.json`, and the about/whoami pages, or if the
+`content/cv/index.md`, the about-page stats, and the about/whoami pages, or if the
 CV section headings drift between the three renderers. It runs as its own CI
 job over the full checkout rather than inside `npm run build` — the guard
 reads `tui/cv.go`, which the web image's build context excludes.
@@ -94,15 +94,28 @@ if a value is missing, malformed, or points at a file that isn't in
 than part of `npm run build`, so drafting a post before its art exists still
 builds locally.
 
+Blog posts can ship a French translation alongside the English original:
+a file under `content/blog/fr/` with the same `YYYY-MM-DD-<slug>.md` name as
+an English post is treated as its translation and served at `/fr/blog/<slug>/`;
+a French-only post (no English file with that slug) is fine too. The language
+switcher that appears on posts and the blog index, in its `pill`/`seg`
+variants, can be reviewed at `/dev/lang-switch/` (`npm run dev`, or
+`SZ_PREVIEW=1 npm run build`; that route is excluded from normal builds and
+the sitemap). The SSH TUI reads `content/blog/fr/` too: blog rows show `EN`/`FR`
+chips, a post opens with a language line, `L` switches to the translation and
+`:lang fr|en` sets the blog language.
+
 ## Repository Structure
 
 ```
 content/         Shared source of truth — read by BOTH front-ends
   blog/          Articles (YYYY-MM-DD-<slug>.md)
   projects/      Project case studies
-  pages/         Standalone pages
+  pages/         Standalone pages (about.md front matter holds the profile card)
+  series/        One Markdown file per article series
+  labels/        Interface text per language (en.md, fr.md)
   cv/            The CV: index.md (base) + one Markdown file per role variant
-  data/          Site data as JSON (nav, profile, site, themes, ...)
+  data/          Site data as JSON (nav, site, themes, ...)
   assets/        Images referenced by content
 web/             Static site (Eleventy + Lit + TypeScript → Caddy / GitHub Pages)
   lib/           Build-time Node modules (external data fetched at build)
@@ -136,10 +149,10 @@ every page-emitting Nunjucks template lives in `web/src/pages/` and build-time
 Node code in `web/lib/`. The TUI reads only `*.md` and the named JSON files, so
 anything else placed under `content/` would be invisible to half the site.
 
-The two exceptions are Eleventy directory-data files, `content/blog/blog.json` and
-`content/projects/projects.json`: Eleventy requires them to sit in the directory
-they configure, and they carry each section's `section` taxonomy alongside the
-`layout`/`permalink` defaults.
+The exceptions are Eleventy directory-data files, `content/blog/blog.json`,
+`content/blog/fr/fr.json` and `content/projects/projects.json`: Eleventy requires
+them to sit in the directory they configure, and they carry each section's
+`section` taxonomy alongside the `layout`/`permalink` defaults.
 
 ## SSH TUI
 

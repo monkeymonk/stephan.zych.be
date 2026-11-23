@@ -36,6 +36,7 @@ export interface SearchEntry {
   url: string;
   tags: string[];
   content: string;
+  lang: string;
 }
 
 const DEFAULT_NAV: NavTab[] = [
@@ -105,7 +106,7 @@ class Registry {
       this.searchLoading = fetch('/search-index.json')
         .then(res => res.json())
         .then((data: SearchEntry[]) => {
-          this.searchEntries = data;
+          this.searchEntries = this.dedupeSearchEntriesByLang(data);
           this.searchLoaded = true;
         })
         .catch(() => {
@@ -114,6 +115,30 @@ class Registry {
     }
     await this.searchLoading;
     return this.searchEntries;
+  }
+
+  // When the same slug exists in both languages (e.g. /blog/x/ and
+  // /fr/blog/x/), keep only the entry matching the current document
+  // language, falling back to whichever exists if there is no match.
+  private dedupeSearchEntriesByLang(entries: SearchEntry[]): SearchEntry[] {
+    const docLang = typeof document !== 'undefined' ? document.documentElement.lang || 'en' : 'en';
+    const canonicalKey = (url: string) => url.replace(/^\/fr\//, '/');
+    const bySlug = new Map<string, SearchEntry[]>();
+    for (const entry of entries) {
+      const key = canonicalKey(entry.url);
+      const group = bySlug.get(key);
+      if (group) group.push(entry);
+      else bySlug.set(key, [entry]);
+    }
+    const result: SearchEntry[] = [];
+    for (const group of bySlug.values()) {
+      if (group.length === 1) {
+        result.push(group[0]);
+        continue;
+      }
+      result.push(group.find(e => e.lang === docLang) || group[0]);
+    }
+    return result;
   }
 }
 

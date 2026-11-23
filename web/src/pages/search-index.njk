@@ -10,7 +10,8 @@ eleventyExcludeFromCollections: true
       description: item.data.description or "",
       url: item.url,
       tags: item.data.tags or [],
-      content: item.templateContent | stripHtml | truncate(300)
+      content: item.templateContent | stripHtml | truncate(300),
+      lang: item.data.lang or 'en'
     } -%}
     {%- set entries = (entries.push(entry), entries) -%}
   {%- endif -%}

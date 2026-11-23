@@ -14,30 +14,35 @@ export class SzViewToggle extends LitElement {
 
   static styles = [focusRing, css`
     :host { display: inline-flex; }
+    /* Discreet, text-only: same size and muted tone as the article breadcrumb
+       it shares a row with, so the two read as one quiet line of chrome. */
     .seg {
       display: inline-flex;
-      border: 1px solid var(--sz-surface1, #45475a);
-      border-radius: 6px;
-      overflow: hidden;
-      font-size: calc(var(--sz-font-size, 13px) * 0.82);
+      align-items: baseline;
+      font-size: calc(var(--sz-font-size, 13px) * 0.88);
+      color: var(--sz-muted, #989caf);
     }
     button {
-      padding: 3px 12px;
+      padding: 0 2px;
       background: transparent;
       border: none;
       color: var(--sz-subtext0, #a6adc8);
       font-family: inherit;
       font-size: inherit;
+      line-height: inherit;
       cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease;
+      transition: color 0.15s ease;
     }
-    button:hover { color: var(--sz-text, #cdd6f4); }
+    button:hover { color: var(--sz-accent, #89b4fa); }
     button.active {
-      background: var(--sz-accent, #89b4fa);
-      color: var(--sz-crust, #11111b);
-      font-weight: 700;
+      color: var(--sz-text, #cdd6f4);
+      cursor: default;
     }
-    button + button { border-left: 1px solid var(--sz-surface1, #45475a); }
+    button + button::before {
+      content: "/";
+      margin: 0 6px 0 4px;
+      color: var(--sz-muted, #989caf);
+    }
   `];
 
   private set(mode: 'code' | 'reading') {

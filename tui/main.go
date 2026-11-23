@@ -102,6 +102,15 @@ func main() {
 	wakapi := FetchWakapi()
 	data.Wakapi = wakapi
 
+	// Themes are decoded once, here, before any session starts. They are not
+	// reloaded on the per-session content reload below: themes is read
+	// concurrently by every session's styles and there is no hard-coded
+	// fallback palette to serve if a reload mid-flight ever failed, so the
+	// simplest correct option is to fix the palette at startup.
+	if err := loadThemes(dataDir + "/themes.json"); err != nil {
+		log.Fatal("themes load failed", "err", err)
+	}
+
 	if *local {
 		runLocal(content, data, loadErr)
 		return

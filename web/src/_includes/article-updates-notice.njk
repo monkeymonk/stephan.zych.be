@@ -9,14 +9,14 @@
 {%- endif %}
 {%- endfor %}
 {%- if correctionCount and revisionCount %}
-{%- set updateLabel = (correctionCount + revisionCount) ~ ' update' ~ ('s' if correctionCount + revisionCount != 1 else '') %}
+{%- set updateLabel = (correctionCount + revisionCount) ~ ' ' ~ (t('updates_unit_update', lang) if correctionCount + revisionCount == 1 else t('updates_unit_updates', lang)) %}
 {%- elif correctionCount %}
-{%- set updateLabel = correctionCount ~ ' correction' ~ ('s' if correctionCount != 1 else '') %}
+{%- set updateLabel = correctionCount ~ ' ' ~ (t('updates_unit_correction', lang) if correctionCount == 1 else t('updates_unit_corrections', lang)) %}
 {%- else %}
-{%- set updateLabel = revisionCount ~ ' revision' ~ ('s' if revisionCount != 1 else '') %}
+{%- set updateLabel = revisionCount ~ ' ' ~ (t('updates_unit_revision', lang) if revisionCount == 1 else t('updates_unit_revisions', lang)) %}
 {%- endif %}
 <a class="sz-updates-notice" href="#updates">
   <span class="sz-updates-notice__icon" aria-hidden="true">↻</span>
-  Updated <time datetime="{{ (updates | latestUpdate) | htmlDateString }}">{{ (updates | latestUpdate) | htmlDateString }}</time> · {{ updateLabel }}
+  {{ t('updates_notice_prefix', lang) }} <time datetime="{{ (updates | latestUpdate) | htmlDateString }}">{{ (updates | latestUpdate) | htmlDateString }}</time> · {{ updateLabel }}
 </a>
 {%- endif -%}

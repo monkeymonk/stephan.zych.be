@@ -6,7 +6,7 @@ import { SHADER_ACTION } from '../../features/screen-shader/actions.js';
 import { NEOVIM_ACTION } from '../../features/neovim/actions.js';
 import { registry } from '../../core/registry.js';
 import { router } from '../../core/router.js';
-import { appState } from '../../core/state.js';
+import { appState, availableThemes } from '../../core/state.js';
 import { paletteRegistry } from '../../core/palette.js';
 import type { PaletteSource, PaletteItem } from '../../core/palette.js';
 import { copyText } from '../../core/clipboard.js';
@@ -25,7 +25,7 @@ export function wireNeovimPalette() {
           description: `Go to ${tab.name} page`,
         })),
         { id: 'colorscheme', label: 'colorscheme', description: 'Switch color theme',
-          args: [{ name: 'catppuccin-mocha' }, { name: 'gruvbox-dark' }, { name: 'tokyonight' }] },
+          args: availableThemes().map(name => ({ name })) },
         { id: 'fullscreen', label: 'fullscreen', description: 'Enter fullscreen' },
         { id: 'windowed', label: 'windowed', description: 'Enter windowed mode' },
         { id: 'fullpage', label: 'fullpage', description: 'Enter full-page mode' },

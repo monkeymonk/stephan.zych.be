@@ -1,8 +1,147 @@
 {
   "default": "catppuccin-mocha",
-  "available": [
-    { "name": "catppuccin-mocha", "label": "Catppuccin Mocha", "file": "/assets/themes/catppuccin-mocha.css" },
-    { "name": "gruvbox-dark", "label": "Gruvbox Dark", "file": "/assets/themes/gruvbox-dark.css" },
-    { "name": "tokyonight", "label": "Tokyo Night", "file": "/assets/themes/tokyonight.css" }
+  "_doc": "Single source for every colour theme. The web build generates /assets/themes/<name>.css from this file and the SSH TUI loads it at start-up. 'colors' is the palette; 'roles' maps UI roles to a palette key or a literal CSS colour, and a theme's own 'roles' override the shared ones. 'swatches' is the eight-colour row of the neofetch card and status bar. Add a theme (seasonal or not) by adding an entry.",
+  "roles": {
+    "terminal-bg": "base",
+    "tab-bg": "mantle",
+    "tab-active": "accent",
+    "tab-text": "subtext",
+    "tab-active-text": "text",
+    "statusbar-bg": "mantle",
+    "statusbar-text": "subtext",
+    "statusbar-accent": "accent",
+    "pane-border": "surface0",
+    "pane-active-border": "accent",
+    "cursor": "accent",
+    "command-bg": "surface0",
+    "command-text": "text",
+    "command-highlight": "accent",
+    "shadow": "rgba(0, 0, 0, 0.5)"
+  },
+  "themes": [
+    {
+      "name": "catppuccin-mocha",
+      "label": "Catppuccin Mocha",
+      "colors": {
+        "base": "#1e1e2e",
+        "mantle": "#181825",
+        "crust": "#11111b",
+        "surface0": "#313244",
+        "surface1": "#45475a",
+        "surface2": "#585b70",
+        "overlay0": "#6c7086",
+        "overlay1": "#7f849c",
+        "overlay2": "#9399b2",
+        "muted": "#989caf",
+        "text": "#cdd6f4",
+        "subtext": "#a6adc8",
+        "subtext0": "#a6adc8",
+        "subtext1": "#bac2de",
+        "accent": "#89b4fa",
+        "blue": "#89b4fa",
+        "green": "#a6e3a1",
+        "red": "#f38ba8",
+        "yellow": "#f9e2af",
+        "mauve": "#cba6f7",
+        "pink": "#f5c2e7",
+        "peach": "#fab387",
+        "teal": "#94e2d5",
+        "lavender": "#b4befe",
+        "rosewater": "#f5e0dc",
+        "flamingo": "#f2cdcd",
+        "sky": "#89dceb",
+        "sapphire": "#74c7ec",
+        "maroon": "#eba0ac"
+      },
+      "roles": {
+        "shadow": "rgba(0, 0, 0, 0.4)"
+      },
+      "swatches": ["#f38ba8", "#fab387", "#f9e2af", "#a6e3a1", "#94e2d5", "#89b4fa", "#cba6f7", "#b4befe"],
+      "notes": {
+        "muted": "Muted content text. overlay0/1/2 are verbatim upstream and decoration only (borders, gutters, glyphs, separators, hover states); anything a reader is meant to read uses muted or brighter. Derived from overlay1 with lightness raised until it clears 4.6:1 on both base (6.02) and surface0 (4.62)."
+      }
+    },
+    {
+      "name": "gruvbox-dark",
+      "label": "Gruvbox Dark",
+      "colors": {
+        "base": "#282828",
+        "mantle": "#1d2021",
+        "crust": "#1d2021",
+        "surface0": "#3c3836",
+        "surface1": "#504945",
+        "surface2": "#665c54",
+        "overlay0": "#7c6f64",
+        "overlay1": "#928374",
+        "overlay2": "#a89984",
+        "muted": "#ada296",
+        "text": "#ebdbb2",
+        "subtext": "#d5c4a1",
+        "subtext0": "#bdae93",
+        "subtext1": "#d5c4a1",
+        "accent": "#83a598",
+        "blue": "#83a598",
+        "green": "#b8bb26",
+        "red": "#fb4934",
+        "yellow": "#fabd2f",
+        "mauve": "#d3869b",
+        "pink": "#d3869b",
+        "peach": "#fe8019",
+        "teal": "#8ec07c",
+        "lavender": "#83a598",
+        "rosewater": "#ebdbb2",
+        "flamingo": "#fb4934",
+        "sky": "#83a598",
+        "sapphire": "#83a598",
+        "maroon": "#cc241d"
+      },
+      "roles": {
+        "command-highlight": "#8bab9e"
+      },
+      "swatches": ["#fb4934", "#fe8019", "#fabd2f", "#b8bb26", "#8ec07c", "#83a598", "#d3869b", "#83a598"],
+      "notes": {
+        "muted": "Derived from overlay1, lightened until it clears 4.6:1 on both base (5.89) and surface0 (4.63). overlay0/1/2 are canonical upstream and decoration only.",
+        "command-highlight": "The only theme that cannot inherit the accent here: #83a598 on command-bg (= surface0) is 4.31:1, just under AA, and this is match-highlight text inside the palette. Nudged up to 4.65:1."
+      }
+    },
+    {
+      "name": "tokyonight",
+      "label": "Tokyo Night",
+      "colors": {
+        "base": "#1a1b26",
+        "mantle": "#16161e",
+        "crust": "#16161e",
+        "surface0": "#292e42",
+        "surface1": "#3b4261",
+        "surface2": "#545c7e",
+        "overlay0": "#565f89",
+        "overlay1": "#6b7394",
+        "overlay2": "#737aa2",
+        "muted": "#9197af",
+        "text": "#c0caf5",
+        "subtext": "#a9b1d6",
+        "subtext0": "#9aa5ce",
+        "subtext1": "#a9b1d6",
+        "accent": "#7aa2f7",
+        "blue": "#7aa2f7",
+        "green": "#9ece6a",
+        "red": "#f7768e",
+        "yellow": "#e0af68",
+        "mauve": "#bb9af7",
+        "pink": "#bb9af7",
+        "peach": "#ff9e64",
+        "teal": "#73daca",
+        "lavender": "#7dcfff",
+        "rosewater": "#c0caf5",
+        "flamingo": "#f7768e",
+        "sky": "#7dcfff",
+        "sapphire": "#2ac3de",
+        "maroon": "#db4b4b"
+      },
+      "swatches": ["#f7768e", "#ff9e64", "#e0af68", "#9ece6a", "#73daca", "#7aa2f7", "#bb9af7", "#7dcfff"],
+      "notes": {
+        "muted": "Derived from overlay1, lightened until it clears 4.6:1 on both base (5.90) and surface0 (4.64). overlay0/1/2 are canonical upstream and decoration only."
+      }
+    }
   ]
 }

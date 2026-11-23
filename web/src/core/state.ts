@@ -13,8 +13,20 @@ export interface AppStateSchema {
 
 const STORAGE_KEY = 'sz-state-v1';
 
+/**
+ * Theme names come from content/data/themes.json via base.njk: the <html>
+ * element carries the default in data-theme and every theme in data-themes.
+ */
+export function availableThemes(): string[] {
+  const list = document.documentElement.dataset.themes?.trim();
+  return list ? list.split(/\s+/) : [];
+}
+
+const defaultTheme =
+  document.documentElement.dataset.theme || availableThemes()[0] || '';
+
 const defaults: AppStateSchema = {
-  theme: 'catppuccin-mocha',
+  theme: defaultTheme,
   windowMode: 'windowed',
   activeTab: 0,
   activePane: null,
@@ -72,6 +84,8 @@ class AppState {
       if (stored) {
         const parsed = JSON.parse(stored);
         this.data = { ...defaults, ...parsed };
+        // A saved theme that no longer exists in themes.json falls back.
+        if (!availableThemes().includes(this.data.theme)) this.data.theme = defaults.theme;
       }
     } catch { /* corrupted — use defaults */ }
   }

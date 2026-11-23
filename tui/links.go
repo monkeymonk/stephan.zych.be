@@ -18,6 +18,7 @@ type pageLink struct {
 	kind     string // "home" | "page" | "list" | "article"
 	target   string // page slug / list kind / article slug
 	section  string // for "article": "projects" | "blog"
+	lang     string // for blog "list"/"article": "" (en) or "fr"
 }
 
 var (
@@ -71,6 +72,19 @@ func (m Model) classifyLink(text, url string) pageLink {
 		return l
 	}
 	parts := strings.Split(trimmed, "/")
+	if parts[0] == "fr" && len(parts) >= 2 && parts[1] == "blog" {
+		if len(parts) == 2 {
+			l.internal, l.kind, l.target, l.lang = true, "list", "blog", "fr"
+			return l
+		}
+		for _, a := range m.content.BlogFr {
+			if a.Slug == parts[2] {
+				l.internal, l.kind, l.section, l.target, l.lang = true, "article", "blog", parts[2], "fr"
+				return l
+			}
+		}
+		return l
+	}
 	switch parts[0] {
 	case "projects", "blog":
 		if len(parts) == 1 {
@@ -79,11 +93,14 @@ func (m Model) classifyLink(text, url string) pageLink {
 		}
 		items := m.content.Projects
 		if parts[0] == "blog" {
-			items = m.content.Blog
+			items = m.content.BlogList("en")
 		}
 		for _, a := range items {
 			if a.Slug == parts[1] {
 				l.internal, l.kind, l.section, l.target = true, "article", parts[0], parts[1]
+				if parts[0] == "blog" {
+					l.lang = a.Lang
+				}
 				return l
 			}
 		}
@@ -109,19 +126,22 @@ func (m Model) followLink(l pageLink) (tea.Model, tea.Cmd) {
 			}
 		case "list":
 			if l.target == "blog" {
-				m.enterList("blog", "blog", m.content.Blog)
+				m.blogLang = l.lang
+				m.enterList("blog", "blog", m.content.BlogList(m.blogLangOr()))
 			} else {
 				m.enterList("projects", "projects", m.content.Projects)
 			}
 		case "article":
-			items := m.content.Projects
 			if l.section == "blog" {
-				items = m.content.Blog
-			}
-			for _, a := range items {
-				if a.Slug == l.target {
+				if a, ok := m.content.BlogVersion(l.target, l.lang); ok {
 					m.openReader(a)
-					break
+				}
+			} else {
+				for _, a := range m.content.Projects {
+					if a.Slug == l.target {
+						m.openReader(a)
+						break
+					}
 				}
 			}
 		}

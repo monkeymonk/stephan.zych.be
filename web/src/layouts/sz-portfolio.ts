@@ -29,6 +29,10 @@ export class SzPortfolio extends LitElement {
   // "list" flows them as a plain block so a slotted list keeps its own styling (blog).
   @property({ attribute: "layout" }) layout = "grid";
 
+  // Blog-only: squeeze the filter bar to one row that scrolls, leaving room
+  // for the slotted language filter reserved below. Projects do not set this.
+  @property({ type: Boolean, reflect: true }) compact = false;
+
   @state() private activeFilter = "";
   @state() private visible = 0;
   @state() private matchedCount = 0;
@@ -61,6 +65,49 @@ export class SzPortfolio extends LitElement {
         top: 0;
         background: var(--sz-base, #1e1e2e);
         z-index: 2;
+      }
+      /* display:contents keeps the tag buttons as direct flex items of
+         .filter-bar outside compact mode, so the layout is unchanged. */
+      .filter-bar__tags {
+        display: contents;
+      }
+      :host([compact]) .filter-bar {
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 8px;
+        padding-bottom: 8px;
+        margin-bottom: 12px;
+      }
+      :host([compact]) .filter-bar__tags {
+        display: flex;
+        flex: 1 1 auto;
+        min-width: 0;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      :host([compact]) .filter-bar__tags::-webkit-scrollbar {
+        display: none;
+      }
+      /* Right-edge fade hints that the row scrolls further. */
+      :host([compact]) .filter-bar__tags {
+        mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+      }
+      /* Reserved slot for a future language filter: separated once something
+         is actually slotted into it. */
+      :host([compact]) ::slotted([slot="lang-filter"]) {
+        display: flex;
+        align-items: center;
+        flex: none;
+        border-left: 1px solid var(--sz-surface0, #313244);
+        padding-left: 8px;
+      }
+      :host([compact]) .filter-btn {
+        padding: 2px 8px;
+        font-size: calc(var(--sz-font-size, 13px) * 0.82);
+        border-radius: 999px;
+        flex-shrink: 0;
+        line-height: 1.5;
       }
       .filter-btn {
         padding: 4px 12px;
@@ -150,9 +197,17 @@ export class SzPortfolio extends LitElement {
         }
         /* Filter tags: one horizontally-scrollable line instead of wrapping
            into many rows. The titlebar is position:fixed here, so a sticky top
-           of 0 would park the bar underneath it. */
+           of 0 would park the bar underneath it. The host's 12px top padding
+           never applies (the page's global "* { padding: 0 }" reset outranks
+           :host), so the bar carries its own gap below the titlebar, which
+           also keeps it off the titlebar once stuck. It sits and sticks 1px up, tucked
+           under the titlebar, and pads 1px more to compensate: at fractional
+           device-pixel ratios the two edges round apart and scrolled rows
+           showed through the hairline seam. */
         .filter-bar {
-          top: var(--sz-mobile-chrome-top);
+          top: calc(var(--sz-mobile-chrome-top) - 1px);
+          margin-top: -1px;
+          padding-top: 7px;
           flex-wrap: nowrap;
           overflow-x: auto;
           scrollbar-width: none;
@@ -161,6 +216,11 @@ export class SzPortfolio extends LitElement {
         }
         .filter-bar::-webkit-scrollbar {
           display: none;
+        }
+        /* Compact mode scrolls .filter-bar__tags, not .filter-bar itself;
+           keep the bar's own 16px side padding, just drop its overflow. */
+        :host([compact]) .filter-bar {
+          overflow: visible;
         }
         .filter-btn {
           flex-shrink: 0;
@@ -357,7 +417,9 @@ export class SzPortfolio extends LitElement {
     const targets: HTMLElement[] = [];
     for (const el of this.items) {
       if (el.offsetParent === null) continue;
-      const target = el.matches("a") ? el : el.querySelector<HTMLElement>("a");
+      const target = el.matches("a")
+        ? el
+        : el.querySelector<HTMLElement>("[data-row-link]") ?? el.querySelector<HTMLElement>("a");
       if (target) targets.push(target);
     }
     return targets;
@@ -561,26 +623,29 @@ export class SzPortfolio extends LitElement {
       ${this.filters.length > 0
         ? html`
             <div class="filter-bar" role="group" aria-label="Filter entries by tag">
-              <button
-                class="filter-btn ${this.activeFilter === "" ? "active" : ""}"
-                aria-pressed=${this.activeFilter === ""}
-                @click=${() => this.toggleFilter("")}
-              >
-                All
-              </button>
-              ${this.filters.map(
-                (f) => html`
-                  <button
-                    class="filter-btn ${this.activeFilter === f
-                      ? "active"
-                      : ""}"
-                    aria-pressed=${this.activeFilter === f}
-                    @click=${() => this.toggleFilter(f)}
-                  >
-                    ${f}
-                  </button>
-                `,
-              )}
+              <div class="filter-bar__tags">
+                <button
+                  class="filter-btn ${this.activeFilter === "" ? "active" : ""}"
+                  aria-pressed=${this.activeFilter === ""}
+                  @click=${() => this.toggleFilter("")}
+                >
+                  All
+                </button>
+                ${this.filters.map(
+                  (f) => html`
+                    <button
+                      class="filter-btn ${this.activeFilter === f
+                        ? "active"
+                        : ""}"
+                      aria-pressed=${this.activeFilter === f}
+                      @click=${() => this.toggleFilter(f)}
+                    >
+                      ${f}
+                    </button>
+                  `,
+                )}
+              </div>
+              <slot name="lang-filter"></slot>
             </div>
           `
         : nothing}

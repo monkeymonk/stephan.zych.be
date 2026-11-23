@@ -38,7 +38,6 @@ const repoRoot = path.resolve(__dirname, '..', '..');
 
 const paths = {
   cv: path.join(repoRoot, 'content/cv/index.md'),
-  profile: path.join(repoRoot, 'content/data/profile.json'),
   about: path.join(repoRoot, 'content/pages/about.md'),
   whoami: path.join(repoRoot, 'content/pages/whoami.md'),
   baseLayout: path.join(repoRoot, 'web/src/layouts/base.njk'),
@@ -46,7 +45,6 @@ const paths = {
 };
 
 const cvText = readFileSync(paths.cv, 'utf8');
-const profileText = readFileSync(paths.profile, 'utf8');
 const aboutText = readFileSync(paths.about, 'utf8');
 const whoamiText = readFileSync(paths.whoami, 'utf8');
 const baseLayoutText = readFileSync(paths.baseLayout, 'utf8');
@@ -54,8 +52,28 @@ const articleLayoutText = readFileSync(paths.articleLayout, 'utf8');
 
 // (content/cv/index.md is Markdown, not JSON — no parse-validity check needed;
 // readFileSync above already fails loudly if the file is missing.)
-const profileJson = JSON.parse(profileText);
-const stats = Array.isArray(profileJson.stats) ? profileJson.stats : [];
+// The about-page profile lives in content/pages/about.md front matter. Only
+// its flat `stats:` list (value/suffix/label items) is needed here, so it is
+// read with a tiny block parser rather than a YAML dependency.
+const aboutFrontmatter = aboutText.startsWith('---\n')
+  ? aboutText.slice(4, aboutText.indexOf('\n---', 4))
+  : '';
+function parseStats(frontmatter) {
+  const block = frontmatter.match(/^stats:\n((?:[ \t]+.*\n?)*)/m);
+  if (!block) return [];
+  const items = [];
+  for (const line of block[1].split('\n')) {
+    const m = line.match(/^\s*(-\s+)?([a-z]+):\s*(.*)$/);
+    if (!m) continue;
+    if (m[1]) items.push({});
+    if (!items.length) continue;
+    let value = m[3].trim();
+    if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+    items[items.length - 1][m[2]] = /^\d+$/.test(value) ? Number(value) : value;
+  }
+  return items;
+}
+const stats = parseStats(aboutFrontmatter);
 
 const failures = [];
 
@@ -73,7 +91,7 @@ function extractFirst(text, regex, label, what) {
 function findStat(predicate, what) {
   const stat = stats.find(predicate);
   if (!stat) {
-    failures.push(`✗ profile.json is missing a stats entry for ${what}`);
+    failures.push(`✗ about.md front matter is missing a stats entry for ${what}`);
     return null;
   }
   return stat;
@@ -111,7 +129,7 @@ if (platformsWhoami !== null && platformsWhoami !== '200') {
 
 findStat((s) => s.value === 200 && /platforms/i.test(s.label ?? ''), 'value=200 with a "platforms" label');
 
-// 3. Team peak — profile.json must have a "20" stat, consistent with the
+// 3. Team peak — about.md stats must have a "20" stat, consistent with the
 // literal "20" the growth-figure regex already requires above.
 findStat((s) => s.value === 20 && /(team|peak)/i.test(s.label ?? ''), 'value=20 with a "team"/"peak" label');
 
@@ -120,10 +138,10 @@ findStat((s) => s.value === 15, 'value=15 (years)');
 findStat((s) => s.value === 1, 'value=1 (exit)');
 
 if (!/\b15\+?\s*years/i.test(cvText)) {
-  failures.push('✗ content/cv/index.md has no "15+ years" reference to match profile.json\'s years stat');
+  failures.push('✗ content/cv/index.md has no "15+ years" reference to match the about.md years stat');
 }
 if (!/acqui(?:re|red|sition)/i.test(cvText)) {
-  failures.push('✗ content/cv/index.md has no acquisition/exit reference to match profile.json\'s exit stat');
+  failures.push('✗ content/cv/index.md has no acquisition/exit reference to match the about.md exit stat');
 }
 
 // 5. Section headings must stay in lockstep across the three CV renderers —
@@ -275,14 +293,13 @@ if (cvFiles.length > 1) {
 const { data: cvFrontmatter } = parseFrontmatter(cvText);
 if (cvFrontmatter.label !== 'Application Architect') {
   failures.push(
-    `✗ content/cv/index.md front matter "label" is "${cvFrontmatter.label}", expected "Application Architect"; if this is a deliberate rename, update profile.json/base.njk/article.njk/about.md/whoami.md (and this check) to match`
+    `✗ content/cv/index.md front matter "label" is "${cvFrontmatter.label}", expected "Application Architect"; if this is a deliberate rename, update about.md/base.njk/article.njk/about.md/whoami.md (and this check) to match`
   );
 }
 
 const roleVocabFiles = [
   { label: 'content/pages/about.md', text: aboutText },
   { label: 'content/pages/whoami.md', text: whoamiText },
-  { label: 'content/data/profile.json', text: profileText },
   { label: 'web/src/layouts/base.njk', text: baseLayoutText },
   { label: 'web/src/layouts/article.njk', text: articleLayoutText },
 ];
@@ -304,5 +321,5 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log('✓ CV headline facts and section headings are consistent across content/cv/index.md / profile.json / renderers');
+console.log('✓ CV headline facts and section headings are consistent across content/cv/index.md / about.md stats / renderers');
 process.exit(0);

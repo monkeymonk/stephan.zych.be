@@ -109,6 +109,28 @@ type Model struct {
 	readerList    []Article // the section sequence, for prev/next navigation
 	readerIndex   int       // readerArticle's position within readerList
 	cvVariant     string    // slug of the CV role variant to render, "" for the base
+	blogLang      string    // "" (= "en") or "fr"; the active blog listing/reader language
+
+	glamourCache *glamourCache // lazily built/rebuilt renderer pair for renderMarkdown, see renderers()
+}
+
+// glamourCache holds the two Glamour renderers renderMarkdown needs (body
+// width, and a narrower one for boxed code blocks), plus the key they were
+// built for, so a call with an unchanged width/theme reuses them instead of
+// constructing fresh renderers every render. Model is a value type copied on
+// every Update, so this lives behind a pointer field — cheap to copy, and
+// each SSH session owns its own Model/cache (no cross-session sharing).
+type glamourCache struct {
+	key  glamourCacheKey
+	body *glamour.TermRenderer
+	code *glamour.TermRenderer
+}
+
+type glamourCacheKey struct {
+	width     int
+	codeWidth int
+	theme     string
+	cv        bool // cvGlamourStyle differs from glamourStyle only for the CV article
 }
 
 // NewModel builds the initial model from already-loaded content.
@@ -116,9 +138,9 @@ func NewModel(content *Content, data *SiteData, loadErr error, width, height int
 	ti := textinput.New()
 	ti.Prompt = ":"
 	ti.CharLimit = 80
-	ti.Cursor.Style = lipgloss.NewStyle().Foreground(lipgloss.Color(catppuccinMocha.Accent))
-	ti.PromptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(catppuccinMocha.Accent))
-	ti.TextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(catppuccinMocha.Text))
+	ti.Cursor.Style = lipgloss.NewStyle().Foreground(lipgloss.Color(themes[defaultTheme].Accent))
+	ti.PromptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(themes[defaultTheme].Accent))
+	ti.TextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(themes[defaultTheme].Text))
 
 	m := Model{
 		content: content, data: data, loadErr: loadErr,
@@ -127,7 +149,7 @@ func NewModel(content *Content, data *SiteData, loadErr error, width, height int
 		input:     ti,
 		animating: true,
 	}
-	m.themeName = themeOrder[0]
+	m.themeName = defaultTheme
 	m.theme = themes[m.themeName]
 	s := buildStyles(m.theme)
 	m.st = &s
@@ -340,30 +362,51 @@ func (m Model) headingBar(level int, text string, width int) string {
 	return bar
 }
 
-func (m *Model) renderMarkdown(a Article) string {
-	style := m.glamourStyle()
-	if a.Slug == "cv" {
-		style = m.cvGlamourStyle()
-	}
-	r, err := glamour.NewTermRenderer(
-		glamour.WithStyles(style),
-		glamour.WithWordWrap(m.contentWidth()),
-	)
-	if err != nil {
-		return a.Body
-	}
+// renderers returns the cached body/code Glamour renderers for a, rebuilding
+// them only when the width or theme (or CV-ness) has changed since the last
+// call — renderMarkdown previously built two fresh TermRenderers on every
+// call, which is the expensive part of rendering an article.
+func (m *Model) renderers(a Article) (*glamour.TermRenderer, *glamour.TermRenderer) {
+	isCV := a.Slug == "cv"
 	width := m.contentWidth()
-
-	// codeRenderer wraps code a little narrower so the box (border + padding)
-	// still fits the content width.
-	codeRenderer := r
 	cw := width - 6
 	if cw < 20 {
 		cw = 20
 	}
+	key := glamourCacheKey{width: width, codeWidth: cw, theme: m.themeName, cv: isCV}
+	if m.glamourCache != nil && m.glamourCache.key == key {
+		return m.glamourCache.body, m.glamourCache.code
+	}
+
+	style := m.glamourStyle()
+	if isCV {
+		style = m.cvGlamourStyle()
+	}
+	r, err := glamour.NewTermRenderer(
+		glamour.WithStyles(style),
+		glamour.WithWordWrap(width),
+	)
+	if err != nil {
+		return nil, nil
+	}
+
+	// codeRenderer wraps code a little narrower so the box (border + padding)
+	// still fits the content width.
+	codeRenderer := r
 	if rc, err := glamour.NewTermRenderer(glamour.WithStyles(style), glamour.WithWordWrap(cw)); err == nil {
 		codeRenderer = rc
 	}
+
+	m.glamourCache = &glamourCache{key: key, body: r, code: codeRenderer}
+	return r, codeRenderer
+}
+
+func (m *Model) renderMarkdown(a Article) string {
+	r, codeRenderer := m.renderers(a)
+	if r == nil {
+		return a.Body
+	}
+	width := m.contentWidth()
 
 	var blocks []string
 	addBlock := func(s string) {
@@ -665,6 +708,9 @@ func (m *Model) openReader(a Article) {
 	a.Body = m.resolveSiteVars(a.Body)
 	a.Body = m.resolveConditionals(a.Body)
 	a.Body = applyRevisionMarkers(a.Body, a.Updates, a.Slug)
+	if sw := m.blogLangSwitchMarkdown(a); sw != "" {
+		a.Body = sw + "\n" + a.Body // one-line EN/FR switcher, before everything else
+	}
 	if nav := m.seriesNavMarkdown(a); nav != "" {
 		a.Body = nav + "\n" + a.Body // sits after the title/description, before the body
 	}
@@ -689,15 +735,39 @@ func (m *Model) openReader(a Article) {
 	m.screen = screenReader
 }
 
-// seriesParts returns the blog posts in a's series, ordered by their `order`
-// front matter — the TUI mirror of the web `seriesPosts` filter.
-func (m Model) seriesParts(series string) []Article {
-	if series == "" {
+// blogLangSwitchMarkdown builds the one-line EN/FR switcher shown above a blog
+// post's body: the current language in bold, the other language as a
+// followable link when a translation exists (so `L` and the link picker can
+// both reach it), or a plain "(not translated)" note when it doesn't.
+func (m Model) blogLangSwitchMarkdown(a Article) string {
+	if a.Section != "blog" {
+		return ""
+	}
+	en, fr := m.content.BlogLangs(a.Slug)
+	switchHint := m.data.label(a.Lang, "tui_lang_switch_hint")
+	notTranslated := "(" + m.data.label(a.Lang, "tui_lang_not_translated") + ")"
+	switch {
+	case a.Lang == "fr" && en:
+		return "[EN](/blog/" + a.Slug + "/) · **FR** · " + switchHint + "\n"
+	case a.Lang == "fr":
+		return "EN " + notTranslated + " · **FR**\n"
+	case fr:
+		return "**EN** · [FR](/fr/blog/" + a.Slug + "/) · " + switchHint + "\n"
+	default:
+		return "**EN** · FR " + notTranslated + "\n"
+	}
+}
+
+// seriesParts returns the blog posts in a's series within a's own language,
+// ordered by their `order` front matter — the TUI mirror of the web
+// `seriesPosts` filter.
+func (m Model) seriesParts(a Article) []Article {
+	if a.Series == "" {
 		return nil
 	}
 	var parts []Article
-	for _, p := range m.content.Blog {
-		if p.Series == series {
+	for _, p := range m.content.BlogList(a.Lang) {
+		if p.Series == a.Series && p.Lang == a.Lang {
 			parts = append(parts, p)
 		}
 	}
@@ -710,7 +780,7 @@ func (m Model) seriesParts(series string) []Article {
 // series blurb, then every part — the current one marked, the rest as links to
 // /blog/<slug>/ that the reader's link extraction makes navigable.
 func (m Model) seriesNavMarkdown(a Article) string {
-	parts := m.seriesParts(a.Series)
+	parts := m.seriesParts(a)
 	if len(parts) == 0 {
 		return ""
 	}
@@ -723,17 +793,19 @@ func (m Model) seriesNavMarkdown(a Article) string {
 	if order < 1 {
 		order = 1
 	}
+	currentNote := m.data.label(a.Lang, "series_current_note")
+	partOf := m.data.label(a.Lang, "series_part_of", "n", fmt.Sprintf("%d", order))
 	var b strings.Builder
-	fmt.Fprintf(&b, "**Part %d of %s**", order, name)
+	fmt.Fprintf(&b, "**%s %s**", partOf, name)
 	if meta.Description != "" {
 		b.WriteString(" — " + meta.Description)
 	}
 	b.WriteString("\n\n")
 	for i, p := range parts {
 		if p.Slug == a.Slug {
-			fmt.Fprintf(&b, "%d. **%s** — you’re reading it\n", i+1, p.Title)
+			fmt.Fprintf(&b, "%d. **%s** — %s\n", i+1, p.Title, currentNote)
 		} else {
-			fmt.Fprintf(&b, "%d. [%s](/blog/%s/)\n", i+1, p.Title, p.Slug)
+			fmt.Fprintf(&b, "%d. [%s](%s)\n", i+1, p.Title, articlePath(p))
 		}
 	}
 	b.WriteString("\n---\n")
@@ -767,12 +839,15 @@ func (m Model) updatesMarkdown(a Article) string {
 		updates[i] = numberedUpdate{Update: u, n: i + 1}
 	}
 	sort.SliceStable(updates, func(i, j int) bool { return updates[i].Date < updates[j].Date })
+	heading := m.data.label(a.Lang, "updates_heading")
+	correctedLabel := m.data.label(a.Lang, "updates_md_corrected")
+	revisedLabel := m.data.label(a.Lang, "updates_md_revised")
 	var b strings.Builder
-	b.WriteString("---\n\n## Updates\n\n")
+	fmt.Fprintf(&b, "---\n\n## %s\n\n", heading)
 	for _, u := range updates {
-		label := "Revised"
+		label := revisedLabel
 		if u.Kind == "correction" {
-			label = "Corrected"
+			label = correctedLabel
 		}
 		fmt.Fprintf(&b, "- **[%d] %s %s** — %s\n", u.n, label, u.Date, u.Summary)
 	}
@@ -821,7 +896,7 @@ func (m Model) sectionSequence(a Article) ([]Article, int) {
 	case "projects":
 		list = m.content.Projects
 	case "blog":
-		list = m.content.Blog
+		list = m.content.BlogList(a.Lang)
 	default:
 		return nil, -1
 	}
@@ -833,12 +908,50 @@ func (m Model) sectionSequence(a Article) ([]Article, int) {
 	return nil, -1
 }
 
+// blogLangOr returns the active blog language ("en" when m.blogLang is unset).
+func (m Model) blogLangOr() string {
+	if m.blogLang == "" {
+		return "en"
+	}
+	return m.blogLang
+}
+
+// switchBlogLang sets the active blog language and shows it where the user
+// is: the open blog post reopens in lang when that version exists, anything
+// else lands on the blog list in lang.
+func (m *Model) switchBlogLang(lang string) {
+	m.blogLang = lang
+	if m.screen == screenReader && m.readerArticle.Section == "blog" {
+		if a, ok := m.content.BlogVersion(m.readerArticle.Slug, lang); ok {
+			m.openReader(a)
+		}
+		return
+	}
+	m.enterList("blog", "blog", m.content.BlogList(lang))
+}
+
+// otherBlogVersion returns the open blog post's translation, if it has one.
+func (m Model) otherBlogVersion() (Article, bool) {
+	a := m.readerArticle
+	if m.screen != screenReader || a.Section != "blog" {
+		return Article{}, false
+	}
+	other := "fr"
+	if a.Lang == "fr" {
+		other = "en"
+	}
+	return m.content.BlogVersion(a.Slug, other)
+}
+
 // articlePath is the article's path on the web site. It must match the Eleventy
 // permalinks in content/blog/blog.json / content/projects/projects.json, or a
 // copied URL won't resolve there.
 func articlePath(a Article) string {
 	if a.Section == "pages" {
 		return "/" + a.Slug + "/"
+	}
+	if a.Section == "blog" && a.Lang == "fr" {
+		return "/fr/blog/" + a.Slug + "/"
 	}
 	return "/" + a.Section + "/" + a.Slug + "/"
 }
@@ -1115,7 +1228,7 @@ func (m Model) gotoTab(name string) (tea.Model, tea.Cmd) {
 	case "projects":
 		m.enterList("projects", "projects", m.content.Projects)
 	case "blog":
-		m.enterList("blog", "blog", m.content.Blog)
+		m.enterList("blog", "blog", m.content.BlogList(m.blogLangOr()))
 	default: // about, contact, whoami, cv, … → page
 		if a, ok := m.content.Pages[name]; ok {
 			m.openReader(a)
@@ -1308,6 +1421,23 @@ func (m Model) renderItems(items []Article, cursor int) string {
 		body.WriteString(bar + title + "\n")
 
 		meta := []string{}
+		if a.Section == "blog" {
+			en, fr := m.content.BlogLangs(a.Slug)
+			if en {
+				st := m.st.Updated
+				if a.Lang == "en" {
+					st = m.st.Series
+				}
+				meta = append(meta, st.Render("EN"))
+			}
+			if fr {
+				st := m.st.Updated
+				if a.Lang == "fr" {
+					st = m.st.Series
+				}
+				meta = append(meta, st.Render("FR"))
+			}
+		}
 		if a.Series != "" {
 			name := m.data.Series[a.Series].Name
 			if name == "" {

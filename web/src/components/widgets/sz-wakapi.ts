@@ -22,7 +22,7 @@ export class SzWakapi extends LitElement {
   @property({ attribute: 'languages', converter: jsonArrayAttribute }) languages: Lang[] = [];
 
   @state() private revealed = false;
-  private revealOnView = new RevealController(this, () => { this.revealed = true; });
+  protected readonly revealOnView = new RevealController(this, () => { this.revealed = true; });
 
   static styles = [panelStyles, css`
     :host { display: block; }

@@ -1,45 +1,10 @@
 ---
 layout: base.njk
-title: Blog · Stéphan Zych
+eleventyComputed:
+  title: "{{ blogIndex.en.title | safe }}"
+  description: "{{ blogIndex.en.description | safe }}"
+lang: en
 permalink: /blog/
 section: { name: blog, path: /blog/ }
 ---
-{% set allTags = collections.blog | collectTags(['blog']) %}
-{# The tmux tab bar is what tells a sighted reader which section this is, so
-   the page has no visible title — but it still needs exactly one h1. Kept
-   outside sz-portfolio: its shadow template slots children straight into the
-   grid/list container, and a heading is not one of the feed's items. #}
-<h1 class="sr-only">Blog · engineering notes &amp; experiments</h1>
-<sz-portfolio layout="list" filters="{{ allTags | join(',') }}" page-size="10">
-  <div class="post-list">
-    {% for group in collections.blog | groupByMonth %}
-    <details class="post-group" data-month="{{ group.key }}" open>
-      <summary class="post-month">{{ group.label }}<span class="post-month__count">{{ group.posts | length }}</span></summary>
-      <ul class="post-group__items">
-        {% for post in group.posts %}
-        <li data-tags="{{ post.data.tags | join(',') }}">
-          <a class="post-row" href="{{ post.url }}">
-            <span class="post-row__date">
-              <time datetime="{{ post.date | htmlDateString }}">{{ post.date | htmlDateString }}</time>
-              <span class="post-row__read">{{ post.templateContent | readingTime }} min read</span>
-            </span>
-            <span class="post-row__main">
-              <span class="post-row__title">{{ post.data.title }}</span>
-              {% if post.data.series %}<span class="post-row__series"><span class="post-row__series-name">{{ seriesData[post.data.series].name if seriesData[post.data.series] else post.data.series }}</span>{% if post.data.order %}<span class="post-row__series-part">part {{ post.data.order }}</span>{% endif %}</span>{% endif %}
-              {% if post.data.updates | length %}<span class="post-row__updated">Updated</span>{% endif %}
-              <span class="post-row__desc">{{ post.data.description }}</span>
-              {% if post.data.tags %}
-              <span class="post-row__tags">
-                {% for tag in post.data.tags %}{% if tag !== 'blog' %}<span class="post-row__tag">{{ tag }}</span>{% endif %}{% endfor %}
-              </span>
-              {% endif %}
-            </span>
-            <span class="post-row__arrow">→</span>
-          </a>
-        </li>
-        {% endfor %}
-      </ul>
-    </details>
-    {% endfor %}
-  </div>
-</sz-portfolio>
+{% set indexLang = 'en' %}{% include "blog-index.njk" %}

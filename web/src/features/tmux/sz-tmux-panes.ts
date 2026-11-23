@@ -26,7 +26,7 @@ export class SzTmuxPanes extends LitElement {
   // Alt+h/j/k/l steps the active pane. Two keystrokes per id means two
   // bindings: `keys` is a sequence, so ['l', 'j'] would mean Alt+l *then*
   // Alt+j rather than either of them.
-  private keysCtrl = new KeymapController(this, [
+  protected readonly keysCtrl = new KeymapController(this, [
     ...this.paneBindings('panes.next', ['l', 'j'], 1),
     ...this.paneBindings('panes.prev', ['h', 'k'], -1),
   ]);

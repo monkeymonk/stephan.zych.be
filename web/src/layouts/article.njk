@@ -2,11 +2,12 @@
 layout: base.njk
 ---
 {% import "share-links.njk" as share %}
+{% import "lang-switch.njk" as langs %}
 <sz-toc></sz-toc>
 <article class="sz-article">
   <div class="sz-article__toolbar">
     {% if section %}
-    <nav class="sz-article__breadcrumb" aria-label="Breadcrumb">
+    <nav class="sz-article__breadcrumb" aria-label="{{ t('breadcrumb_aria_label', lang) }}">
       <a href="/">~</a>
       <span class="sz-article__crumb-sep">/</span>
       <a href="{{ section.path }}">{{ section.name }}</a>
@@ -23,17 +24,24 @@ layout: base.njk
      the title made AT read the same string twice. Applies to project case
      studies too: their poster is a screenshot, but nothing in the front matter
      describes it, and a duplicated title is not a description. #}
+  {% if section.name == 'blog' %}<div class="sz-article__banner">{% endif %}
   {% if poster %}
+  {% set posterSize = poster | imageSize %}
   <div class="sz-article__hero">
-    <img src="{{ poster }}" alt="" fetchpriority="high" decoding="async" loading="eager" sizes="100vw">
+    <img src="{{ poster }}" alt="" fetchpriority="high" decoding="async" loading="eager"{% if posterSize %} width="{{ posterSize.width }}" height="{{ posterSize.height }}"{% endif %}>
+  </div>
+  {% endif %}
+  {# Language switcher: overlays the bottom of the hero, on the content column. #}
+  {% if section.name == 'blog' %}
+  {{ langs.langSwitch(collections.blogEntries | translations(page.fileSlug), lang or 'en', 'seg', 'hero') }}
   </div>
   {% endif %}
   <header class="sz-article__header">
     <h1 class="sz-article__title">{{ heading or title }}</h1>
     {% if date or tags or section.name == 'blog' %}
     <div class="sz-article__meta">
-      {% if date %}<time datetime="{{ date | htmlDateString }}">{{ date | dateDisplay }}</time>{% endif %}
-      {% if section.name == 'blog' %}<span class="sz-article__read">{{ content | readingTime }} min read</span>{% endif %}
+      {% if date %}<time datetime="{{ date | htmlDateString }}">{{ date | dateDisplay(lang) }}</time>{% endif %}
+      {% if section.name == 'blog' %}<span class="sz-article__read">{{ t('reading_time', lang, { n: (content | readingTime) }) }}</span>{% endif %}
       {% if tags %}
       <span class="sz-article__tags">
         {% for tag in tags %}{% if tag !== 'blog' and tag !== 'projects' %}<span class="sz-article__tag">{{ tag }}</span>{% endif %}{% endfor %}
@@ -65,7 +73,7 @@ layout: base.njk
       {% if date or tags or section.name == 'blog' %}
       <div class="md-meta">
         {% if date %}<span class="md-date">{{ date | htmlDateString }}</span>{% endif %}
-        {% if section.name == 'blog' %}<span class="md-read">{{ content | readingTime }} min read</span>{% endif %}
+        {% if section.name == 'blog' %}<span class="md-read">{{ t('reading_time', lang, { n: (content | readingTime) }) }}</span>{% endif %}
         {% if tags %}{% for tag in tags %}{% if tag !== 'blog' and tag !== 'projects' %}<span class="md-tag">#{{ tag }}</span>{% endif %}{% endfor %}{% endif %}
       </div>
       {% endif %}
@@ -113,7 +121,7 @@ layout: base.njk
   {% endif %}
 
   {# Previous / next within the same section (blog or projects) #}
-  {% set sectionItems = collections[section.name] %}
+  {% set sectionItems = collections[section.collection or section.name] %}
   {% if sectionItems %}
   {% if section.name == 'blog' %}
   {# blog is sorted newest-first, so read it chronologically: prev = older, next = newer #}

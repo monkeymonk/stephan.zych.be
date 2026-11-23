@@ -1,0 +1,52 @@
+---
+layout: base.njk
+title: Language switcher preview
+permalink: /dev/lang-switch/
+noindex: true
+eleventyExcludeFromCollections: true
+---
+{# Dev-only: every switcher state x every variant on one page, from static
+   fake URLs, so a restyle can be judged without hunting for real posts in
+   each language. Excluded from production builds in .eleventy.js. #}
+{% import "lang-switch.njk" as langs %}
+{% set states = [
+  { label: 'index, viewed in EN', versions: { en: '/blog/', fr: '/fr/blog/' }, current: 'en', context: 'index' },
+  { label: 'index, viewed in FR', versions: { en: '/blog/', fr: '/fr/blog/' }, current: 'fr', context: 'index' },
+  { label: 'post in EN + FR, viewed in EN', versions: { en: '#en', fr: '#fr' }, current: 'en', context: 'post' },
+  { label: 'post in EN + FR, viewed in FR', versions: { en: '#en', fr: '#fr' }, current: 'fr', context: 'post' },
+  { label: 'post in EN only', versions: { en: '#en', fr: null }, current: 'en', context: 'post' },
+  { label: 'post in FR only', versions: { en: null, fr: '#fr' }, current: 'fr', context: 'post' }
+] %}
+{% set variants = ['pill', 'seg'] %}
+<style>
+  .lsp { padding: 24px; font-size: var(--sz-font-size); }
+  .lsp h1 { font-size: 1.2em; margin: 0 0 8px; }
+  .lsp p { color: var(--sz-muted); margin: 0 0 20px; }
+  .lsp table { border-collapse: collapse; width: 100%; }
+  .lsp th, .lsp td { border: 1px solid var(--sz-surface1); padding: 12px; text-align: left; vertical-align: middle; }
+  .lsp th { color: var(--sz-muted); font-weight: 400; }
+  .lsp .sz-lang-switch[data-context="index"] { margin: 0; }
+  .lsp .post-row__langs { display: inline-flex; }
+</style>
+<div class="lsp">
+  <h1>Language switcher preview</h1>
+  <p>Default variant: <code>LANG_SWITCH_VARIANT</code> in <code>_includes/lang-switch.njk</code>. Styles: the "Language switcher" block in <code>styles/base.css</code>.</p>
+  <table>
+    <thead>
+      <tr><th>state</th>{% for v in variants %}<th>{{ v }}</th>{% endfor %}</tr>
+    </thead>
+    <tbody>
+      {% for s in states %}
+      <tr>
+        <th scope="row">{{ s.label }}</th>
+        {% for v in variants %}<td>{{ langs.langSwitch(s.versions, s.current, v, s.context) }}</td>{% endfor %}
+      </tr>
+      {% endfor %}
+      <tr>
+        <th scope="row">index row chips</th>
+        <td><span class="post-row__langs"><span class="post-row__lang" lang="en">EN</span><span class="post-row__lang" lang="fr">FR</span></span> EN + FR</td>
+        <td><span class="post-row__langs"><span class="post-row__lang" lang="en">EN</span></span> EN only</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

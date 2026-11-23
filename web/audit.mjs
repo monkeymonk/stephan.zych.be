@@ -14,6 +14,7 @@
 // behavioural journey in a11y-journey.mjs) and is the thing that exits non-zero.
 // Everything the gate needs is exported here rather than duplicated there.
 
+import { themes as themesData } from './lib/themes.js';
 import { createServer } from 'node:http';
 import { readFile, mkdir, writeFile, access } from 'node:fs/promises';
 import path from 'node:path';
@@ -43,7 +44,8 @@ export const ROUTES = [
 // Colour contrast is a property of the *theme*, not of the markup, and only the
 // default theme's stylesheet ships render-blocking (app/index.ts) — so a scan of
 // the default theme alone says nothing about the other two.
-export const THEMES = ['catppuccin-mocha', 'gruvbox-dark', 'tokyonight'];
+// One per theme in content/data/themes.json (the single source of truth).
+export const THEMES = themesData.themes.map(t => t.name);
 
 // Both viewports, because a one-viewport sweep is not a check. The same
 // article reports 0 axe violations at 1280x720 and 9 at 390x844 with

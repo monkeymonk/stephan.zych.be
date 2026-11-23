@@ -8,7 +8,7 @@ import { mountEffectLayer } from './top-layer.js';
 @customElement('sz-effect-confetti')
 export class SzEffectConfetti extends LitElement {
   private cleanupEffect?: () => void;
-  private actionCtrl = new ActionController(this, [[EFFECT_ACTION.CONFETTI, () => {
+  protected readonly actionCtrl = new ActionController(this, [[EFFECT_ACTION.CONFETTI, () => {
     if (reducedMotion.matches) {
       this.startFlash();
       return;

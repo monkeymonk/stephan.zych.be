@@ -32,6 +32,7 @@ type location struct {
 	// reader state (screenReader)
 	articleSection string
 	articleSlug    string
+	articleLang    string
 	readerOffset   int
 
 	// cursor position to restore on the list/home screens
@@ -92,6 +93,7 @@ func (m Model) capture() location {
 		// corpus no longer contains.
 		loc.articleSection = m.readerArticle.Section
 		loc.articleSlug = m.readerArticle.Slug
+		loc.articleLang = m.readerArticle.Lang
 		loc.readerOffset = m.reader.YOffset
 	}
 	return loc
@@ -110,7 +112,7 @@ func (m *Model) restore(loc location) {
 			m.cursor = max(0, len(m.listItems)-1)
 		}
 	case screenReader:
-		a, ok := m.articleAt(loc.articleSection, loc.articleSlug)
+		a, ok := m.articleAt(loc.articleSection, loc.articleSlug, loc.articleLang)
 		if !ok {
 			// Content is loaded once per session (main.go:136), so a slug on
 			// the stack cannot go missing mid-session; this is the defensive
@@ -138,7 +140,7 @@ func (m *Model) restore(loc location) {
 // historyLimit is that a location stays cheap to copy.
 func (m Model) sectionItems(kind string) []Article {
 	if kind == "blog" {
-		return m.content.Blog
+		return m.content.BlogList(m.blogLangOr())
 	}
 	return m.content.Projects
 }
@@ -146,13 +148,15 @@ func (m Model) sectionItems(kind string) []Article {
 // articleAt re-resolves an article from the identity a location stores. The
 // lookup goes through the session's own content maps every time, which is what
 // makes storing section+slug rather than an Article worth the indirection.
-func (m Model) articleAt(section, slug string) (Article, bool) {
+func (m Model) articleAt(section, slug, lang string) (Article, bool) {
 	switch section {
 	case "pages":
 		a, ok := m.content.Pages[slug]
 		return a, ok
-	case "projects", "blog":
-		for _, a := range m.sectionItems(section) {
+	case "blog":
+		return m.content.BlogVersion(slug, lang)
+	case "projects":
+		for _, a := range m.content.Projects {
 			if a.Slug == slug {
 				return a, true
 			}

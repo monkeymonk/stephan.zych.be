@@ -79,7 +79,7 @@ let checked = 0;
 
 for (const { dir, keys } of collections) {
   const entries = readdirSync(path.join(repoRoot, dir))
-    .filter((name) => name.endsWith('.md'))
+    .filter((name) => name.endsWith('.md') && !name.startsWith('_')) // _index.md describes the folder
     .sort();
 
   for (const name of entries) {

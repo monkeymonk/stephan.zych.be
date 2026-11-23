@@ -40,7 +40,7 @@ export class SzLinks extends LitElement {
   // is typing. `keys` is a sequence and never an alternation, so `j`/ArrowDown
   // is two registrations of one id; the description rides the character key
   // only, so help generation dedupes by id without special-casing.
-  private keysCtrl = new KeymapController(this, [
+  protected readonly keysCtrl = new KeymapController(this, [
     { id: 'links.open', keys: ['l'], scope: 'page', chars: true,
       description: 'List links in the current article',
       // Desktop-only on purpose: there is no `l` key to press on a phone, and

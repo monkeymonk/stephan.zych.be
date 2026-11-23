@@ -51,7 +51,7 @@ export class SzPalette extends LitElement {
     onClose: (reason) => this.closeHelp(reason),
   });
 
-  private keysCtrl = new KeymapController(this, [
+  protected readonly keysCtrl = new KeymapController(this, [
     this.prefixBinding('palette.command', ':', 'Open command palette'),
     this.prefixBinding('palette.search', '/', 'Search pages and content'),
     {

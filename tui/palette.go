@@ -29,7 +29,7 @@ func (m *Model) navItems() []paletteItem {
 		case "projects":
 			out = append(out, paletteItem{icon, "projects", "section", func(m *Model) tea.Cmd { m.enterList("projects", "projects", m.content.Projects); return nil }})
 		case "blog":
-			out = append(out, paletteItem{icon, "blog", "section", func(m *Model) tea.Cmd { m.enterList("blog", "blog", m.content.Blog); return nil }})
+			out = append(out, paletteItem{icon, "blog", "section", func(m *Model) tea.Cmd { m.enterList("blog", "blog", m.content.BlogList(m.blogLangOr())); return nil }})
 		default:
 			name := tab.Name
 			out = append(out, paletteItem{icon, name, "page", func(m *Model) tea.Cmd {
@@ -50,6 +50,8 @@ func (m *Model) navItems() []paletteItem {
 		out = append(out, paletteItem{"󰈙", "cv " + slug, label + " CV", func(m *Model) tea.Cmd { m.showCVVariant(slug); return nil }})
 	}
 	out = append(out,
+		paletteItem{"󰍌", "lang en", "blog language", func(m *Model) tea.Cmd { m.switchBlogLang("en"); return nil }},
+		paletteItem{"󰍌", "lang fr", "blog language", func(m *Model) tea.Cmd { m.switchBlogLang("fr"); return nil }},
 		paletteItem{"󰈙", "whoami", "man page for one (1) developer", func(m *Model) tea.Cmd {
 			if a, ok := m.content.Pages["whoami"]; ok {
 				m.openReader(a)

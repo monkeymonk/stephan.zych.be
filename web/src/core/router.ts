@@ -143,6 +143,9 @@ class SpaRouter {
         currentContent.appendChild(newContent.firstChild);
       }
       document.title = newTitle;
+      // Lang drives locale-aware things (date formatting re-render, a11y tools);
+      // keep it in sync on SPA hops since only #main-content is swapped above.
+      document.documentElement.lang = doc.documentElement.lang || 'en';
 
       if (pushState) {
         history.pushState(null, '', path);

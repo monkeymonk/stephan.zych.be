@@ -1,0 +1,5 @@
+{
+  "lang": "fr",
+  "permalink": "/fr/blog/{{ page.fileSlug }}/",
+  "section": { "name": "blog", "path": "/fr/blog/", "collection": "blogFr" }
+}

@@ -16,7 +16,7 @@ export class SzNotifications extends LitElement {
   @state() private notification?: Required<NotificationPayload>;
 
   private hideTimer?: number;
-  private actionCtrl = new ActionController(this, [[NOTIFY_ACTION.SHOW, (action) => {
+  protected readonly actionCtrl = new ActionController(this, [[NOTIFY_ACTION.SHOW, (action) => {
     const payload = action.payload as NotificationPayload | undefined;
     if (!payload?.text) return;
     this.showNotification(payload);

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type NavTab struct {
@@ -83,7 +84,7 @@ type SiteMeta struct {
 	} `json:"socials"`
 }
 
-// SeriesMeta is one entry of seriesData.json (display name + blurb), keyed by
+// SeriesMeta is one entry of content/series/*.md (display name + blurb), keyed by
 // series slug. Shared with the web build's series-nav.
 type SeriesMeta struct {
 	Name        string `json:"name"`
@@ -208,6 +209,9 @@ type SiteData struct {
 	CVLabel  string
 	Variants []CVVariant // role variants parsed from content/cv/*.md, excluding index.md
 	Wakapi   *WakapiStats
+	// Labels holds the UI label strings shared with the web build
+	// (content/labels/*.md), keyed by lang then snake_case key.
+	Labels map[string]map[string]string
 }
 
 // LoadData reads the shared config: JSON from dataDir, plus the CV (now
@@ -218,16 +222,34 @@ type SiteData struct {
 func LoadData(contentDir, dataDir string) *SiteData {
 	d := &SiteData{}
 	readJSON(filepath.Join(dataDir, "nav.json"), &d.Nav)
-	readJSON(filepath.Join(dataDir, "profile.json"), &d.Profile)
+	d.Profile = loadProfile(filepath.Join(contentDir, "pages", "about.md"))
 	readJSON(filepath.Join(dataDir, "startScreen.json"), &d.StartScreen)
 	readJSON(filepath.Join(dataDir, "shortcuts.json"), &d.Shortcuts)
 	readJSON(filepath.Join(dataDir, "site.json"), &d.Site)
-	readJSON(filepath.Join(dataDir, "seriesData.json"), &d.Series)
+	d.Series = loadSeries(contentDir)
+	d.Labels = loadLabels(contentDir)
 	cvIndexPath := filepath.Join(contentDir, "cv", "index.md")
 	d.CV = loadCV(cvIndexPath)
 	d.CVLabel = loadCVLabel(cvIndexPath)
 	d.Variants = loadCVVariants(contentDir)
 	return d
+}
+
+// loadProfile reads the about page's front matter (identity card, timeline,
+// stats, skills) into a ProfileData. The front matter is re-encoded as JSON so
+// the existing json tags describe the shape once; a missing or malformed file
+// leaves the profile empty, like readJSON.
+func loadProfile(path string) ProfileData {
+	var p ProfileData
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return p
+	}
+	meta, _ := parseFrontmatter(raw)
+	if enc, err := json.Marshal(meta); err == nil {
+		_ = json.Unmarshal(enc, &p)
+	}
+	return p
 }
 
 func readJSON(path string, v any) {
@@ -313,6 +335,85 @@ func loadCVVariants(contentDir string) []CVVariant {
 		})
 	}
 	return variants
+}
+
+// loadSeries globs content/series/*.md and parses each into a SeriesMeta,
+// keyed by filename slug (without extension) — the TUI's mirror of the web
+// build's series.js. Front matter carries `name`; the trimmed body is the
+// description paragraph. A glob error (malformed pattern only — never a
+// missing directory) yields an empty map rather than panicking, the same
+// tolerant spirit as loadCVVariants.
+func loadSeries(contentDir string) map[string]SeriesMeta {
+	series := map[string]SeriesMeta{}
+	matches, err := filepath.Glob(filepath.Join(contentDir, "series", "*.md"))
+	if err != nil {
+		return series
+	}
+	for _, path := range matches {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		meta, body := parseFrontmatter(raw)
+		slug := strings.TrimSuffix(filepath.Base(path), ".md")
+		series[slug] = SeriesMeta{
+			Name:        metaString(meta, "name"),
+			Description: strings.TrimSpace(body),
+		}
+	}
+	return series
+}
+
+// loadLabels globs content/labels/*.md and parses each into a lang -> key ->
+// value map, mirroring the web build's labels.js loader: the filename
+// (without extension) is the language code, and every string front-matter
+// entry is a label value. A glob error (malformed pattern only — never a
+// missing directory) yields an empty map rather than panicking, the same
+// tolerant spirit as loadSeries.
+func loadLabels(contentDir string) map[string]map[string]string {
+	labels := map[string]map[string]string{}
+	matches, err := filepath.Glob(filepath.Join(contentDir, "labels", "*.md"))
+	if err != nil {
+		return labels
+	}
+	for _, path := range matches {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			continue
+		}
+		meta, _ := parseFrontmatter(raw)
+		lang := strings.TrimSuffix(filepath.Base(path), ".md")
+		values := map[string]string{}
+		for key := range meta {
+			values[key] = metaString(meta, key)
+		}
+		labels[lang] = values
+	}
+	return labels
+}
+
+// label looks up a UI label by language and key, the TUI mirror of the web
+// build's labels.js `t()`: it falls back to "en" when lang lacks the key (or
+// lacks the language entirely), and falls back to the key itself as a last
+// resort so a missing label never renders blank. kv pairs are k, v, k, v...
+// and each occurrence of "{k}" in the resolved value is substituted with v.
+func (d *SiteData) label(lang, key string, kv ...string) string {
+	val, ok := "", false
+	if m, exists := d.Labels[lang]; exists {
+		val, ok = m[key]
+	}
+	if !ok {
+		if m, exists := d.Labels["en"]; exists {
+			val, ok = m[key]
+		}
+	}
+	if !ok {
+		val = key
+	}
+	for i := 0; i+1 < len(kv); i += 2 {
+		val = strings.ReplaceAll(val, "{"+kv[i]+"}", kv[i+1])
+	}
+	return val
 }
 
 // iconGlyph maps a data icon name to a nerdfont glyph for the palette.

@@ -625,6 +625,7 @@ const INTENTIONAL_TUI_ONLY = new Map([
   ['ctrl+j', 'readline-style palette movement, the convention in a terminal'],
   ['ctrl+k', 'readline-style palette movement, the convention in a terminal'],
   ['n', 'declines the quit confirmation; the web never asks before a tab closes'],
+  ['L', 'switches a post to its translation; the web post carries a visible EN/FR switcher link instead'],
 ]);
 
 for (const key of [...webKeys].sort()) {
