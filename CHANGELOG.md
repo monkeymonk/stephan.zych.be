@@ -9,6 +9,13 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.15.2] - 2026-11-23
+
+### Added
+- The contact page lists the conversations worth starting without a business
+  case: mentoring, advisory, non-profit and community work, experimental
+  projects and talks.
+
 ## [1.15.1] - 2026-11-23
 
 ### Fixed
@@ -910,7 +917,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.15.1...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.15.2...HEAD
+[1.15.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.15.1...v1.15.2
 [1.15.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.2...v1.14.0
