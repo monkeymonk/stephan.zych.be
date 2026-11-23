@@ -9,6 +9,60 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-11-23
+
+### Added
+- UI labels for the bilingual blog live in `content/labels/en.md` and `fr.md`,
+  shared by the web and the SSH TUI, so French pages get French interface text.
+- French blog posts under `/fr/blog/` (`content/blog/fr/`; a post with the same
+  slug as an English one is its translation).
+- Language switcher on the blog index and on blog posts (pill/seg
+  variants, see `/dev/lang-switch/` preview).
+- Language chips (`post-row__langs`) on blog index rows showing which
+  languages a post is available in.
+- `hreflang` alternate links for translated posts and for the blog indexes.
+- French translations of all nine blog posts.
+- French posts and a language switcher in the SSH TUI (`L` on a post,
+  `:lang fr|en`).
+
+### Changed
+- The blog listing title and description come from `content/blog/_index.md` and
+  `content/blog/fr/_index.md`, which also describe the folder when browsing the
+  content as plain Markdown; both renderers skip `_`-prefixed files as posts.
+- Colour themes are defined once in `content/data/themes.json`; the web generates
+  its theme stylesheets from it and the SSH TUI reads it, so a new theme is one
+  JSON entry. Catppuccin's `sky` now uses the upstream `#89dceb`.
+- Series descriptions and the about-page profile (identity card, timeline, stats,
+  skills) moved from JSON into Markdown: `content/series/*.md` and the front
+  matter of `content/pages/about.md`.
+- Blog index tag filters are a single row of small chips (horizontally
+  scrollable), with a reserved slot for a future language filter.
+- The post language switcher now matches the markdown/html view toggle and
+  overlays the top-right of the hero image, aligned with the content column.
+- The blog index language switcher sits to the right of the tag filters.
+- The markdown/html view toggle is now a discreet text toggle
+  (`markdown / html`) matching the breadcrumb on the same row.
+- Blog index rows list their languages as links to each version, next to the
+  date and reading time.
+- Resized the GoAccess dashboard poster to 1600px wide.
+
+### Fixed
+- On mobile, the blog and projects filter bars no longer touch the
+  titlebar: they keep a small gap, also once stuck while scrolling.
+- On mobile, scrolled rows no longer show through a hairline seam between the
+  titlebar and the stuck filter bar.
+- Article breadcrumb no longer sits off-centre next to the view toggle: it
+  now hugs the window's left edge, mirroring the toggle on the right.
+- Site search no longer lists a post twice when it exists in both languages;
+  results follow the page language.
+- Hreflang alternates are only emitted for posts that actually have a
+  translation.
+- The code view's series block on a French post lists the French parts.
+- Post hero images declare their dimensions, so the page no longer shifts
+  while they load.
+- "I Run My AI Agents in a Box" carries a dated correction: gVisor is a user-space
+  kernel, not a microVM.
+
 ## [1.14.0] - 2026-11-19
 
 ### Added
@@ -847,7 +901,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.14.0...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.15.0...HEAD
+[1.15.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.2...v1.14.0
 [1.13.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.1...v1.13.2
 [1.13.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.13.0...v1.13.1
