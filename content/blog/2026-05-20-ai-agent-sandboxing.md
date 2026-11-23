@@ -13,6 +13,11 @@ updates:
       - "keep **`sbx`** for one-shot untrusted commands."
       - "So the split that stuck: **Greywall for the agents I run all day in my own project tree, `sbx` for the commands I run once and don't trust.**"
     summary: "`sbx` picked up real substance since I filed it under one-shot only: a proper TUI dashboard for managing and monitoring running sandboxes, persistent environments you create once and return to instead of respawning per command, reusable **templates and kits** so a project's setup boots the same way twice, direct SSH access at `<sandbox>.sbx`, skill sharing across sandboxes, and credential and policy handling considerably more solid than what I described above. That's enough to move it from a very good isolation primitive toward **an actual execution environment for agents**, and I'm re-running it as a much more central part of my day-to-day workflow than the one-shot role I gave it here. None of that touches the rule this piece is built on: the hypervisor boundary argument still stands, only where `sbx` ranks as a daily driver moved."
+  - date: 2026-11-19
+    kind: correction
+    marks:
+      - "a user-space kernel that intercepts the agent's system calls, not a VM."
+    summary: "I originally filed gVisor next to Firecracker as a platform that puts the agent in a *lightweight VM with its own kernel*. That was wrong. gVisor is an application kernel running in user space: it intercepts the sandboxed process's system calls and serves most of them itself, so the host kernel sees far less of the agent, but there is no guest VM and no hypervisor in the picture. It belongs to a different kind of boundary from `sbx` and Firecracker, which is why the sentence now says so. The argument of this section is unchanged: the microVMs it describes still put the boundary at the hypervisor."
 ---
 
 > **TL;DR:** A coding agent runs as *you*: every SSH key, every client's `.env`, your whole home directory. So I sandbox them. After a stint on `sbx` microVMs and a doomed attempt to build my own `bwrap`+Go wrapper, I landed on **Greywall** (a deny-by-default kernel jail over my *real* files, secrets masked in place) for the agents I run all day, and keep **`sbx`** for one-shot untrusted commands. The one rule that matters: a boundary the agent can reconfigure isn't one.
@@ -56,7 +61,7 @@ greywall -c "rm -rf /"       # blocked outright by the command deny rules
 
 **3. Plain Docker / devcontainers.** Tempting, and **not actually a sandbox.** Containers share the host kernel; a single container-escape bug hands the agent the host. This isn't hypothetical. More on the real incident below. A devcontainer is great for *reproducibility* and a decent speed bump, but treating it as a security boundary is a category error the whole industry keeps making.
 
-**4. microVMs: the real boundary.** [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) (the `sbx` CLI, GA since Jan 2026) and platforms like Firecracker/gVisor put the agent in a *lightweight VM with its own kernel*. The isolation boundary is the **hypervisor**, not a policy file the agent can read. Each sandbox gets its own filesystem, its own Docker daemon, its own network. The host is simply invisible:
+**4. microVMs: the real boundary.** [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) (the `sbx` CLI, GA since Jan 2026) and platforms like Firecracker put the agent in a *lightweight VM with its own kernel*. gVisor reaches a similar place by a different route: a user-space kernel that intercepts the agent's system calls, not a VM. The isolation boundary is the **hypervisor**, not a policy file the agent can read. Each sandbox gets its own filesystem, its own Docker daemon, its own network. The host is simply invisible:
 
 ```bash
 # CachyOS/Arch: KVM already ships in the kernel; sbx itself lives in the AUR
