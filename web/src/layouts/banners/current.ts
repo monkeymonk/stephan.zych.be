@@ -1,4 +1,4 @@
-// 1. current — the plain wordmark, no animation.
+// 1. current - the plain wordmark, no animation.
 import { centerInStage } from './core.js';
 import type { BannerCtx } from './registry.js';
 

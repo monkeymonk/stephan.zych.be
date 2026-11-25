@@ -1,4 +1,4 @@
-// Static registry of home-banner variants: tiny on purpose, since sz-dashboard
+// Static registry of home-banner variants: tiny on purpose, since sz-banner
 // imports this module eagerly (it needs the list to render the switch button
 // and stage dimensions on first paint). Each variant's actual implementation
 // and styles live in their own module, loaded on demand via `load()` so only
@@ -6,7 +6,7 @@
 
 /** Fixed stage the banner occupies: every variant renders into the same
  * number of character rows, and a column count computed from the available
- * width (see sz-dashboard.ts), clamped between STAGE_MIN_COLS/STAGE_MAX_COLS.
+ * width (see sz-banner.ts), clamped between STAGE_MIN_COLS/STAGE_MAX_COLS.
  * This keeps the banner footprint identical across variants so switching
  * never shifts the tagline/links below. */
 export const STAGE_ROWS = 16;

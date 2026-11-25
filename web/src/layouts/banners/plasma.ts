@@ -1,4 +1,4 @@
-// 7. plasma — colour-cycling plasma field filling the name.
+// 7. plasma - colour-cycling plasma field filling the name.
 import { artFor, centerInStage, injectStyle } from './core.js';
 import type { BannerCtx } from './registry.js';
 import { runTicker, reducedMotion } from './core.js';

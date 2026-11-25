@@ -1,4 +1,4 @@
-// 9. wave — sine scroller, name stays put, columns bob vertically.
+// 9. wave - sine scroller, name stays put, columns bob vertically.
 import { wordBitmap, padLines, halfBlock, reducedMotion, runTicker, injectStyle } from './core.js';
 import type { BannerCtx } from './registry.js';
 

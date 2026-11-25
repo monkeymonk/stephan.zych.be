@@ -1,6 +1,6 @@
 // Shared helpers, types and bitmap art for the home-banner variants. Each
 // variant module imports only what it needs from here; this module itself is
-// never imported by sz-dashboard or registry.ts, so it ships only inside the
+// never imported by sz-banner or registry.ts, so it ships only inside the
 // lazy-loaded variant chunks that reference it, never in the main bundle.
 import { reducedMotion } from '../../core/styles.js';
 import type { Banner } from './registry.js';
@@ -172,7 +172,7 @@ export function runTicker(host: HTMLElement, fps: number, frame: (tMs: number) =
 }
 
 /** Inject `cssText` as a <style> element, first child of `host`. host lives
- * inside sz-dashboard's shadow root, so the rules stay scoped to it. */
+ * inside sz-banner's shadow root, so the rules stay scoped to it. */
 export function injectStyle(host: HTMLElement, cssText: string): void {
   const style = document.createElement('style');
   style.textContent = cssText;

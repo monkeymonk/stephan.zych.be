@@ -28,3 +28,21 @@ export const jsonArrayAttribute = {
   },
   toAttribute: (value: unknown[]): string => JSON.stringify(value ?? []),
 };
+
+/**
+ * Lit property converter for JSON-object attributes. Same purpose as
+ * jsonArrayAttribute, for structured objects instead of arrays. Returns
+ * null on missing/invalid input so components can degrade gracefully.
+ */
+export const jsonObjectAttribute = {
+  fromAttribute: (value: string | null): unknown | null => {
+    if (!value) return null;
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  },
+  toAttribute: (value: unknown | null): string => JSON.stringify(value ?? null),
+};

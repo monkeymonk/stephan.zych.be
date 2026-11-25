@@ -1,4 +1,4 @@
-// 2. decrypt — matrix-noise resolving into the locked wordmark.
+// 2. decrypt - matrix-noise resolving into the locked wordmark.
 import { artFor, centerInStage, centerOffsets, reducedMotion, runTicker, injectStyle } from './core.js';
 import type { BannerCtx } from './registry.js';
 

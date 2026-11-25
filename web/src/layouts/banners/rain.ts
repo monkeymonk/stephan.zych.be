@@ -1,4 +1,4 @@
-// 6. rain — matrix-style rain carving the name out of falling characters.
+// 6. rain - matrix-style rain carving the name out of falling characters.
 import { artFor, centerOffsets, reducedMotion, runTicker, injectStyle } from './core.js';
 import type { BannerCtx } from './registry.js';
 

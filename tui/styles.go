@@ -81,6 +81,23 @@ type Styles struct {
 	ConfBody  lipgloss.Style
 	ConfHint  lipgloss.Style
 	Backdrop  lipgloss.Color
+	// home banner rotation (banner.go)
+	BannerNoise      lipgloss.Style
+	BannerLock       lipgloss.Style
+	BannerGlitchMain lipgloss.Style
+	BannerGlitchRed  lipgloss.Style
+	BannerGlitchTeal lipgloss.Style
+	BannerRainbow    []lipgloss.Style
+	BannerStar       lipgloss.Style
+	BannerWave       []lipgloss.Style
+	BannerLanded     lipgloss.Style
+	BannerFalling    lipgloss.Style
+	// Ramps for the simulation variants, darkest first: BannerHeat for fire,
+	// BannerShade for the 3D/lit ones (spin, donut), BannerRain for the
+	// matrix trail (dim trail .. bright head).
+	BannerHeat  []lipgloss.Style
+	BannerShade []lipgloss.Style
+	BannerRain  []lipgloss.Style
 }
 
 // buildStyles constructs a Styles from the given Theme. buildStyles(themes[defaultTheme])
@@ -164,6 +181,54 @@ func buildStyles(t Theme) Styles {
 		ConfBody:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Subtext0)),
 		ConfHint:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
 		Backdrop:  lipgloss.Color(t.Surface0),
+		// home banner rotation: decrypt's noise/lock, glitch's RGB-split tint
+		// layers, rainbow's cycling hue band, wave's star field plus 3 colour
+		// layers, stack's landed/falling pieces.
+		BannerNoise:      lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
+		BannerLock:       lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		BannerGlitchMain: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		BannerGlitchRed:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Red)).Bold(true),
+		BannerGlitchTeal: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Teal)).Bold(true),
+		BannerRainbow: []lipgloss.Style{
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Red)).Bold(true),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Peach)).Bold(true),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Yellow)).Bold(true),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Green)).Bold(true),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Teal)).Bold(true),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Blue)).Bold(true),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Mauve)).Bold(true),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Pink)).Bold(true),
+		},
+		BannerStar: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
+		BannerWave: []lipgloss.Style{
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Blue)).Bold(true),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Mauve)).Bold(true),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Pink)).Bold(true),
+		},
+		BannerLanded:  lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+		BannerFalling: lipgloss.NewStyle().Foreground(lipgloss.Color(t.Peach)).Bold(true),
+		BannerHeat: []lipgloss.Style{
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Surface2)),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Maroon)),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Red)),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Peach)),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Yellow)).Bold(true),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Text)).Bold(true),
+		},
+		BannerShade: []lipgloss.Style{
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Surface2)),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay0)),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Overlay1)),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Lavender)),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Accent)).Bold(true),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Text)).Bold(true),
+		},
+		BannerRain: []lipgloss.Style{
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Surface2)),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Teal)),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Green)),
+			lipgloss.NewStyle().Foreground(lipgloss.Color(t.Text)).Bold(true),
+		},
 	}
 }
 

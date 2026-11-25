@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"math/rand/v2"
 	"regexp"
 	"sort"
 	"strings"
@@ -99,6 +100,17 @@ type Model struct {
 	rotateTicking bool
 	rotateIndex   int
 
+	// Home banner rotation (banner.go): the variant playing, the shuffled
+	// rest of the current bag, the homeFrame it started on, and the session
+	// seed/RNG. homeFrame only advances on the home screen, so leaving home
+	// pauses the rotation along with the animation.
+	bannerIndex int
+	bannerBag   []int
+	bannerStart int
+	bannerSeed  uint64
+	bannerRng   *rand.Rand
+	bannerSim   *bannerSim
+
 	readerLinks []pageLink
 	linkCursor  int
 
@@ -149,6 +161,9 @@ func NewModel(content *Content, data *SiteData, loadErr error, width, height int
 		input:     ti,
 		animating: true,
 	}
+	m.bannerIndex, m.bannerBag, m.bannerSeed = newBannerSession()
+	m.bannerSim = &bannerSim{}
+	m.bannerRng = rand.New(rand.NewPCG(m.bannerSeed, m.bannerSeed^0x9E3779B97F4A7C15))
 	m.themeName = defaultTheme
 	m.theme = themes[m.themeName]
 	s := buildStyles(m.theme)
@@ -468,7 +483,7 @@ func (m *Model) renderMarkdown(a Article) string {
 				}
 				flush()
 				if lang == "mermaid" {
-					addBlock(m.renderMermaid(strings.Join(code, "\n"), width))
+					addBlock(m.renderMermaid(strings.Join(code, "\n")))
 				} else {
 					addBlock(codeBlock(lang, strings.Join(code, "\n")))
 				}
@@ -484,7 +499,7 @@ func (m *Model) renderMarkdown(a Article) string {
 				}
 				i-- // step back so the for-loop i++ lands on the first non-table line
 				flush()
-				addBlock(m.renderTable(rows, width))
+				addBlock(m.renderTable(rows))
 				continue
 			}
 
@@ -547,7 +562,7 @@ func isTableSep(t string) bool {
 
 // renderTable renders a markdown table with lipgloss: rounded border, bold
 // mauve header, padded Catppuccin cells.
-func (m Model) renderTable(mdRows []string, width int) string {
+func (m Model) renderTable(mdRows []string) string {
 	if len(mdRows) < 2 {
 		return strings.Join(mdRows, "\n")
 	}
@@ -598,7 +613,7 @@ var (
 // be drawn over SSH, so flowcharts/graphs are rendered as a node → node edge
 // list (the web shows the same relationships visually); other diagram types
 // fall back to their labelled source.
-func (m Model) renderMermaid(code string, width int) string {
+func (m Model) renderMermaid(code string) string {
 	src := strings.TrimSpace(code)
 	lines := strings.Split(src, "\n")
 	head := strings.ToLower(strings.TrimSpace(lines[0]))
@@ -1072,6 +1087,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case animMsg:
 		if m.screen == screenHome {
 			m.homeFrame++
+			m.advanceBanner()
 		}
 		if m.overlay == overlayPalette && m.palFrame < paletteRevealLen {
 			m.palFrame++
@@ -1377,7 +1393,6 @@ func (m Model) shell(body, status string) string {
 }
 
 func (m Model) viewHome() string {
-	logo := m.wordmarkView(m.data.StartScreen.Wordmark, m.homeFrame)
 
 	cursor := " "
 	if (m.homeFrame/8)%2 == 0 {
@@ -1396,7 +1411,11 @@ func (m Model) viewHome() string {
 		}
 	}
 
-	body := lipgloss.JoinVertical(lipgloss.Left, logo, "", tagline, "", menu.String(), m.homeHint())
+	hint := m.homeHint()
+	// Everything under the banner: blank, tagline, blank, menu, hint.
+	below := 3 + strings.Count(menu.String(), "\n") + strings.Count(hint, "\n") + 1
+	logo := m.bannerView(below)
+	body := lipgloss.JoinVertical(lipgloss.Left, logo, "", tagline, "", menu.String(), hint)
 	body = lipgloss.NewStyle().Padding(0, 0, 0, 2).Render(body)
 	status := m.statusline(m.st.Breadcrumb.Render("~"), m.themeName, "utf-8")
 	return m.shell(body, m.bottomBar(status))

@@ -42,37 +42,49 @@ func splashTaglineText(taglines []string, frame int) string {
 	}
 }
 
-// wordmarkView renders the home wordmark: a one-time light-sweep intro for the
-// first frames, then settling into the solid wordmark. Shared "splash" intro
-// now lives on the home screen itself.
-func (m Model) wordmarkView(lines []string, frame int) string {
+// wordmarkLines renders the home wordmark one styled line per input line: a
+// one-time light-sweep intro for the first frames, then settling into the
+// solid wordmark. Shared by wordmarkView and the "current" banner variant
+// (banner.go), which centers these lines in the rotation stage instead of
+// printing them as-is.
+func wordmarkLines(lines []string, frame int, base, hot, glow, solid lipgloss.Style) []string {
 	if len(lines) == 0 {
-		return ""
+		return nil
 	}
 	logoW := lipgloss.Width(lines[0])
 	if frame > logoW+10 {
-		return m.st.HomeWordmark.Render(strings.Join(lines, "\n"))
+		out := make([]string, len(lines))
+		for i, l := range lines {
+			out[i] = solid.Render(l)
+		}
+		return out
 	}
 	sweep := frame - 6 // start just left of the logo
-	var b strings.Builder
+	out := make([]string, len(lines))
 	for i, line := range lines {
+		var b strings.Builder
 		col := 0
 		for _, r := range line {
-			st := m.st.SplashBase
+			st := base
 			if r != ' ' {
 				switch d := sweep - col; {
 				case d == 0:
-					st = m.st.SplashHot
+					st = hot
 				case d == 1 || d == -1:
-					st = m.st.SplashGlow
+					st = glow
 				}
 			}
 			b.WriteString(st.Render(string(r)))
 			col++
 		}
-		if i < len(lines)-1 {
-			b.WriteString("\n")
-		}
+		out[i] = b.String()
 	}
-	return b.String()
+	return out
+}
+
+// wordmarkView renders the home wordmark: a one-time light-sweep intro for the
+// first frames, then settling into the solid wordmark. Shared "splash" intro
+// now lives on the home screen itself.
+func (m Model) wordmarkView(lines []string, frame int) string {
+	return strings.Join(wordmarkLines(lines, frame, m.st.SplashBase, m.st.SplashHot, m.st.SplashGlow, m.st.HomeWordmark), "\n")
 }

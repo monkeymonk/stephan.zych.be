@@ -1,4 +1,4 @@
-// 10. life — Conway's Game of Life seeded with the name.
+// 10. life - Conway's Game of Life seeded with the name.
 import { wordBitmap, padLines, halfBlock, centerBitmap, reducedMotion, runTicker, injectStyle } from './core.js';
 import type { BannerCtx } from './registry.js';
 

@@ -1,4 +1,4 @@
-// 4. rainbow — colour-cycling gradient clipped to the static art text.
+// 4. rainbow - colour-cycling gradient clipped to the static art text.
 import { artFor, centerInStage, injectStyle } from './core.js';
 import type { BannerCtx } from './registry.js';
 

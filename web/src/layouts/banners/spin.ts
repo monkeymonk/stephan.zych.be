@@ -1,4 +1,4 @@
-// 5. spin — 3D voxel ASCII render of the wordmark, rotating.
+// 5. spin - 3D voxel ASCII render of the wordmark, rotating.
 import { wordBitmap, reducedMotion, runTicker, injectStyle } from './core.js';
 import type { BannerCtx, Banner } from './registry.js';
 

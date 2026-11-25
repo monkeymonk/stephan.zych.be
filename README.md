@@ -165,6 +165,11 @@ Same controls as the web terminal: `:` opens the command palette, `/` searches a
 content, `tab` autocompletes, `?` shows help, `esc` closes. `j/k`/arrows move,
 `enter` opens, `esc`/`h` go back. An animated splash greets you on connect.
 
+Both home screens rotate the same set of animated ASCII banners of the name,
+drawn from one letter bitmap in `content/data/startScreen.json` (`banner`): the
+web variants live in `web/src/layouts/banners/` (one lazy-loaded module each),
+their terminal ports in `tui/banner*.go`.
+
 The SSH server is hardened for a public port: a [distroless](https://github.com/GoogleContainerTools/distroless)
 non-root image (no shell to pivot into), idle/absolute session timeouts, and a
 concurrent-session cap. The host key persists in a volume so clients don't get

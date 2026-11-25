@@ -1,4 +1,4 @@
-// 12. donut — classic donut.c spinning ASCII torus, no text.
+// 12. donut - classic donut.c spinning ASCII torus, no text.
 import { injectStyle } from './core.js';
 import type { BannerCtx } from './registry.js';
 import { runTicker } from './core.js';

@@ -1,4 +1,4 @@
-// 3. glitch — pure CSS RGB-split glitch on the static art.
+// 3. glitch - pure CSS RGB-split glitch on the static art.
 import { artFor, centerInStage, injectStyle } from './core.js';
 import type { BannerCtx } from './registry.js';
 

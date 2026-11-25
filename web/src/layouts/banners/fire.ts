@@ -1,4 +1,4 @@
-// 8. fire — doom-style fire rising from the name's silhouette.
+// 8. fire - doom-style fire rising from the name's silhouette.
 import { artFor, reducedMotion, runTicker, injectStyle } from './core.js';
 import type { BannerCtx } from './registry.js';
 

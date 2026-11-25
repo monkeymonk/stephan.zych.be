@@ -57,8 +57,20 @@ type StartItem struct {
 	Desc   string `json:"desc"`
 }
 
+// BannerData is the shared glyph source for the animated home banner
+// variants (tui/banner.go). Each glyph is GlyphRows strings of GlyphCols
+// chars, '#' on, '.' off; GlyphGap is the blank columns between letters.
+type BannerData struct {
+	Word      string              `json:"word"`
+	GlyphRows int                 `json:"glyphRows"`
+	GlyphCols int                 `json:"glyphCols"`
+	GlyphGap  int                 `json:"glyphGap"`
+	Glyphs    map[string][]string `json:"glyphs"`
+}
+
 type StartScreenData struct {
 	Wordmark []string    `json:"wordmark"`
+	Banner   BannerData  `json:"banner"`
 	Taglines []string    `json:"taglines"`
 	Items    []StartItem `json:"items"`
 }
