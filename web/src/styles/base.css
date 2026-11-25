@@ -1985,7 +1985,7 @@ html[data-view="reading"] .sz-updates { display: block; }
 .post-row__lang {
   position: relative;
   z-index: 1;
-  color: var(--sz-overlay1, #7f849c);
+  color: var(--sz-muted, #989caf);
   letter-spacing: 0.04em;
   padding: 0 4px;
   border: 1px solid var(--sz-surface1, #45475a);

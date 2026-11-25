@@ -334,7 +334,9 @@ async function keyboardChecks(run, s) {
     const { page, close } = await s.open('/blog/');
     try {
       const before = await page.title();
-      await page.locator('#main-content a.post-row').first().click();
+      // Rows are a div with the title link inside (the EN/FR links are their
+      // own anchors), so click the row's title link, not the row.
+      await page.locator('#main-content a.post-row__link').first().click();
       await page.waitForTimeout(1200);
 
       const state = await page.evaluate(`(() => {
@@ -458,7 +460,9 @@ async function scrollChecks(run, s) {
       };
     })()`;
     const seen = [];
-    for (const [route, scrolls] of [[ARTICLE, true], ['/blog/', true], ['/contact/', false], ['/', false]]) {
+    // /contact/ grew past one phone screen in 1.15.2, so it now covers the
+    // scrolling arm; /404.html is the short page that must stay static.
+    for (const [route, scrolls] of [[ARTICLE, true], ['/blog/', true], ['/contact/', true], ['/404.html', false], ['/', false]]) {
       const { page, close } = await s.open(route, { viewport: MOBILE });
       try {
         const rest = await page.evaluate(probe);
