@@ -9,6 +9,24 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-11-25
+
+### Added
+- The home page banner now picks one of twelve animated ASCII variants of
+  the name at random and rotates every twenty seconds (pausing when hidden,
+  off-screen or hovered; a single static variant under reduced motion);
+  each animation is loaded on demand so the first load stays as light as
+  before.
+- The SSH terminal home screen rotates the same twelve banners, drawn from
+  the same letter bitmap in `content/data/startScreen.json`, shrinking to the
+  terminal width and falling back to the static name on very narrow ones.
+
+### Fixed
+- The EN/FR language tags on the blog index meet WCAG AA contrast on mobile
+  in every theme (they used a decoration-only colour for text).
+- The accessibility gate follows the blog rows' title links and the longer
+  contact page, so it tests the site as it is again.
+
 ## [1.15.2] - 2026-11-23
 
 ### Added
@@ -917,7 +935,8 @@ The version of record is the latest `vX.Y.Z` git tag, kept in sync with
 - Dockerised deployment — distroless SSH server + Caddy — with a GitHub Actions
   build-and-deploy pipeline.
 
-[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.15.2...HEAD
+[Unreleased]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.16.0...HEAD
+[1.16.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.15.2...v1.16.0
 [1.15.2]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.15.1...v1.15.2
 [1.15.1]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/monkeymonk/stephan.zych.be/compare/v1.14.0...v1.15.0
