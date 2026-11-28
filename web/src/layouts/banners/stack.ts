@@ -1,5 +1,5 @@
 // 11. stack - tetris-ish build of the name, then line-clear and repeat.
-import { wordBitmap, padLines, halfBlock, centerBitmap, reducedMotion, runTicker, injectStyle } from './core.js';
+import { wordBitmap, padLines, halfBlock, centerBitmap, runTicker, injectStyle, staticMotion } from './core.js';
 import type { BannerCtx } from './registry.js';
 
 const CSS = `
@@ -61,7 +61,7 @@ export function mount(host: HTMLElement, ctx: BannerCtx): () => void {
 
   if (bitmap.length === 0) return () => {};
 
-  if (reducedMotion.matches) {
+  if (staticMotion(host)) {
     landedLayer.textContent = padLines(halfBlock(bitmap)).join('\n');
     fallingLayer.textContent = '';
     return () => {};

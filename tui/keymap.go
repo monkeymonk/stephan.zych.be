@@ -436,6 +436,20 @@ var keyTable = []binding{
 			return m, nil
 		},
 	},
+	{
+		id:      "home.pause",
+		keys:    key.NewBinding(key.WithKeys(" "), key.WithHelp("space", "pause / resume the home banner")),
+		scope:   scopeScreen,
+		screens: setHome,
+		// The TUI counterpart to the web banner's pause button (WCAG 2.2.2): the
+		// home banner and tagline are both driven by homeFrame (see
+		// needsAnim), so freezing it here freezes both. `p` is already a
+		// nav-tab letter (see homeLinks), hence space.
+		run: func(m Model) (Model, tea.Cmd) {
+			m.bannerPaused = !m.bannerPaused
+			return m, nil
+		},
+	},
 
 	// --- screen: list (model.go:945-968) ----------------------------------
 	{
@@ -650,6 +664,7 @@ var helpDocIDs = []string{
 	"list.move.up",     // j / k  ·  ↑ / ↓
 	"list.first",       // g / G
 	"list.open",        // enter / l
+	"home.pause",       // space
 	"reader.prev",      // [ / ]
 	"reader.lang",      // L
 	"nav.back",         // esc / h / q

@@ -6,6 +6,27 @@ import { BANNER_VARIANTS, STAGE_ROWS, STAGE_MIN_COLS, STAGE_MAX_COLS } from './r
 import type { Banner } from './registry.js';
 
 const BANNER_ROTATE_MS = 20_000;
+const PAUSE_STORAGE_KEY = 'sz-banner-paused';
+
+/** Read the persisted pause preference; false (and no throw) if storage is
+ * unavailable (private browsing, disabled storage, etc). */
+function readPausedPreference(): boolean {
+  try {
+    return localStorage.getItem(PAUSE_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/** Persist the pause preference; silently no-op if storage is unavailable. */
+function writePausedPreference(paused: boolean): void {
+  try {
+    if (paused) localStorage.setItem(PAUSE_STORAGE_KEY, '1');
+    else localStorage.removeItem(PAUSE_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
 
 function readBannerIndexFromLocation(): number | null {
   const param = new URLSearchParams(window.location.search).get('banner');
@@ -55,6 +76,7 @@ export class SzBanner extends LitElement {
   private isHovering = false;
   private handlePointerEnter = () => { this.isHovering = true; };
   private handlePointerLeave = () => { this.isHovering = false; };
+  private handleVisibilityChange = () => { this.syncMotionAttributes(); };
   private handleReducedMotionChange = () => {
     if (reducedMotion.matches) {
       this.stopRotation();
@@ -112,6 +134,43 @@ export class SzBanner extends LitElement {
       .ascii { font-size: clamp(4px, 2.4vw, 8px); }
       .char-probe { font-size: clamp(4px, 2.4vw, 8px); }
     }
+
+    /* Paused (button) or idle (off-screen / hidden tab): freeze the CSS-only
+       variants. Specificity beats the variants' own animation shorthand. */
+    .ascii[data-paused] pre,
+    .ascii[data-idle] pre { animation-play-state: paused; }
+    /* The whole banner is the pause toggle: a real <button> wrapping the
+       stage, so it is reachable by Tab and announced with aria-pressed. */
+    .stage {
+      all: unset;
+      display: block;
+      position: relative;
+      width: 100%;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .stage:focus-visible { outline: 1px solid var(--sz-accent, #89b4fa); outline-offset: 4px; }
+    .motion-hint {
+      display: block;
+      width: fit-content;
+      margin: 4px auto 0;
+      padding: 0 4px;
+      border-radius: 3px;
+      font-family: var(--sz-font, ui-monospace, 'JetBrains Mono', monospace);
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--sz-subtext0, #a6adc8);
+      background: var(--sz-surface0, #313244);
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      pointer-events: none;
+    }
+    .stage:hover .motion-hint,
+    .stage:focus-visible .motion-hint,
+    .stage[aria-pressed="true"] .motion-hint { opacity: 1; }
+    .stage:hover .motion-hint,
+    .stage:focus-visible .motion-hint { color: var(--sz-accent, #89b4fa); }
+    @media print { .motion-hint { display: none; } }
   `];
 
   /** ASCII wordmark lines, injected by sz-dashboard as a property. */
@@ -120,6 +179,7 @@ export class SzBanner extends LitElement {
   @property({ attribute: 'banner', converter: jsonObjectAttribute }) banner: Banner | null = null;
 
   @state() private bannerIndex: number;
+  @state() private paused = readPausedPreference();
 
   constructor() {
     super();
@@ -131,6 +191,7 @@ export class SzBanner extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     reducedMotion.addEventListener('change', this.handleReducedMotionChange);
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
   }
 
   disconnectedCallback() {
@@ -144,6 +205,7 @@ export class SzBanner extends LitElement {
     if (this.resizeDebounce !== null) window.clearTimeout(this.resizeDebounce);
     this.stopRotation();
     reducedMotion.removeEventListener('change', this.handleReducedMotionChange);
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
   }
 
   /** Pull the next index from the shuffle bag, refilling (excluding the
@@ -161,7 +223,7 @@ export class SzBanner extends LitElement {
 
   private startRotation() {
     this.stopRotation();
-    if (this.pinned || reducedMotion.matches) return;
+    if (this.pinned || this.paused || reducedMotion.matches) return;
     this.rotateTimer = window.setInterval(this.rotateTick, BANNER_ROTATE_MS);
   }
 
@@ -170,6 +232,26 @@ export class SzBanner extends LitElement {
       window.clearInterval(this.rotateTimer);
       this.rotateTimer = null;
     }
+  }
+
+  /** Toggle pause (the banner itself is the button): stops/starts the 20s rotation and remounts the
+   * current variant (without a cross-fade) so it picks up data-paused. */
+  private togglePause = () => {
+    this.paused = !this.paused;
+    writePausedPreference(this.paused);
+    if (this.paused) this.stopRotation();
+    else this.startRotation();
+    this.mountBanner({ fade: false });
+  };
+
+  /** Reflect pause/idle state onto the `.ascii` stage host so variants can
+   * read it (data-paused, data-idle); CSS-only variants freeze via the
+   * stylesheet rule keyed on these same attributes. */
+  private syncMotionAttributes() {
+    const host = this.renderRoot.querySelector('.ascii');
+    if (!(host instanceof HTMLElement)) return;
+    host.toggleAttribute('data-paused', this.paused);
+    host.toggleAttribute('data-idle', document.hidden || !this.isIntersecting);
   }
 
   /** Re-trigger the 300ms cross-fade on the `.ascii` host after a rotation
@@ -204,7 +286,7 @@ export class SzBanner extends LitElement {
     return Math.min(STAGE_MAX_COLS, Math.max(STAGE_MIN_COLS, Math.floor(availableWidth / charWidth)));
   }
 
-  private mountBanner() {
+  private mountBanner({ fade = true }: { fade?: boolean } = {}) {
     const host = this.renderRoot.querySelector('.ascii');
     if (!(host instanceof HTMLElement)) return;
     this.stageCols = this.computeStageCols();
@@ -224,9 +306,9 @@ export class SzBanner extends LitElement {
       this.bannerCleanup?.();
       this.bannerCleanup = null;
       host.replaceChildren();
-      host.style.cursor = '';
+      this.syncMotionAttributes();
       this.bannerCleanup = module.mount(host, ctx);
-      if (!isFirstMount) this.playFadeIn(host);
+      if (!isFirstMount && fade) this.playFadeIn(host);
     }).catch(err => {
       console.error('banner variant failed to load', variant.id, err);
     });
@@ -246,6 +328,7 @@ export class SzBanner extends LitElement {
     this.intersectionObserver = new IntersectionObserver(entries => {
       const entry = entries.at(-1);
       if (entry) this.isIntersecting = entry.isIntersecting;
+      this.syncMotionAttributes();
     });
     this.intersectionObserver.observe(this);
     this.addEventListener('mouseenter', this.handlePointerEnter);
@@ -265,7 +348,10 @@ export class SzBanner extends LitElement {
   render() {
     return html`
       <span class="char-probe" aria-hidden="true"></span>
-      <div class="ascii" aria-hidden="true"></div>
+      <button type="button" class="stage" aria-label="Pause banner animation" aria-pressed=${this.paused ? 'true' : 'false'} @click=${this.togglePause}>
+        <div class="ascii" aria-hidden="true"></div>
+        <span class="motion-hint" aria-hidden="true">${this.paused ? '[paused]' : '[pause]'}</span>
+      </button>
     `;
   }
 }

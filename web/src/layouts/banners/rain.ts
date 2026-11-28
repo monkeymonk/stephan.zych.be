@@ -1,5 +1,5 @@
 // 6. rain - matrix-style rain carving the name out of falling characters.
-import { artFor, centerOffsets, reducedMotion, runTicker, injectStyle } from './core.js';
+import { artFor, centerOffsets, runTicker, injectStyle, staticMotion } from './core.js';
 import type { BannerCtx } from './registry.js';
 
 const CSS = `
@@ -60,7 +60,7 @@ export function mount(host: HTMLElement, ctx: BannerCtx): () => void {
     nameLayer.textContent = rows.join('\n');
   };
 
-  if (reducedMotion.matches) {
+  if (staticMotion(host)) {
     for (let row = 0; row < RAIN_H; row++) {
       for (let col = 0; col < RAIN_W; col++) revealed[row][col] = true;
     }
@@ -95,13 +95,6 @@ export function mount(host: HTMLElement, ctx: BannerCtx): () => void {
   });
 
   const drops: RainDrop[] = Array.from({ length: RAIN_W }, () => spawn());
-
-  const replay = () => {
-    for (let row = 0; row < RAIN_H; row++) revealed[row].fill(false);
-    renderNameLayer();
-    for (let col = 0; col < RAIN_W; col++) drops[col] = spawn();
-    startTicker();
-  };
 
   let stopFn: (() => void) | null = null;
 
@@ -157,11 +150,8 @@ export function mount(host: HTMLElement, ctx: BannerCtx): () => void {
   };
 
   startTicker();
-  host.style.cursor = 'pointer';
-  host.addEventListener('click', replay);
 
   return () => {
     stopFn?.();
-    host.removeEventListener('click', replay);
   };
 }

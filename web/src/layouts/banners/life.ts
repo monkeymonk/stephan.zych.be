@@ -1,5 +1,5 @@
 // 10. life - Conway's Game of Life seeded with the name.
-import { wordBitmap, padLines, halfBlock, centerBitmap, reducedMotion, runTicker, injectStyle } from './core.js';
+import { wordBitmap, padLines, halfBlock, centerBitmap, runTicker, injectStyle, staticMotion } from './core.js';
 import type { BannerCtx } from './registry.js';
 
 const CSS = `
@@ -56,7 +56,7 @@ export function mount(host: HTMLElement, ctx: BannerCtx): () => void {
     for (let x = 0; x < LIFE_W; x++) target[y * LIFE_W + x] = centered[y][x] ? 1 : 0;
   }
 
-  if (reducedMotion.matches) {
+  if (staticMotion(host)) {
     renderLifeGrid(layer, target, LIFE_W, pixelRows);
     return () => {};
   }

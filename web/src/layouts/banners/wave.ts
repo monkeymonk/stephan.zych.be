@@ -1,5 +1,5 @@
 // 9. wave - sine scroller, name stays put, columns bob vertically.
-import { wordBitmap, padLines, halfBlock, reducedMotion, runTicker, injectStyle } from './core.js';
+import { wordBitmap, padLines, halfBlock, runTicker, injectStyle, staticMotion } from './core.js';
 import type { BannerCtx } from './registry.js';
 
 const CSS = `
@@ -87,7 +87,7 @@ export function mount(host: HTMLElement, ctx: BannerCtx): () => void {
     starsLayer.textContent = starGrid.map(r => r.join('')).join('\n');
   };
 
-  if (reducedMotion.matches) {
+  if (staticMotion(host)) {
     renderFrame(0, baseDy, false);
     return () => {};
   }

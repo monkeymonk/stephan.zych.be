@@ -1,5 +1,5 @@
 // 5. spin - 3D voxel ASCII render of the wordmark, rotating.
-import { wordBitmap, reducedMotion, runTicker, injectStyle } from './core.js';
+import { wordBitmap, runTicker, injectStyle, staticMotion } from './core.js';
 import type { BannerCtx, Banner } from './registry.js';
 
 const CSS = `
@@ -106,7 +106,7 @@ export function mount(host: HTMLElement, ctx: BannerCtx): () => void {
   const points = buildVoxelPoints(ctx.banner);
   if (points.length === 0) return () => {};
 
-  if (reducedMotion.matches) {
+  if (staticMotion(host)) {
     out.textContent = renderSpinFrame(points, 0.25, 0.12, cols, rows);
     return () => {};
   }

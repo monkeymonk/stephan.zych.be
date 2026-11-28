@@ -100,6 +100,18 @@ type Model struct {
 	rotateTicking bool
 	rotateIndex   int
 
+	// bannerPaused is the session-local pause toggle for the home banner
+	// (space key, home.pause binding): true freezes homeFrame, which also
+	// freezes the rotation and tagline since both are driven by it. Not
+	// persisted: it resets with the session like every other animation flag.
+	bannerPaused bool
+	// blurred mirrors whether the terminal reported losing focus
+	// (tea.BlurMsg/tea.FocusMsg, requires tea.WithReportFocus()): true stops
+	// both animTick and rotateTick, the SSH counterpart to the web banner
+	// pausing in a hidden tab. Terminals that never report focus leave
+	// this permanently false, so behaviour there is unchanged.
+	blurred bool
+
 	// Home banner rotation (banner.go): the variant playing, the shuffled
 	// rest of the current bag, the homeFrame it started on, and the session
 	// seed/RNG. homeFrame only advances on the home screen, so leaving home
@@ -244,7 +256,13 @@ func (m Model) needsAnim() bool {
 	if m.overlay == overlayConfirmQuit {
 		return false
 	}
-	return m.screen == screenHome || (m.overlay == overlayPalette && m.palFrame < paletteRevealLen) || m.screen == screenEffect
+	// The terminal reported losing focus: nothing animating is visible to
+	// the user, so there is nothing to repaint for. Checked before every other
+	// clause, same reasoning as the quit prompt above.
+	if m.blurred {
+		return false
+	}
+	return (m.screen == screenHome && !m.bannerPaused) || (m.overlay == overlayPalette && m.palFrame < paletteRevealLen) || m.screen == screenEffect
 }
 
 // needsRotate reports whether the neofetch identity card, as currently
@@ -261,6 +279,9 @@ func (m Model) needsAnim() bool {
 // an invisible screen for as long as the question goes unanswered.
 func (m Model) needsRotate() bool {
 	if m.overlay == overlayConfirmQuit {
+		return false
+	}
+	if m.blurred {
 		return false
 	}
 	return m.screen == screenReader &&
@@ -1085,7 +1106,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tick()
 
 	case animMsg:
-		if m.screen == screenHome {
+		if m.screen == screenHome && !m.bannerPaused {
 			m.homeFrame++
 			m.advanceBanner()
 		}
@@ -1109,6 +1130,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.rotateTicking = false
 		return m, nil
+
+	case tea.BlurMsg:
+		// The terminal lost focus. Nothing more to do here: the running
+		// animTick/rotateTick, if any, sees needsAnim/needsRotate turn false
+		// on its own next tick (both now check m.blurred) and stops itself.
+		m.blurred = true
+		return m, nil
+
+	case tea.FocusMsg:
+		// The terminal regained focus. Tickers that stopped while blurred
+		// need restarting explicitly, since nothing else will wake them.
+		m.blurred = false
+		return m.ensureTickers(nil)
 
 	case tea.KeyMsg:
 		if !m.overlay.open() && m.screen != screenEffect {
@@ -1147,6 +1181,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // no dedupe state belongs on Model (which is copied by value).
 func (m Model) afterKey(cmd tea.Cmd) (tea.Model, tea.Cmd) {
 	m.trackPath()
+	return m.ensureTickers(cmd)
+}
+
+// ensureTickers starts animTick/rotateTick when the current screen needs
+// them and the matching ticker is not already running. Factored out of
+// afterKey so tea.FocusMsg can restart the tickers on regained focus without
+// also recording a pageview via trackPath (afterKey calls this, then its own
+// trackPath, so the two never duplicate work).
+func (m Model) ensureTickers(cmd tea.Cmd) (Model, tea.Cmd) {
 	if m.needsAnim() && !m.animating {
 		m.animating = true
 		cmd = tea.Batch(cmd, animTick())
@@ -1264,6 +1307,13 @@ func (m Model) homeHint() string {
 		if want[s.Keys] {
 			parts = append(parts, m.st.HelpKey.Render(s.Keys)+m.st.Help.Render(" "+strings.ToLower(s.Description)))
 		}
+	}
+	// The pause hint is not in content/data/shortcuts.json (the web pauses by
+	// clicking the banner, not by a key), so it is appended directly.
+	if m.bannerPaused {
+		parts = append(parts, m.st.HelpKey.Render("space")+m.st.Help.Render(" resume"))
+	} else {
+		parts = append(parts, m.st.HelpKey.Render("space")+m.st.Help.Render(" pause"))
 	}
 	if len(parts) == 0 {
 		return ""

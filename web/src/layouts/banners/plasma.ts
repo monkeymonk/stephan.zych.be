@@ -1,7 +1,7 @@
 // 7. plasma - colour-cycling plasma field filling the name.
 import { artFor, centerInStage, injectStyle } from './core.js';
 import type { BannerCtx } from './registry.js';
-import { runTicker, reducedMotion } from './core.js';
+import { runTicker, staticMotion } from './core.js';
 
 const CSS = `
   .pl-bg { color: var(--sz-overlay0, #6c7086); opacity: .55; }
@@ -65,7 +65,7 @@ export function mount(host: HTMLElement, ctx: BannerCtx): () => void {
     bgLayer.textContent = bgLines.join('\n');
   };
 
-  if (reducedMotion.matches) {
+  if (staticMotion(host)) {
     renderFrame(0);
     return () => {};
   }

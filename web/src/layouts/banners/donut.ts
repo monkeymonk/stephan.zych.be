@@ -1,7 +1,6 @@
 // 12. donut - classic donut.c spinning ASCII torus, no text.
-import { injectStyle } from './core.js';
+import { injectStyle, runTicker, staticMotion } from './core.js';
 import type { BannerCtx } from './registry.js';
-import { runTicker } from './core.js';
 
 const CSS = `
   .dn-hi { color: var(--sz-accent, #89b4fa); }
@@ -82,6 +81,11 @@ export function mount(host: HTMLElement, ctx: BannerCtx): () => void {
     hiLayer.textContent = hiRows.join('\n');
     loLayer.textContent = loRows.join('\n');
   };
+
+  if (staticMotion(host)) {
+    paint(1, 0.5);
+    return () => {};
+  }
 
   const stop = runTicker(host, 30, now => {
     paint(now * 0.0010, now * 0.0005);

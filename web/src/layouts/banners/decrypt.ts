@@ -1,5 +1,5 @@
 // 2. decrypt - matrix-noise resolving into the locked wordmark.
-import { artFor, centerInStage, centerOffsets, reducedMotion, runTicker, injectStyle } from './core.js';
+import { artFor, centerInStage, centerOffsets, runTicker, injectStyle, staticMotion } from './core.js';
 import type { BannerCtx } from './registry.js';
 
 const CSS = `
@@ -30,7 +30,7 @@ export function mount(host: HTMLElement, ctx: BannerCtx): () => void {
   const stageArt = centerInStage(art, cols, rows);
   const { colOffset } = centerOffsets(artWidth, artHeight, cols, rows);
 
-  if (reducedMotion.matches) {
+  if (staticMotion(host)) {
     lockLayer.textContent = stageArt.join('\n');
     noiseLayer.textContent = '';
     return () => {};
@@ -100,24 +100,8 @@ export function mount(host: HTMLElement, ctx: BannerCtx): () => void {
     }
   });
 
-  const replay = () => {
-    renderFrame(0, null, 0);
-    const start = performance.now();
-    const stop = runTicker(host, 30, now => {
-      const t = now - start;
-      renderFrame(t, null, 0);
-      if (allLocked(t)) {
-        stop();
-        return false;
-      }
-    });
-  };
-  host.style.cursor = 'pointer';
-  host.addEventListener('click', replay);
-
   return () => {
     cleanedUp = true;
     if (rescrambleTimer !== null) window.clearTimeout(rescrambleTimer);
-    host.removeEventListener('click', replay);
   };
 }

@@ -7,6 +7,13 @@ import type { Banner } from './registry.js';
 
 export { reducedMotion };
 
+/** True when a variant should mount its single static frame: the user asked
+ * for reduced motion, or sz-banner's pause button is pressed (data-paused on
+ * the stage host). */
+export function staticMotion(host: HTMLElement): boolean {
+  return reducedMotion.matches || host.hasAttribute('data-paused');
+}
+
 // ---------------------------------------------------------------------------
 // Shared "stephan" bitmap, built from the Banner glyph data supplied by the
 // template (content/data/startScreen.json, single source of truth). Unknown
@@ -125,8 +132,9 @@ export function centerBitmap(bitmap: boolean[][], cols: number, rows: number): b
 }
 
 // ---------------------------------------------------------------------------
-// Frame ticker: rAF-driven, throttled to a target fps, paused while hidden or
-// off-screen, stopped when `frame` returns false. Cancelled by cleanup.
+// Frame ticker: rAF-driven, throttled to a target fps. The rAF chain is
+// cancelled while hidden or off-screen and rescheduled on return, stopped
+// for good when `frame` returns false. Cancelled by cleanup.
 // ---------------------------------------------------------------------------
 
 export function runTicker(host: HTMLElement, fps: number, frame: (tMs: number) => boolean | void): () => void {
@@ -135,39 +143,54 @@ export function runTicker(host: HTMLElement, fps: number, frame: (tMs: number) =
   let stopped = false;
   let visible = true;
   const interval = 1000 / fps;
+  const canRun = () => !stopped && visible && !document.hidden;
+  const halt = () => { if (rafId !== 0) { cancelAnimationFrame(rafId); rafId = 0; } };
 
   const tick = (now: number) => {
-    if (stopped) return;
-    if (!document.hidden && visible) {
-      if (now - lastTick >= interval) {
-        lastTick = now;
-        const keepGoing = frame(now);
-        if (keepGoing === false) {
-          stopped = true;
-          return;
-        }
+    rafId = 0;
+    if (!canRun()) return;
+    if (now - lastTick >= interval) {
+      lastTick = now;
+      if (frame(now) === false) {
+        stopped = true;
+        return;
       }
     }
     rafId = requestAnimationFrame(tick);
   };
 
-  // document.hidden is checked on every tick; browsers also throttle rAF in
-  // background tabs, so no visibilitychange listener is needed.
+  // Start or stop the rAF chain to match visibility. On resume lastTick
+  // resets so the first frame back draws immediately (not skipped, not
+  // doubled); the rafId guard keeps a single chain.
+  const sync = () => {
+    if (!canRun()) {
+      halt();
+      return;
+    }
+    if (rafId === 0) {
+      lastTick = 0;
+      rafId = requestAnimationFrame(tick);
+    }
+  };
 
   let observer: IntersectionObserver | null = null;
   if (typeof IntersectionObserver !== 'undefined') {
     observer = new IntersectionObserver(entries => {
-      for (const entry of entries) visible = entry.isIntersecting;
+      const entry = entries.at(-1);
+      if (entry) visible = entry.isIntersecting;
+      sync();
     });
     observer.observe(host);
   }
 
-  rafId = requestAnimationFrame(tick);
+  document.addEventListener('visibilitychange', sync);
+  sync();
 
   return () => {
     stopped = true;
-    cancelAnimationFrame(rafId);
+    halt();
     observer?.disconnect();
+    document.removeEventListener('visibilitychange', sync);
   };
 }
 

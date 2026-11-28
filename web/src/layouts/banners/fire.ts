@@ -1,5 +1,5 @@
 // 8. fire - doom-style fire rising from the name's silhouette.
-import { artFor, reducedMotion, runTicker, injectStyle } from './core.js';
+import { artFor, runTicker, injectStyle, staticMotion } from './core.js';
 import type { BannerCtx } from './registry.js';
 
 const CSS = `
@@ -47,7 +47,7 @@ export function mount(host: HTMLElement, ctx: BannerCtx): () => void {
   }
   nameLayer.textContent = nameRows.join('\n');
 
-  if (reducedMotion.matches) {
+  if (staticMotion(host)) {
     lowLayer.textContent = '';
     midLayer.textContent = '';
     highLayer.textContent = '';
