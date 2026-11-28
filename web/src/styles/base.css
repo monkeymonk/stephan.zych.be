@@ -10,6 +10,27 @@
   font-weight: 700;
   font-display: swap;
 }
+/* Box-drawing + block elements (U+2500-259F), missing from the subsets above.
+   The home banner is built from these; without them each OS substitutes its
+   own fallback glyphs, whose advance width does not match the measured cell,
+   so on phones the art overflowed the stage and got clipped. Fetched only
+   when such a glyph is actually rendered. Declared once per weight with the
+   same descriptors as the faces above: weight matching runs before
+   unicode-range, so a 100-900 range face would never be consulted. */
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/assets/fonts/JetBrainsMono-Blocks.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+  unicode-range: U+2500-259F;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/assets/fonts/JetBrainsMono-Blocks.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+  unicode-range: U+2500-259F;
+}
 
 :root {
   /* Accessibility text-size multiplier (sz-tmux-bar's "aA" control sets it

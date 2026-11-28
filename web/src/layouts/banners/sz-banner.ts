@@ -64,6 +64,7 @@ export class SzBanner extends LitElement {
   private bannerCleanup: (() => void) | null = null;
   private mountedBannerIndex = -1;
   private stageCols = STAGE_MIN_COLS;
+  private mountedCharWidth = 0;
   private resizeObserver: ResizeObserver | null = null;
   private resizeDebounce: number | null = null;
   private bannerMountToken = 0;
@@ -148,6 +149,9 @@ export class SzBanner extends LitElement {
       width: 100%;
       cursor: pointer;
       border-radius: 3px;
+      /* Tapping the banner toggles pause; without this a quick second tap is
+         read as double-tap-to-zoom on mobile and zooms into the banner. */
+      touch-action: manipulation;
     }
     .stage:focus-visible { outline: 1px solid var(--sz-accent, #89b4fa); outline-offset: 4px; }
     .motion-hint {
@@ -266,13 +270,13 @@ export class SzBanner extends LitElement {
   }
 
   /** Measure the `.ascii` font's character width with a hidden probe span of
-   * repeated 'M' chars, so the stage column count is based on the real
-   * rendered font rather than an assumed em fraction. */
+   * the block glyph the variants are drawn with, so the stage column count is
+   * based on the real rendered glyph rather than an assumed em fraction. */
   private measureCharWidth(): number {
     const probe = this.renderRoot.querySelector('.char-probe');
     if (!(probe instanceof HTMLElement)) return 0;
     const sample = 100;
-    probe.textContent = 'M'.repeat(sample);
+    probe.textContent = '\u2588'.repeat(sample);
     const width = probe.getBoundingClientRect().width;
     return width > 0 ? width / sample : 0;
   }
@@ -291,6 +295,7 @@ export class SzBanner extends LitElement {
     if (!(host instanceof HTMLElement)) return;
     this.stageCols = this.computeStageCols();
     const charWidth = this.measureCharWidth();
+    this.mountedCharWidth = charWidth;
     if (charWidth > 0) {
       host.style.width = `${this.stageCols * charWidth}px`;
     }
@@ -321,10 +326,17 @@ export class SzBanner extends LitElement {
       this.resizeDebounce = window.setTimeout(() => {
         this.resizeDebounce = null;
         const newCols = this.computeStageCols();
-        if (newCols !== this.stageCols) this.mountBanner();
+        if (newCols !== this.stageCols || this.measureCharWidth() !== this.mountedCharWidth) this.mountBanner();
       }, 150);
     });
     this.resizeObserver.observe(this);
+    // The first mount may measure a fallback font (font-display: swap); once
+    // the web font (incl. the block-glyph subset) is in, re-measure and
+    // remount if the cell width moved, so the stage never clips the art.
+    document.fonts?.load(`10px "JetBrains Mono"`, '\u2588M').then(() => {
+      if (!this.isConnected) return;
+      if (this.measureCharWidth() !== this.mountedCharWidth) this.mountBanner({ fade: false });
+    }).catch(() => {});
     this.intersectionObserver = new IntersectionObserver(entries => {
       const entry = entries.at(-1);
       if (entry) this.isIntersecting = entry.isIntersecting;
